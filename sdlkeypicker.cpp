@@ -9,6 +9,8 @@
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 
+// -----------------------------------------------------------------------------------------------------------
+
 class PressAKey : public wxDialog
 {
     SDLKey m_result;
@@ -83,6 +85,17 @@ public:
     }
 };
 
+// -----------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxButton(parent, wxID_ANY, "")
+{
+    m_key = key;
+    updateLabel();
+    Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+}
+
+// -----------------------------------------------------------------------------------------------------------
 
 void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 {
@@ -94,6 +107,8 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         updateLabel();
     }
 }
+
+// -----------------------------------------------------------------------------------------------------------
 
 void wxSDLKeyPicker::updateLabel()
 {
@@ -110,10 +125,4 @@ void wxSDLKeyPicker::updateLabel()
     SetLabel(label);
 }
 
-
-wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxButton(parent, wxID_ANY, "")
-{
-    m_key = key;
-    updateLabel();
-    Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
-}
+// -----------------------------------------------------------------------------------------------------------

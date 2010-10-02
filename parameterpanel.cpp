@@ -13,6 +13,7 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
+// -----------------------------------------------------------------------------------------------------------
 
 ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
     wxScrolledWindow(parent, wxID_ANY), m_section(section)
@@ -126,10 +127,14 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
     SetScrollRate(5, 5);
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 ParameterPanel::~ParameterPanel()
 {
     m_magic_number = 0xDEADBEEF;
 }
+
+// -----------------------------------------------------------------------------------------------------------
 
 void ParameterPanel::commitNewValues()
 {
@@ -207,6 +212,9 @@ void ParameterPanel::commitNewValues()
     }
 }
 
+// -----------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+
 ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, std::vector<ConfigSection> sections) :
         wxNotebook(parent, wxID_ANY)
 {
@@ -221,6 +229,8 @@ ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, std::vector<ConfigS
     }
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 void ParameterGroupsPanel::commitNewValues()
 {
     assert(m_magic_number == 0x12345678);
@@ -231,3 +241,5 @@ void ParameterGroupsPanel::commitNewValues()
         m_panels[n]->commitNewValues();
     }
 }
+
+// -----------------------------------------------------------------------------------------------------------
