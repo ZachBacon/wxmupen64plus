@@ -49,7 +49,7 @@ LibPath                := "$(LibraryPathSwitch)."
 ##
 CodeLiteDir:=/Applications/CodeLite.app/Contents/SharedSupport/
 DYLD_LIBRARY_PATH:=/Developer/hg/mupen64plus/mupen64plus-core/projects/unix
-Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
+Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 
 ##
 ## Main Build Targets 
@@ -91,6 +91,14 @@ $(IntermediateDirectory)/parameterpanel$(DependSuffix): parameterpanel.cpp
 
 $(IntermediateDirectory)/parameterpanel$(PreprocessSuffix): parameterpanel.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/parameterpanel$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/parameterpanel.cpp"
+
+$(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix): sdlkeypicker.cpp $(IntermediateDirectory)/sdlkeypicker$(DependSuffix)
+	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/sdlkeypicker$(DependSuffix): sdlkeypicker.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) -MF$(IntermediateDirectory)/sdlkeypicker$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp"
+
+$(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix): sdlkeypicker.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp"
 
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix): mupen64plusplus/MupenAPI.c $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IncludePath)
@@ -144,6 +152,9 @@ clean:
 	$(RM) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/parameterpanel$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/parameterpanel$(PreprocessSuffix)
+	$(RM) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix)
+	$(RM) $(IntermediateDirectory)/sdlkeypicker$(DependSuffix)
+	$(RM) $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix)

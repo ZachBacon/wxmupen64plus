@@ -11,6 +11,8 @@
     <File Name="main.cpp"/>
     <File Name="parameterpanel.h"/>
     <File Name="parameterpanel.cpp"/>
+    <File Name="sdlkeypicker.cpp"/>
+    <File Name="sdlkeypicker.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="osx">
     <File Name="Info.plist"/>
