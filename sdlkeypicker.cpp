@@ -12,6 +12,7 @@
 class PressAKey : public wxDialog
 {
     SDLKey m_result;
+    
 public:
 
     void onIdle(wxIdleEvent& evt)
@@ -37,6 +38,13 @@ public:
         EndModal( GetReturnCode() );
     }
 
+    void onErase(wxCommandEvent& evt)
+    {
+        // TODO: make the "erase" button actually work
+        
+        EndModal( GetReturnCode() );
+    }
+
     PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250))
     {
         m_result = SDLK_UNKNOWN;
@@ -53,9 +61,9 @@ public:
         sizer->Add(cancel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
         cancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onCancel), NULL, this);
         
-        // TODO: make this buttons work
         wxButton* erase = new wxButton(this, wxID_CANCEL, _("Erase this key binding"));
         sizer->Add(erase, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
+        erase->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onErase), NULL, this);
         
         sizer->AddSpacer(25);
         
@@ -63,20 +71,7 @@ public:
         
         SetSizer(sizer);
         Center();
-        ShowModal();
-        /*
-        printf("Will poll SDL...\n");
-        
-        SDL_Event event;
-        while(SDL_PollEvent(&event)) 
-        {
-            if (event.type == SDL_KEYDOWN)
-            {
-                // TODO...
-                EndModal( GetReturnCode() );
-            }
-        }*/
-        
+        ShowModal();        
     }
     
     /**
