@@ -40,8 +40,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
             {
                 int currVal = section.m_parameters[p].getIntValue();
                 
-                // FIXME: find better way to identify SDL key parameters
-                if (wxString(section.m_parameters[p].m_param_name).StartsWith("Kbd Mapping"))
+                if (section.m_parameters[p].m_special_type == KEYBOARD_KEY_INT)
                 {
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
@@ -100,8 +99,18 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                         case M64TYPE_STRING:
             {
                 std::string currVal = section.m_parameters[p].getStringValue();
-                ctrl = new wxTextCtrl(this, wxID_ANY, currVal, wxDefaultPosition, wxSize(150, -1));
-                sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
+                
+                if (section.m_parameters[p].m_special_type == BINDING_STRING)
+                {
+                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()));
+                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                }
+                else
+                {
+                    ctrl = new wxTextCtrl(this, wxID_ANY, currVal, wxDefaultPosition, wxSize(150, -1));
+                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
+                }
+                
                 break;
             }
                 
@@ -189,16 +198,33 @@ void ParameterPanel::commitNewValues()
             case M64TYPE_BOOL:
             {
                 wxCheckBox* ctrl = (wxCheckBox*)m_parameter_widgets[n];
-                printf("[bool] parameter %s has value %s\n", param->m_param_name.c_str(), ctrl->IsChecked() ? "true" : "false");
+                printf("[bool] parameter %s has value %s\n", param->m_param_name.c_str(),
+                       ctrl->IsChecked() ? "true" : "false");
                 param->setBoolValue(ctrl->IsChecked() ? 1 : 0);
                 break;
             }
             
             case M64TYPE_STRING:
             {
-                wxTextCtrl* ctrl = (wxTextCtrl*)m_parameter_widgets[n];
-                printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(), (const char*)ctrl->GetValue().mb_str());
-                param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                if (dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]) != NULL)
+                {
+                    wxTextCtrl* ctrl = (wxTextCtrl*)m_parameter_widgets[n];
+                    printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
+                           (const char*)ctrl->GetValue().mb_str());
+                    param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                }
+                else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
+                {
+                    wxSDLKeyPicker* ctrl = (wxSDLKeyPicker*)m_parameter_widgets[n];
+                    printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
+                           (const char*)ctrl->getBindingString().mb_str());
+                    param->setStringValue((const char*)ctrl->getBindingString().mb_str());
+                }
+                else
+                {
+                    assert(false);
+                }
+                
                 break;
             }
             

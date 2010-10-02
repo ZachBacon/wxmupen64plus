@@ -91,6 +91,19 @@ public:
 wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxButton(parent, wxID_ANY, "")
 {
     m_key = key;
+    m_format = FORMAT_KEY_INT;
+    
+    updateLabel();
+    Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr) : wxButton(parent, wxID_ANY, "")
+{
+    m_format = FORMAT_STRING;
+    m_binding = curr;
+    
     updateLabel();
     Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
 }
@@ -113,13 +126,25 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 void wxSDLKeyPicker::updateLabel()
 {
     wxString label;
-    if (m_key == SDLK_UNKNOWN)
+    if (m_format == FORMAT_KEY_INT)
     {
-        label = _("Select a key...");
+        if (m_key == SDLK_UNKNOWN)
+        {
+            label = _("Select a key...");
+        }
+        else
+        {
+            label = SDL_GetKeyName(m_key);
+        }
+    }
+    else if (m_format == FORMAT_STRING)
+    {
+        label = m_binding;
     }
     else
     {
-        label = SDL_GetKeyName(m_key);
+        label = "??";
+        assert(false);
     }
     
     SetLabel(label);

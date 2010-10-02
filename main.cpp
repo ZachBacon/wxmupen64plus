@@ -240,9 +240,16 @@ bool wxMiniApp::OnInit()
             // Move key mappings from wherever they are into a separate input section
             // TODO: find better way to identify key mappings?
             wxString section_wxname(section.m_parameters[p].m_param_name);
-            if (section_wxname.StartsWith("Kbd Mapping") ||
-                section_wxname.StartsWith("Joy Mapping"))
+            if (section_wxname.StartsWith("Kbd Mapping"))
             {
+                section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
+                inputSection.m_parameters.push_back(section.m_parameters[p]);
+                section.m_parameters[p].m_enabled = false;
+            }
+            else if (section_wxname.StartsWith("Joy Mapping"))
+            {
+                // TODO: create a special display type for joystick
+                //section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
             }
@@ -334,35 +341,38 @@ bool wxMiniApp::OnInit()
             
             // add any missing parameter (FIXME: don't hardcode names?) 
             // TODO: add help strings so that they get tooltips
-#define CREATE_PARAM_IF_MISSING( name, val, type )                 \
-            if (!section.hasChildNamed(name))                      \
-                section.addNewParam(name, wxVariant( val ), type)
+#define CREATE_PARAM_IF_MISSING( name, val, type, disp )                  \
+            if (!section.hasChildNamed(name))                             \
+                section.addNewParam(name, wxVariant( val ), type, disp);  \
+            else                                                          \
+                section.getParamWithName(name)->m_special_type = disp
+            
             try
             {
-                CREATE_PARAM_IF_MISSING("plugged",           true,          M64TYPE_BOOL);
-                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT);
-                CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL);
-                CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT);
-                CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("DPad U",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("Start",             "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("Z Trig",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("B Button",          "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("A Button",          "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("C Button R",        "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("C Button L",        "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("C Button D",        "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("C Button U",        "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("R Trig",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING);
-                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING);
+                CREATE_PARAM_IF_MISSING("plugged",           true,          M64TYPE_BOOL,   NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT,    NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING, NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING, NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("DPad U",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Start",             "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Z Trig",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("B Button",          "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("A Button",          "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button R",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button L",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button D",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button U",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("R Trig",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_STRING);
             }
             catch (std::exception& e)
             {
