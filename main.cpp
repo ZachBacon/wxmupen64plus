@@ -62,14 +62,14 @@ public:
         {
             m_curr_panel->commitNewValues();
         }
-        
-        // TODO: need to unload plugins, etc.?
+                
         m_frame->Destroy();
 
-        if (saveConfig() != M64ERR_SUCCESS)
+        if (m_api->saveConfig() != M64ERR_SUCCESS)
         {
             wxLogWarning("Failed to save config file");
         }
+        delete m_api;        
     }
 
     void onClose(wxCloseEvent& evt)
