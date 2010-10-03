@@ -171,7 +171,9 @@ bool wxMiniApp::OnInit()
     
     try
     {
+        // TODO: on OS X, the default path may need to be updated if the application is moved around
         m_api = new Mupen64PlusPlus(resources + "libmupen64plus" + OSAL_DLL_EXTENSION,
+                                    resources.utf8_str(),
                                     "mupen64plus-video-rice",
                                     "mupen64plus-audio-sdl",
                                     "mupen64plus-input-sdl",
@@ -179,25 +181,11 @@ bool wxMiniApp::OnInit()
     }
     catch (std::runtime_error& e)
     {
+        // TODO: if plugins are not found, offer fixing the paths instead of aborting
         fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
         return false;
     }
     
-    
-    try
-    {
-        // TODO: don't hardcode plugin choice, but read it from config instead
-        m_api->loadPlugins(resources,
-                           "mupen64plus-video-rice",
-                           "mupen64plus-audio-sdl",
-                           "mupen64plus-input-sdl",
-                           "mupen64plus-rsp-hle");
-    }
-    catch (std::runtime_error& e)
-    {
-        fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
-        return false;
-    }
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(800, 600));
     

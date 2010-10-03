@@ -123,7 +123,7 @@ m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
     /* if no plugins found, search the PluginDir in the UI-plugins section of the config file */
     if (lib_filelist == NULL)
     {
-        const char *plugindir = (*ConfigGetParamString)(ConfigPlugins, "PluginDir");
+        const char *plugindir = (*PtrConfigGetParamString)(ConfigPlugins, "PluginDir");
         lib_filelist = osal_library_search(plugindir);
     }
 
@@ -185,7 +185,7 @@ m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
         }
         else /* otherwise search for a plugin specified in the config file */
         {
-            const char *config_path = (*ConfigGetParamString)(ConfigPlugins, config_var);
+            const char *config_path = (*PtrConfigGetParamString)(ConfigPlugins, config_var);
             if (config_path != NULL && strlen(config_path) > 0)
             {
                 /* if full path was given, try loading exactly this file */
