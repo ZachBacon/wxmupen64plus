@@ -24,6 +24,7 @@
 #include <wx/stdpaths.h>
 #include <wx/filename.h>
 #include <wx/frame.h>
+#include <wx/event.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -167,6 +168,16 @@ public:
         
     }
     
+    void onActivate(wxActivateEvent& evt)
+    {
+    #ifdef __WXMAC__
+        if (evt.GetActive())
+        {
+            m_frame->Raise();
+        }
+    #endif
+    }
+        
 };
 
 IMPLEMENT_APP(wxMiniApp);
@@ -466,6 +477,7 @@ bool wxMiniApp::OnInit()
     m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(wxMiniApp::onQuitMenu), NULL, this);
     
     SetTopWindow( m_frame );
+    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(wxMiniApp::onActivate), NULL, this);
     
     // enter the application's main loop
     return true;
