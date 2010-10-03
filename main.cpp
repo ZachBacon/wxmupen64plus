@@ -213,7 +213,6 @@ bool wxMiniApp::OnInit()
     
     try
     {
-        // FIXME: does not return options from all plugin if mupen64plus --saveoptions was not first invoked
         config = m_api->getConfigContents();
     }
     catch (std::runtime_error& e)
