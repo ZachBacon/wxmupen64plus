@@ -22,7 +22,9 @@
 #if !defined(PLUGIN_H)
 #define PLUGIN_H
 
-#ifdef __cplusplusextern "C" {#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "m64p_types.h"
 #include "mupen64plusplus/osal_preproc.h"
@@ -47,7 +49,9 @@ typedef struct {
 
 extern plugin_map_node g_PluginMap[4];
 
-#ifdef __cplusplus}#endif
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* #define PLUGIN_H */
 

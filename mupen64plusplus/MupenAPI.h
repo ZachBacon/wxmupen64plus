@@ -1,6 +1,90 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *   wxMupen64Plus frontend                                                * *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           * *   Copyright (C) 2010 Marianne Gagnon, based on work by Richard Goedeken * *                                                                         * *   This program is free software; you can redistribute it and/or modify  * *   it under the terms of the GNU General Public License as published by  * *   the Free Software Foundation; either version 2 of the License, or     * *   (at your option) any later version.                                   * *                                                                         * *   This program is distributed in the hope that it will be useful,       * *   but WITHOUT ANY WARRANTY; without even the implied warranty of        * *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * *   GNU General Public License for more details.                          * *                                                                         * *   You should have received a copy of the GNU General Public License     * *   along with this program; if not, write to the                         * *   Free Software Foundation, Inc.,                                       * *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */#ifndef __MUPEN64_API__#define __MUPEN64_API__#ifdef __cplusplusextern "C" {#endif#include "callbacks.h"
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *   wxMupen64Plus frontend                                                *
+ *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2010 Marianne Gagnon, based on work by Richard Goedeken *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#ifndef __MUPEN64_API__
+#define __MUPEN64_API__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "callbacks.h"
 #include "config.h"
 #include "m64p_config.h"
 #include "m64p_frontend.h"
 #include "m64p_common.h"
-#include "m64p_plugin.h"extern m64p_dynlib_handle CoreHandle;extern ptr_ConfigGetParamString   PtrConfigGetParamString;extern void DebugCallback(void *Context, int level, const char *message);m64p_error AttachCoreLib(const char *CoreLibFilepath);m64p_error DetachCoreLib(void);m64p_error InitCore(void);extern m64p_error OpenConfigurationHandles(const char* defaultPluginDir,                                           const char* defaultVideoPlugin, const char* defaultAudioPlugin,                                           const char* defaultInputPlugin, const char* defaultRspPlugin);extern m64p_error SaveConfigurationOptions(void);m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName));m64p_error ReadConfigSectionParameters(const char* section, void (*ParameterListCallback)(void * sectionHandle,                                                                       const char *ParamName,                                                                       m64p_type ParamType));const char* getParameterHelp(m64p_handle* section, const char* paramName);const char* getErrorMessage(m64p_error err);m64p_handle getConfigUI();m64p_error getIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut);m64p_error getBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut);m64p_error getFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, float* valueOut);m64p_error getStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, char* valueOut, int maxSize);m64p_error setStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue);m64p_error setIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue);m64p_error setFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue);m64p_error setBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue);m64p_error createStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue, const char* help);m64p_error createIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue, const char* help);m64p_error createFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue, const char* help);m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue, const char* help);m64p_handle getSectionHandle(const char* sectionName);m64p_error saveConfig();m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,                            char videoPlugin[], const int videoPluginLen,                            char audioPlugin[], const int audioPluginLen,                            char inputPlugin[], const int inputPluginLen,                            char rspPlugin[],   const int rspPluginLen);extern ptr_CoreShutdown  CoreShutdown;extern ptr_CoreStartup   CoreStartup;#ifdef __cplusplus}#endif#endif
+#include "m64p_plugin.h"
+
+extern m64p_dynlib_handle CoreHandle;
+extern ptr_ConfigGetParamString   PtrConfigGetParamString;
+
+extern void DebugCallback(void *Context, int level, const char *message);
+
+m64p_error AttachCoreLib(const char *CoreLibFilepath);
+m64p_error DetachCoreLib(void);
+m64p_error InitCore(void);
+
+extern m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
+                                           const char* defaultVideoPlugin, const char* defaultAudioPlugin,
+                                           const char* defaultInputPlugin, const char* defaultRspPlugin);
+extern m64p_error SaveConfigurationOptions(void);
+m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName));
+m64p_error ReadConfigSectionParameters(const char* section, void (*ParameterListCallback)(void * sectionHandle,
+                                                                       const char *ParamName,
+                                                                       m64p_type ParamType));
+const char* getParameterHelp(m64p_handle* section, const char* paramName);
+
+const char* getErrorMessage(m64p_error err);
+
+m64p_handle getConfigUI();
+m64p_error getIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut);
+m64p_error getBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut);
+m64p_error getFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, float* valueOut);
+m64p_error getStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, char* valueOut, int maxSize);
+
+m64p_error setStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue);
+m64p_error setIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue);
+m64p_error setFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue);
+m64p_error setBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue);
+
+m64p_error createStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue, const char* help);
+m64p_error createIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue, const char* help);
+m64p_error createFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue, const char* help);
+m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue, const char* help);
+
+m64p_handle getSectionHandle(const char* sectionName);
+
+m64p_error saveConfig();
+
+m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
+                            char videoPlugin[], const int videoPluginLen,
+                            char audioPlugin[], const int audioPluginLen,
+                            char inputPlugin[], const int inputPluginLen,
+                            char rspPlugin[],   const int rspPluginLen);
+
+extern ptr_CoreShutdown  CoreShutdown;
+extern ptr_CoreStartup   CoreStartup;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

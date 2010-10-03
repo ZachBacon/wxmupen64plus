@@ -1,6 +1,64 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *   wxMupen64Plus frontend                                                * *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           * *   Copyright (C) 2010 Marianne Gagnon, based on work by Richard Goedeken * *                                                                         * *   This program is free software; you can redistribute it and/or modify  * *   it under the terms of the GNU General Public License as published by  * *   the Free Software Foundation; either version 2 of the License, or     * *   (at your option) any later version.                                   * *                                                                         * *   This program is distributed in the hope that it will be useful,       * *   but WITHOUT ANY WARRANTY; without even the implied warranty of        * *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * *   GNU General Public License for more details.                          * *                                                                         * *   You should have received a copy of the GNU General Public License     * *   along with this program; if not, write to the                         * *   Free Software Foundation, Inc.,                                       * *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */#include "mupen64plusplus/MupenAPI.h"#include "m64p_types.h"#include "m64p_common.h"#include "m64p_frontend.h"#include "m64p_config.h"#include "m64p_debugger.h"
-#include "version.h"#include "plugin.h"#include "main/main.h"#include "mupen64plusplus/osal_preproc.h"#include "mupen64plusplus/osal_dynamiclib.h"#include <stdio.h>#include <assert.h>#include <string.h>#ifndef NULL
-#define NULL 0#endif/** static (local) variables **/static m64p_handle l_ConfigCore = NULL;static m64p_handle l_ConfigVideo = NULL;static m64p_handle l_ConfigPlugins = NULL;//static const char *l_CoreLibPath = NULL;static const char *l_ConfigDirPath = NULL;//static const char *l_ROMFilepath = NULL;       // filepath of ROM to load & run at startup#if defined(SHAREDIR)  static const char *l_DataDirPath = SHAREDIR;#else  static const char *l_DataDirPath = NULL;#endif/* global data definitions */int g_CoreCapabilities;
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *   wxMupen64Plus frontend                                                *
+ *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2010 Marianne Gagnon, based on work by Richard Goedeken *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#include "mupen64plusplus/MupenAPI.h"
+
+#include "m64p_types.h"
+#include "m64p_common.h"
+#include "m64p_frontend.h"
+#include "m64p_config.h"
+#include "m64p_debugger.h"
+#include "version.h"
+#include "plugin.h"
+#include "main/main.h"
+
+#include "mupen64plusplus/osal_preproc.h"
+#include "mupen64plusplus/osal_dynamiclib.h"
+
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+
+#ifndef NULL
+#define NULL 0
+#endif
+
+/** static (local) variables **/
+static m64p_handle l_ConfigCore = NULL;
+static m64p_handle l_ConfigVideo = NULL;
+static m64p_handle l_ConfigPlugins = NULL;
+
+//static const char *l_CoreLibPath = NULL;
+static const char *l_ConfigDirPath = NULL;
+//static const char *l_ROMFilepath = NULL;       // filepath of ROM to load & run at startup
+
+#if defined(SHAREDIR)
+  static const char *l_DataDirPath = SHAREDIR;
+#else
+  static const char *l_DataDirPath = NULL;
+#endif
+
+/* global data definitions */
+int g_CoreCapabilities;
+
 /* definitions of pointers to Core common functions */
 ptr_CoreErrorMessage    CoreErrorMessage = NULL;
 
@@ -20,7 +78,8 @@ ptr_ConfigOpenSection      PtrConfigOpenSection = NULL;
 ptr_ConfigListParameters   PtrConfigListParameters = NULL;
 ptr_ConfigSaveFile         PtrConfigSaveFile = NULL;
 ptr_ConfigSetParameter     PtrConfigSetParameter = NULL;
-ptr_ConfigGetParameter     PtrConfigGetParameter = NULL;ptr_ConfigGetParameterType PtrConfigGetParameterType = NULL;
+ptr_ConfigGetParameter     PtrConfigGetParameter = NULL;
+ptr_ConfigGetParameterType PtrConfigGetParameterType = NULL;
 ptr_ConfigGetParameterHelp PtrConfigGetParameterHelp = NULL;
 ptr_ConfigSetDefaultInt    PtrConfigSetDefaultInt = NULL;
 ptr_ConfigSetDefaultFloat  PtrConfigSetDefaultFloat = NULL;
@@ -62,8 +121,32 @@ ptr_DebugBreakpointLookup  DebugBreakpointLookup = NULL;
 ptr_DebugBreakpointCommand DebugBreakpointCommand = NULL;
 
 /* global variables */
-m64p_dynlib_handle CoreHandle = NULL;#define g_Verbose 0char concat_buff[512];const char* concat(const char* a, const char* b){    strcpy(concat_buff, a);    strcat(concat_buff, b);    return concat_buff;}
-/* functions */void DebugCallback(void *Context, int level, const char *message){    if (level <= 1)        printf("%s Error: %s\n", (const char *) Context, message);    else if (level == 2)        printf("%s Warning: %s\n", (const char *) Context, message);    else if (level == 3 || (level == 5 && g_Verbose))        printf("%s: %s\n", (const char *) Context, message);    else if (level == 4)        printf("%s Status: %s\n", (const char *) Context, message);    /* ignore the verbose info for now */}
+m64p_dynlib_handle CoreHandle = NULL;
+
+#define g_Verbose 0
+
+char concat_buff[512];
+const char* concat(const char* a, const char* b)
+{
+    strcpy(concat_buff, a);
+    strcat(concat_buff, b);
+    return concat_buff;
+}
+
+/* functions */
+void DebugCallback(void *Context, int level, const char *message)
+{
+    if (level <= 1)
+        printf("%s Error: %s\n", (const char *) Context, message);
+    else if (level == 2)
+        printf("%s Warning: %s\n", (const char *) Context, message);
+    else if (level == 3 || (level == 5 && g_Verbose))
+        printf("%s: %s\n", (const char *) Context, message);
+    else if (level == 4)
+        printf("%s Status: %s\n", (const char *) Context, message);
+    /* ignore the verbose info for now */
+}
+
 m64p_error AttachCoreLib(const char *CoreLibFilepath)
 {
     /* check if Core DLL is already attached */
@@ -161,7 +244,8 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     PtrConfigListParameters   = (ptr_ConfigListParameters)   osal_dynlib_getproc(CoreHandle, "ConfigListParameters");
     PtrConfigSaveFile         = (ptr_ConfigSaveFile)         osal_dynlib_getproc(CoreHandle, "ConfigSaveFile");
     PtrConfigSetParameter     = (ptr_ConfigSetParameter)     osal_dynlib_getproc(CoreHandle, "ConfigSetParameter");
-    PtrConfigGetParameter     = (ptr_ConfigGetParameter)     osal_dynlib_getproc(CoreHandle, "ConfigGetParameter");    PtrConfigGetParameterType = (ptr_ConfigGetParameterType) osal_dynlib_getproc(CoreHandle, "ConfigGetParameterType");
+    PtrConfigGetParameter     = (ptr_ConfigGetParameter)     osal_dynlib_getproc(CoreHandle, "ConfigGetParameter");
+    PtrConfigGetParameterType = (ptr_ConfigGetParameterType) osal_dynlib_getproc(CoreHandle, "ConfigGetParameterType");
     PtrConfigGetParameterHelp = (ptr_ConfigGetParameterHelp) osal_dynlib_getproc(CoreHandle, "ConfigGetParameterHelp");
     PtrConfigSetDefaultInt    = (ptr_ConfigSetDefaultInt)    osal_dynlib_getproc(CoreHandle, "ConfigSetDefaultInt");
     PtrConfigSetDefaultFloat  = (ptr_ConfigSetDefaultFloat)  osal_dynlib_getproc(CoreHandle, "ConfigSetDefaultFloat");
@@ -269,8 +353,16 @@ m64p_error DetachCoreLib(void)
 
     return M64ERR_SUCCESS;
 }
-m64p_handle getConfigUI(){    assert(l_ConfigPlugins != NULL);    return l_ConfigPlugins;}
-m64p_error OpenConfigurationHandles(const char* defaultPluginDir,                                    const char* defaultVideoPlugin, const char* defaultAudioPlugin,                                    const char* defaultInputPlugin, const char* defaultRspPlugin)
+
+m64p_handle getConfigUI()
+{
+    assert(l_ConfigPlugins != NULL);
+    return l_ConfigPlugins;
+}
+
+m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
+                                    const char* defaultVideoPlugin, const char* defaultAudioPlugin,
+                                    const char* defaultInputPlugin, const char* defaultRspPlugin)
 {
     m64p_error rval;
 
@@ -288,23 +380,62 @@ m64p_error OpenConfigurationHandles(const char* defaultPluginDir,              
         fprintf(stderr, "Error (%s:%i): failed to open 'Video-General' configuration section\n", __FILE__, __LINE__);
         return rval;
     }
-    rval = (*PtrConfigOpenSection)("UI-Plugins", &l_ConfigPlugins);
+
+    rval = (*PtrConfigOpenSection)("UI-Plugins", &l_ConfigPlugins);
     if (rval != M64ERR_SUCCESS)
     {
         fprintf(stderr, "Error (%s:%i): failed to open 'UI-Plugins' configuration section\n", __FILE__, __LINE__);
         return rval;
     }
-    // "mupen64plus-video-rice"    // "mupen64plus-audio-sdl"    // "mupen64plus-input-sdl    // "mupen64plus-rsp-hle"
+
+    // "mupen64plus-video-rice"
+    // "mupen64plus-audio-sdl"
+    // "mupen64plus-input-sdl
+    // "mupen64plus-rsp-hle"
+
     /* Set default values for my Config parameters */
-    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "PluginDir", defaultPluginDir,                                 "Directory in which to search for plugins");
-    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "VideoPlugin",                                 concat(defaultVideoPlugin, OSAL_DLL_EXTENSION),                                 "Filename of video plugin");
-    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "AudioPlugin",                                 concat(defaultAudioPlugin, OSAL_DLL_EXTENSION),                                 "Filename of audio plugin");
-    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "InputPlugin",                                 concat(defaultInputPlugin, OSAL_DLL_EXTENSION),                                 "Filename of input plugin");
-    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "RspPlugin",                                 concat(defaultRspPlugin, OSAL_DLL_EXTENSION),                                 "Filename of RSP plugin");
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "PluginDir", defaultPluginDir,
+                                 "Directory in which to search for plugins");
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "VideoPlugin",
+                                 concat(defaultVideoPlugin, OSAL_DLL_EXTENSION),
+                                 "Filename of video plugin");
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "AudioPlugin",
+                                 concat(defaultAudioPlugin, OSAL_DLL_EXTENSION),
+                                 "Filename of audio plugin");
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "InputPlugin",
+                                 concat(defaultInputPlugin, OSAL_DLL_EXTENSION),
+                                 "Filename of input plugin");
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "RspPlugin",
+                                 concat(defaultRspPlugin, OSAL_DLL_EXTENSION),
+                                 "Filename of RSP plugin");
 
     return M64ERR_SUCCESS;
 }
-m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,                            char videoPlugin[], const int videoPluginLen,                            char audioPlugin[], const int audioPluginLen,                            char inputPlugin[], const int inputPluginLen,                            char rspPlugin[],   const int rspPluginLen){    m64p_error rval = getStringConfigParam(l_ConfigPlugins, "PluginDir", pluginsPath, pluginsPathLen);    if (rval != M64ERR_SUCCESS) return rval;    rval = getStringConfigParam(l_ConfigPlugins, "VideoPlugin", videoPlugin, videoPluginLen);    if (rval != M64ERR_SUCCESS) return rval;    rval = getStringConfigParam(l_ConfigPlugins, "AudioPlugin", audioPlugin, audioPluginLen);    if (rval != M64ERR_SUCCESS) return rval;    rval = getStringConfigParam(l_ConfigPlugins, "InputPlugin", inputPlugin, inputPluginLen);    if (rval != M64ERR_SUCCESS) return rval;    rval = getStringConfigParam(l_ConfigPlugins, "RspPlugin", rspPlugin, rspPluginLen);    if (rval != M64ERR_SUCCESS) return rval;    return M64ERR_SUCCESS;}
+
+m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
+                            char videoPlugin[], const int videoPluginLen,
+                            char audioPlugin[], const int audioPluginLen,
+                            char inputPlugin[], const int inputPluginLen,
+                            char rspPlugin[],   const int rspPluginLen)
+{
+    m64p_error rval = getStringConfigParam(l_ConfigPlugins, "PluginDir", pluginsPath, pluginsPathLen);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    rval = getStringConfigParam(l_ConfigPlugins, "VideoPlugin", videoPlugin, videoPluginLen);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    rval = getStringConfigParam(l_ConfigPlugins, "AudioPlugin", audioPlugin, audioPluginLen);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    rval = getStringConfigParam(l_ConfigPlugins, "InputPlugin", inputPlugin, inputPluginLen);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    rval = getStringConfigParam(l_ConfigPlugins, "RspPlugin", rspPlugin, rspPluginLen);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    return M64ERR_SUCCESS;
+}
+
 m64p_error SaveConfigurationOptions(void)
 {
     /* if shared data directory was given on the command line, write it into the config file */
@@ -324,5 +455,188 @@ m64p_error SaveConfigurationOptions(void)
         (*PtrConfigSetParameter)(l_ConfigPlugins, "RspPlugin", M64TYPE_STRING, g_RspPlugin);
 
     return (*PtrConfigSaveFile)();
-}const char* getErrorMessage(m64p_error err){    return (*CoreErrorMessage)(err);}const char* getParameterHelp(m64p_handle* section, const char* ParamName){    return (*PtrConfigGetParameterHelp)(*section, ParamName);}m64p_error ReadConfigSectionParameters(const char* SectionName,                                        void (*ParameterListCallback)(void * sectionHandle,                                                                       const char *ParamName,                                                                       m64p_type ParamType)){    m64p_handle section;    m64p_error result = (*PtrConfigOpenSection)(SectionName, &section) ;    if (result != M64ERR_SUCCESS)    {        return result;    }    result = (*PtrConfigListParameters)(section, &section /* user data */, ParameterListCallback);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName)){    m64p_error result = (*PtrConfigListSections)(NULL /* user data */, SectionListCallback);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error getIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut){    int value = -1;    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &value, sizeof(int));    if (result != M64ERR_SUCCESS)    {        return result;    }    *valueOut = value;    return M64ERR_SUCCESS;}m64p_error getBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut){    int value = -1;    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &value, sizeof(int));    if (result != M64ERR_SUCCESS)    {        return result;    }    *valueOut = value;    return M64ERR_SUCCESS;}m64p_error getFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, float* valueOut){    float value = -1;    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_FLOAT, &value, sizeof(float));    if (result != M64ERR_SUCCESS)    {        return result;    }    *valueOut = value;    return M64ERR_SUCCESS;}m64p_error getStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, char* valueOut, int maxSize){    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_STRING, valueOut, maxSize);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error setIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue){    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &newValue);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error setFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue){    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_FLOAT, &newValue);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error setBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue){    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_BOOL, &newValue);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error setStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue){    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_STRING, newValue);    if (result != M64ERR_SUCCESS)    {        return result;    }    return M64ERR_SUCCESS;}m64p_error createStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue,                                   const char* ParamHelp){    return (*PtrConfigSetDefaultString)(ConfigSectionHandle, ParamName, newValue, ParamHelp);}m64p_error createIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue,                                const char* ParamHelp){    return (*PtrConfigSetDefaultInt)(ConfigSectionHandle, ParamName, newValue, ParamHelp);}m64p_error createFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue,                                 const char* ParamHelp){    return (*PtrConfigSetDefaultFloat)(ConfigSectionHandle, ParamName, newValue, ParamHelp);}m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue,                                 const char* ParamHelp){    return (*PtrConfigSetDefaultBool)(ConfigSectionHandle, ParamName, newValue, ParamHelp);}m64p_error InitCore(void){    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath, "Core",
-                                      DebugCallback, NULL, NULL);}m64p_handle getSectionHandle(const char* sectionName){    m64p_handle handle;    m64p_error result = (*PtrConfigOpenSection)(sectionName, &handle);    assert (result == M64ERR_SUCCESS);    return handle;}m64p_error saveConfig(){    return (*PtrConfigSaveFile)();}
+}
+
+const char* getErrorMessage(m64p_error err)
+{
+    return (*CoreErrorMessage)(err);
+}
+
+const char* getParameterHelp(m64p_handle* section, const char* ParamName)
+{
+    return (*PtrConfigGetParameterHelp)(*section, ParamName);
+}
+
+m64p_error ReadConfigSectionParameters(const char* SectionName,
+                                        void (*ParameterListCallback)(void * sectionHandle,
+                                                                       const char *ParamName,
+                                                                       m64p_type ParamType))
+{
+    m64p_handle section;
+
+    m64p_error result = (*PtrConfigOpenSection)(SectionName, &section) ;
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    result = (*PtrConfigListParameters)(section, &section /* user data */, ParameterListCallback);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName))
+{
+    m64p_error result = (*PtrConfigListSections)(NULL /* user data */, SectionListCallback);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error getIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut)
+{
+    int value = -1;
+    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &value, sizeof(int));
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    *valueOut = value;
+    return M64ERR_SUCCESS;
+}
+
+m64p_error getBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut)
+{
+    int value = -1;
+    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &value, sizeof(int));
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    *valueOut = value;
+    return M64ERR_SUCCESS;
+}
+
+m64p_error getFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, float* valueOut)
+{
+    float value = -1;
+    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_FLOAT, &value, sizeof(float));
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    *valueOut = value;
+    return M64ERR_SUCCESS;
+}
+
+m64p_error getStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, char* valueOut, int maxSize)
+{
+    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_STRING, valueOut, maxSize);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error setIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue)
+{
+    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &newValue);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error setFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue)
+{
+    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_FLOAT, &newValue);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error setBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue)
+{
+    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_BOOL, &newValue);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error setStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue)
+{
+    m64p_error result = (*PtrConfigSetParameter)(ConfigSectionHandle, ParamName, M64TYPE_STRING, newValue);
+    if (result != M64ERR_SUCCESS)
+    {
+        return result;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error createStringConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const char* newValue,
+                                   const char* ParamHelp)
+{
+    return (*PtrConfigSetDefaultString)(ConfigSectionHandle, ParamName, newValue, ParamHelp);
+}
+
+m64p_error createIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue,
+                                const char* ParamHelp)
+{
+    return (*PtrConfigSetDefaultInt)(ConfigSectionHandle, ParamName, newValue, ParamHelp);
+}
+
+m64p_error createFloatConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const float newValue,
+                                 const char* ParamHelp)
+{
+    return (*PtrConfigSetDefaultFloat)(ConfigSectionHandle, ParamName, newValue, ParamHelp);
+}
+
+m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, const int newValue,
+                                 const char* ParamHelp)
+{
+    return (*PtrConfigSetDefaultBool)(ConfigSectionHandle, ParamName, newValue, ParamHelp);
+}
+
+
+
+m64p_error InitCore(void)
+{
+    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath, "Core",
+                                      DebugCallback, NULL, NULL);
+}
+
+m64p_handle getSectionHandle(const char* sectionName)
+{
+    m64p_handle handle;
+    m64p_error result = (*PtrConfigOpenSection)(sectionName, &handle);
+
+    assert (result == M64ERR_SUCCESS);
+
+    return handle;
+}
+
+m64p_error saveConfig()
+{
+    return (*PtrConfigSaveFile)();
+}
