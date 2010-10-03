@@ -159,29 +159,32 @@ bool wxMiniApp::OnInit()
     // SDL_INIT_VIDEO is necessary to init keyboard support, which is in turn necessary for our input module
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
     
-    printf(" __  __                         __   _  _   ____  _             \n");  
+    printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
     printf("| |\\/| | | | | '_ \\ / _ \\ '_ \\| '_ \\| || |_| |_) | | | | / __|  \n");
     printf("| |  | | |_| | |_) |  __/ | | | (_) |__   _|  __/| | |_| \\__ \\  \n");
     printf("|_|  |_|\\__,_| .__/ \\___|_| |_|\\___/   |_| |_|   |_|\\__,_|___/  \n");
-    printf("             |_|         http://code.google.com/p/mupen64plus/  \n");
+    printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
+    
+    wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+    printf("Will look for resources in <%s>\n", (const char*)resources.utf8_str());
     
     try
     {
-        // FIXME: don't hardcode path
-        m_api = new Mupen64PlusPlus("/Developer/hg/mupen64plus/mupen64plus-core/projects/unix/libmupen64plus.dylib");
+        // FIXME: don't hardcode lib name, will be different under other systems
+        m_api = new Mupen64PlusPlus(resources + "libmupen64plus.dylib");
     }
     catch (std::runtime_error& e)
     {
-        fprintf(stderr, "%s\n",  e.what());
+        fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
         return false;
     }
     
     
     try
     {
-        // TODO: don't hardcode path and plugin choice!!
-        m_api->loadPlugins("/Developer/hg/mupen64plus",
+        // TODO: don't hardcode plugin choice
+        m_api->loadPlugins(resources,
                            "mupen64plus-video-rice",
                            "mupen64plus-audio-sdl",
                            "mupen64plus-input-sdl",
@@ -189,7 +192,7 @@ bool wxMiniApp::OnInit()
     }
     catch (std::runtime_error& e)
     {
-        fprintf(stderr, "%s\n",  e.what());
+        fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
         return false;
     }
     
@@ -204,7 +207,7 @@ bool wxMiniApp::OnInit()
     }
     catch (std::runtime_error& e)
     {
-        fprintf(stderr, "%s\n",  e.what());
+        fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
         return false;
     }
     
@@ -265,7 +268,6 @@ bool wxMiniApp::OnInit()
     
     wxInitAllImageHandlers();
     //wxImage::AddHandler(new wxPNGHandler());
-    wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
     wxBitmap icon_mupen  (resources + "mupenicon.png", wxBITMAP_TYPE_PNG);    
     wxBitmap icon_input  (resources + "input.png",     wxBITMAP_TYPE_PNG);
     wxBitmap icon_cpu    (resources + "emulation.png", wxBITMAP_TYPE_PNG);
