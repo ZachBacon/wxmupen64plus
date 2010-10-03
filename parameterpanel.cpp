@@ -29,6 +29,7 @@
 #include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/cshelp.h>
+#include <wx/filepicker.h>
 
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
@@ -124,14 +125,18 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 if (section.m_parameters[p].m_special_type == BINDING_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()));
-                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                }
+                else if (section.m_parameters[p].m_special_type == DIRECTORY)
+                {
+                    ctrl = new wxDirPickerCtrl(this, wxID_ANY, wxString(currVal.c_str()));
+                    ctrl->SetMinSize( wxSize(350, -1) );
                 }
                 else
                 {
                     ctrl = new wxTextCtrl(this, wxID_ANY, currVal, wxDefaultPosition, wxSize(150, -1));
-                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
                 }
                 
+                sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 break;
             }
                 
@@ -240,6 +245,13 @@ void ParameterPanel::commitNewValues()
                     printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
                            (const char*)ctrl->getBindingString().mb_str());
                     param->setStringValue((const char*)ctrl->getBindingString().mb_str());
+                }
+                else if (dynamic_cast<wxDirPickerCtrl*>(m_parameter_widgets[n])  != NULL)
+                {
+                    wxDirPickerCtrl* ctrl = (wxDirPickerCtrl*)m_parameter_widgets[n];
+                    printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
+                           (const char*)ctrl->GetPath().mb_str());
+                    param->setStringValue((const char*)ctrl->GetPath().mb_str());
                 }
                 else
                 {

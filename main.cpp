@@ -251,22 +251,29 @@ bool wxMiniApp::OnInit()
                    section.m_parameters[p].m_help_string.c_str(),
                    buffer);
             
+            wxString param_wxname(section.m_parameters[p].m_param_name);
+            
             // Move key mappings from wherever they are into a separate input section
             // TODO: find better way to identify key mappings?
-            wxString section_wxname(section.m_parameters[p].m_param_name);
-            if (section_wxname.StartsWith("Kbd Mapping"))
+            if (param_wxname.StartsWith("Kbd Mapping"))
             {
                 section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
             }
-            else if (section_wxname.StartsWith("Joy Mapping"))
+            else if (param_wxname.StartsWith("Joy Mapping"))
             {
                 // TODO: create a special display type for joystick
                 //section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
             }
+            
+            else if (param_wxname == "PluginDir")
+            {
+                section.m_parameters[p].m_special_type = DIRECTORY;
+            }
+            
         }
     }
     

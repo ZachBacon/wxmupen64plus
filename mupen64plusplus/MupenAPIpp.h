@@ -51,7 +51,10 @@ enum SpecialParamType
     KEYBOARD_KEY_INT,
 
     /** A key binding, stored using "key(111)" format in config */
-    BINDING_STRING
+    BINDING_STRING,
+    
+    /** A directory parameter (primitive type = string)*/
+    DIRECTORY
 };
 
 class ConfigParam
