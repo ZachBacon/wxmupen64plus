@@ -268,12 +268,18 @@ bool wxMiniApp::OnInit()
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
             }
-            
-            else if (param_wxname == "PluginDir")
+            else if (param_wxname == "PluginDir" || param_wxname == "ScreenshotPath" ||
+                     param_wxname == "SaveStatePath" || param_wxname == "SharedDataPath")
             {
                 section.m_parameters[p].m_special_type = DIRECTORY;
             }
-            
+            else if (param_wxname == "R4300Emulator")
+            {
+                ConfigParam& param = section.m_parameters[p];
+                param.m_choices.push_back( ConfigParamChoice(_("Pure Interpreter"), 0) );
+                param.m_choices.push_back( ConfigParamChoice(_("Cached Interpreter"), 1) );
+                param.m_choices.push_back( ConfigParamChoice(_("Dynamic Recompiler"), 2) );
+            }
         }
     }
     

@@ -65,7 +65,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 if (section.m_parameters[p].m_special_type == KEYBOARD_KEY_INT)
                 {
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
-                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (section.m_parameters[p].m_choices.size() > 0)
                 {
@@ -92,14 +92,15 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                     choice->SetSelection(selection);
                     
                     ctrl = choice;
-                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else
                 {
                     ctrl = new wxSpinCtrl(this, wxID_ANY, wxString::Format("%i", currVal),
                                           wxDefaultPosition, wxSize(100, -1), wxSP_ARROW_KEYS,
                                           0 /* min */, 99999 /* max */);
-                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    ctrl->SetMaxSize(wxSize(100, -1));
+                    sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }                break;
             }
                             case M64TYPE_FLOAT:
