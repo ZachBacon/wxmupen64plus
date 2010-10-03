@@ -171,8 +171,11 @@ bool wxMiniApp::OnInit()
     
     try
     {
-        // FIXME: don't hardcode lib name, will be different under other systems
-        m_api = new Mupen64PlusPlus(resources + "libmupen64plus.dylib");
+        m_api = new Mupen64PlusPlus(resources + "libmupen64plus" + OSAL_DLL_EXTENSION,
+                                    "mupen64plus-video-rice",
+                                    "mupen64plus-audio-sdl",
+                                    "mupen64plus-input-sdl",
+                                    "mupen64plus-rsp-hle");
     }
     catch (std::runtime_error& e)
     {
@@ -183,7 +186,7 @@ bool wxMiniApp::OnInit()
     
     try
     {
-        // TODO: don't hardcode plugin choice
+        // TODO: don't hardcode plugin choice, but read it from config instead
         m_api->loadPlugins(resources,
                            "mupen64plus-video-rice",
                            "mupen64plus-audio-sdl",

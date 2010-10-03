@@ -1,5 +1,5 @@
 #include "m64p_types.h"#include "m64p_common.h"#include "m64p_frontend.h"#include "m64p_config.h"#include "m64p_debugger.h"
-#include "version.h"#include "plugin.h"#include "main/main.h"#include "mupen64plusplus/osal_preproc.h"#include "mupen64plusplus/osal_dynamiclib.h"#include <stdio.h>#include <assert.h>#ifndef NULL
+#include "version.h"#include "plugin.h"#include "main/main.h"#include "mupen64plusplus/osal_preproc.h"#include "mupen64plusplus/osal_dynamiclib.h"#include <stdio.h>#include <assert.h>#include <string.h>#ifndef NULL
 #define NULL 0#endif/** static (local) variables **/static m64p_handle l_ConfigCore = NULL;static m64p_handle l_ConfigVideo = NULL;static m64p_handle l_ConfigPlugins = NULL;//static const char *l_CoreLibPath = NULL;static const char *l_ConfigDirPath = NULL;//static const char *l_ROMFilepath = NULL;       // filepath of ROM to load & run at startup#if defined(SHAREDIR)  static const char *l_DataDirPath = SHAREDIR;#else  static const char *l_DataDirPath = NULL;#endif/* global data definitions */int g_CoreCapabilities;
 /* definitions of pointers to Core common functions */
 ptr_CoreErrorMessage    CoreErrorMessage = NULL;
@@ -63,7 +63,7 @@ ptr_DebugBreakpointLookup  DebugBreakpointLookup = NULL;
 ptr_DebugBreakpointCommand DebugBreakpointCommand = NULL;
 
 /* global variables */
-m64p_dynlib_handle CoreHandle = NULL;#define g_Verbose 0
+m64p_dynlib_handle CoreHandle = NULL;#define g_Verbose 0char concat_buff[512];const char* concat(const char* a, const char* b){    strcpy(concat_buff, a);    strcat(concat_buff, b);    return concat_buff;}
 /* functions */void DebugCallback(void *Context, int level, const char *message){    if (level <= 1)        printf("%s Error: %s\n", (const char *) Context, message);    else if (level == 2)        printf("%s Warning: %s\n", (const char *) Context, message);    else if (level == 3 || (level == 5 && g_Verbose))        printf("%s: %s\n", (const char *) Context, message);    else if (level == 4)        printf("%s Status: %s\n", (const char *) Context, message);    /* ignore the verbose info for now */}
 m64p_error AttachCoreLib(const char *CoreLibFilepath)
 {
@@ -272,7 +272,7 @@ m64p_error DetachCoreLib(void)
     return M64ERR_SUCCESS;
 }
 m64p_handle getConfigUI(){    assert(l_ConfigPlugins != NULL);    return l_ConfigPlugins;}
-m64p_error OpenConfigurationHandles(void)
+m64p_error OpenConfigurationHandles(const char* defaultVideoPlugin, const char* defaultAudioPlugin,                                    const char* defaultInputPlugin, const char* defaultRspPlugin)
 {
     m64p_error rval;
 
@@ -296,13 +296,13 @@ m64p_error OpenConfigurationHandles(void)
         fprintf(stderr, "Error (%s:%i): failed to open 'UI-Plugins' configuration section\n", __FILE__, __LINE__);
         return rval;
     }
-
+    // "mupen64plus-video-rice"    // "mupen64plus-audio-sdl"    // "mupen64plus-input-sdl    // "mupen64plus-rsp-hle"
     /* Set default values for my Config parameters */
-    (*ConfigSetDefaultString)(l_ConfigPlugins, "PluginDir", OSAL_CURRENT_DIR, "Directory in which to search for plugins");
-    (*ConfigSetDefaultString)(l_ConfigPlugins, "VideoPlugin", "mupen64plus-video-rice" OSAL_DLL_EXTENSION, "Filename of video plugin");
-    (*ConfigSetDefaultString)(l_ConfigPlugins, "AudioPlugin", "mupen64plus-audio-sdl" OSAL_DLL_EXTENSION, "Filename of audio plugin");
-    (*ConfigSetDefaultString)(l_ConfigPlugins, "InputPlugin", "mupen64plus-input-sdl" OSAL_DLL_EXTENSION, "Filename of input plugin");
-    (*ConfigSetDefaultString)(l_ConfigPlugins, "RspPlugin", "mupen64plus-rsp-hle" OSAL_DLL_EXTENSION, "Filename of RSP plugin");
+    (*ConfigSetDefaultString)(l_ConfigPlugins, "PluginDir", OSAL_CURRENT_DIR,                              "Directory in which to search for plugins");
+    (*ConfigSetDefaultString)(l_ConfigPlugins, "VideoPlugin",                              concat(defaultVideoPlugin, OSAL_DLL_EXTENSION),                              "Filename of video plugin");
+    (*ConfigSetDefaultString)(l_ConfigPlugins, "AudioPlugin",                              concat(defaultAudioPlugin, OSAL_DLL_EXTENSION),                              "Filename of audio plugin");
+    (*ConfigSetDefaultString)(l_ConfigPlugins, "InputPlugin",                              concat(defaultInputPlugin, OSAL_DLL_EXTENSION),                              "Filename of input plugin");
+    (*ConfigSetDefaultString)(l_ConfigPlugins, "RspPlugin",                              concat(defaultRspPlugin, OSAL_DLL_EXTENSION),                              "Filename of RSP plugin");
 
     return M64ERR_SUCCESS;
 }
