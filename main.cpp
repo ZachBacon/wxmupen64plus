@@ -356,6 +356,124 @@ bool wxMiniApp::OnInit()
                 section.m_section_name = (const char*)(wxString(section.m_section_name).AfterFirst('-').mb_str());
             }
             
+            if (section.m_section_name == "Rice")
+            {
+                ConfigParam* frameBufferSetting = section.getParamWithName("FrameBufferSetting");
+                if (frameBufferSetting != NULL)
+                {
+                    frameBufferSetting->m_choices.push_back( ConfigParamChoice(_("ROM Default"), 0) );
+                    frameBufferSetting->m_choices.push_back( ConfigParamChoice(_("Disabled"), 1) );
+                }
+                
+                ConfigParam* rttSetting = section.getParamWithName("RenderToTexture");
+                if (rttSetting != NULL)
+                {
+                    rttSetting->m_choices.push_back( ConfigParamChoice(_("None"), 0) );
+                    rttSetting->m_choices.push_back( ConfigParamChoice(_("Ignore"), 1) );
+                    rttSetting->m_choices.push_back( ConfigParamChoice(_("Normal"), 2) );
+                    rttSetting->m_choices.push_back( ConfigParamChoice(_("Write Back"), 3) );
+                    rttSetting->m_choices.push_back( ConfigParamChoice(_("Write Back and Reload"), 4) );
+                }
+                
+                ConfigParam* screenUpSetting = section.getParamWithName("ScreenUpdateSetting");
+                if (screenUpSetting != NULL)
+                {
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("ROM Default"), 0) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("VI Origin Update"), 1) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("VI Origin Change"), 2) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("CI Change"), 3) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("First CI Change"), 4) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("First Primitive Drawn"), 5) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("Before Screen Clear"), 6) );
+                    screenUpSetting->m_choices.push_back( ConfigParamChoice(_("After Screen Clear"), 7) );
+                }
+                
+                ConfigParam* fogSetting = section.getParamWithName("FogMethod");
+                if (fogSetting != NULL)
+                {
+                    fogSetting->m_choices.push_back( ConfigParamChoice(_("Disable"), 0) );
+                    fogSetting->m_choices.push_back( ConfigParamChoice(_("Enable N64 Choose"), 1) );
+                    fogSetting->m_choices.push_back( ConfigParamChoice(_("Force Fog"), 2) );                    
+                }
+                
+                ConfigParam* forceTextureFilterSetting = section.getParamWithName("ForceTextureFilter");
+                if (forceTextureFilterSetting != NULL)
+                {
+                    forceTextureFilterSetting->m_choices.push_back( ConfigParamChoice(_("Auto (N64 Choose)"), 0) );
+                    forceTextureFilterSetting->m_choices.push_back( ConfigParamChoice(_("Force no Filtering"), 1) );
+                    forceTextureFilterSetting->m_choices.push_back( ConfigParamChoice(_("Force Filtering"), 2) );                    
+                }
+                
+                ConfigParam* textureFilteringMethod = section.getParamWithName("TextureFilteringMethod");
+                if (textureFilteringMethod != NULL)
+                {
+                    textureFilteringMethod->m_choices.push_back( ConfigParamChoice(_("No Filtering"), 0) );
+                    textureFilteringMethod->m_choices.push_back( ConfigParamChoice(_("Bilinear"), 1) );
+                    textureFilteringMethod->m_choices.push_back( ConfigParamChoice(_("Trilinear"), 2) );                    
+                }
+                
+                ConfigParam* textureEnhancement = section.getParamWithName("TextureEnhancement");
+                if (textureEnhancement != NULL)
+                {
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("None"), 0) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("2X"), 1) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("2XSAI"), 2) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("HQ2X"), 3) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("LQ2X"), 4) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("HQ4X"), 5) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("Sharpen"), 6) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("Sharpen More"), 7) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("External"), 8) );
+                    textureEnhancement->m_choices.push_back( ConfigParamChoice(_("Mirror"), 9) );
+                }
+                
+                ConfigParam* textureQuality = section.getParamWithName("TextureQuality");
+                if (textureQuality != NULL)
+                {
+                    textureQuality->m_choices.push_back( ConfigParamChoice(_("Defaut"), 0) );
+                    textureQuality->m_choices.push_back( ConfigParamChoice(_("32 Bits"), 1) );
+                    textureQuality->m_choices.push_back( ConfigParamChoice(_("16 Bits"), 2) );
+                }
+                
+                ConfigParam* multiSampling = section.getParamWithName("MultiSampling");
+                if (multiSampling != NULL)
+                {
+                    multiSampling->m_choices.push_back( ConfigParamChoice(_("Off"), 0) );
+                    multiSampling->m_choices.push_back( ConfigParamChoice("2", 2) );
+                    multiSampling->m_choices.push_back( ConfigParamChoice("4", 4) );
+                    multiSampling->m_choices.push_back( ConfigParamChoice("8", 8) );
+                    multiSampling->m_choices.push_back( ConfigParamChoice("16", 16) );
+                }
+                
+                ConfigParam* colorQuality = section.getParamWithName("ColorQuality");
+                if (colorQuality != NULL)
+                {
+                    colorQuality->m_choices.push_back( ConfigParamChoice(_("32 Bits"), 0) );
+                    colorQuality->m_choices.push_back( ConfigParamChoice(_("16 Bits"), 1) );
+                }
+                
+                ConfigParam* openGLDepthBufferSetting = section.getParamWithName("OpenGLDepthBufferSetting");
+                if (openGLDepthBufferSetting != NULL)
+                {
+                    openGLDepthBufferSetting->m_choices.push_back( ConfigParamChoice(_("32 Bits"), 32) );
+                    openGLDepthBufferSetting->m_choices.push_back( ConfigParamChoice(_("16 Bits"), 16) );
+                }
+                
+                ConfigParam* openGLRenderSetting = section.getParamWithName("OpenGLRenderSetting");
+                if (openGLRenderSetting != NULL)
+                {
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice(_("Auto"), 0) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("OGL 1.1", 1) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("OGL 1.2", 2) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("OGL 1.3", 3) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("OGL 1.4", 4) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("OGL 1.4 v2", 5) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("OGL TNT2", 6) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice("NVIDIA OGL", 7) );
+                    openGLRenderSetting->m_choices.push_back( ConfigParamChoice(_("OGL Fragment Program"), 8) );
+                }
+            }
+            
             videoSections.push_back(section);
             //m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, section.m_section_name,
             //                                           icon_video, icon_video), section));
@@ -437,8 +555,6 @@ bool wxMiniApp::OnInit()
                     deviceParam->m_choices.push_back( ConfigParamChoice(wxString::Format(_("Joystick %i"), n), n) );
                 }
             }
-
-
             inputSections.push_back(section);
             
             /*
