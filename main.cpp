@@ -480,6 +480,20 @@ bool wxMiniApp::OnInit()
         }
         else if (section.m_section_name == "Audio-SDL")
         {
+            ConfigParam* resample = section.getParamWithName("RESAMPLE");
+            if (resample != NULL)
+            {
+                resample->m_choices.push_back( ConfigParamChoice(_("Unfiltered"), 1) );
+                resample->m_choices.push_back( ConfigParamChoice(_("SINC Resampling"), 2) );
+            }
+            
+            ConfigParam* volumeCtrType = section.getParamWithName("VOLUME_CONTROL_TYPE");
+            if (volumeCtrType != NULL)
+            {
+                volumeCtrType->m_choices.push_back( ConfigParamChoice(_("SDL (mupen output only)"), 1) );
+                volumeCtrType->m_choices.push_back( ConfigParamChoice(_("OSS mixer (master PC volume)"), 2) );
+            }
+                
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Audio"),
                                                       icon_audio, icon_audio), section));
         }
