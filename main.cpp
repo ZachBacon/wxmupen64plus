@@ -427,7 +427,7 @@ bool wxMiniApp::OnInit()
             }
 
             ConfigParam* deviceParam = section.getParamWithName("device");
-            if (pluginParam != NULL)
+            if (deviceParam != NULL)
             {
                 deviceParam->m_choices.push_back( ConfigParamChoice(_("Keyboard/Mouse"), -2) );
                 deviceParam->m_choices.push_back( ConfigParamChoice(_("Auto Config"), -1) );
