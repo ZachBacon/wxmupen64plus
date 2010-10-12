@@ -53,6 +53,9 @@ enum SpecialParamType
     /** A key binding, stored using "key(111)" format in config */
     BINDING_STRING,
     
+    /** A key binding, stored using "key(111, 222)" format in config */
+    BINDING_DOUBLE_STRING,
+    
     /** A directory parameter (primitive type = string)*/
     DIRECTORY
 };

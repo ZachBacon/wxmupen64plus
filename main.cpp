@@ -540,8 +540,8 @@ bool wxMiniApp::OnInit()
                 CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING, BINDING_STRING);
                 CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING, BINDING_STRING);
                 CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING);
+                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING);
             }
             catch (std::exception& e)
             {

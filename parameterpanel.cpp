@@ -125,7 +125,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 
                 if (section.m_parameters[p].m_special_type == BINDING_STRING)
                 {
-                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()));
+                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()), false);
+                }
+                else if (section.m_parameters[p].m_special_type == BINDING_DOUBLE_STRING)
+                {
+                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()), true);
                 }
                 else if (section.m_parameters[p].m_special_type == DIRECTORY)
                 {

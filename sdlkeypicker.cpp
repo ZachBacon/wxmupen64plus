@@ -25,6 +25,7 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
+#include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/event.h>
 #include <wx/sizer.h>
@@ -109,26 +110,64 @@ public:
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
 
-wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxButton(parent, wxID_ANY, "")
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxPanel(parent, wxID_ANY)
 {
     m_key = key;
     m_format = FORMAT_KEY_INT;
+    m_btn2 = NULL;
     
+    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    m_btn = new wxButton(this, wxID_ANY, "");
+#ifdef __WXMAC__
+    sizer->AddSpacer(2);
+    sizer->Add(m_btn, 1, wxBOTTOM, 5);
+    sizer->AddSpacer(2);
+#else
+    sizer->Add(m_btn, 1);
+#endif
     updateLabel();
-    Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    
+    m_btn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
     
     SetMinSize( wxSize(150, -1) );
+    SetSizerAndFit(sizer);
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr) : wxButton(parent, wxID_ANY, "")
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) : wxPanel(parent, wxID_ANY)
 {
-    m_format = FORMAT_STRING;
+    m_format = (isDouble ? FORMAT_DOUBLE_STRING : FORMAT_STRING);
     m_binding = curr;
+    m_btn2 = NULL;
     
+    wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+    m_btn = new wxButton(this, wxID_ANY, "");
+#ifdef __WXMAC__
+    sizer->AddSpacer(2);
+    sizer->Add(m_btn, 1, wxBOTTOM, 5);
+    sizer->AddSpacer(2);
+#else
+    sizer->Add(m_btn, 1);
+#endif
+
+    if (m_format == FORMAT_DOUBLE_STRING)
+    {
+        m_btn2 = new wxButton(this, wxID_ANY, "");
+#ifdef __WXMAC__
+        sizer->AddSpacer(2);
+        sizer->Add(m_btn2, 1, wxBOTTOM, 5);
+        sizer->AddSpacer(2);
+#else
+        sizer->Add(m_btn2, 1);
+#endif
+    }
+
     updateLabel();
-    Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    
+    m_btn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    SetMinSize( wxSize(150, -1) );
+    SetSizerAndFit(sizer);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -148,6 +187,10 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
             // TODO: also support gamepad bindings
             m_binding = wxString::Format("key(%i)", key);
         }
+        else if (m_format == FORMAT_DOUBLE_STRING)
+        {
+            // TODO
+        }
         updateLabel();
     }
 }
@@ -157,6 +200,7 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 void wxSDLKeyPicker::updateLabel()
 {
     wxString label;
+    
     if (m_format == FORMAT_KEY_INT)
     {
         if (m_key == SDLK_UNKNOWN)
@@ -190,13 +234,38 @@ void wxSDLKeyPicker::updateLabel()
             label = m_binding;
         }
     }
+    else if (m_format == FORMAT_DOUBLE_STRING)
+    {
+        if (m_binding.StartsWith("key("))
+        {
+            long key1val = -1, key2val = -1;
+            // TODO: also support gamepad bindings
+            wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
+            wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
+            const bool success = key1.ToLong(&key1val) && key2.ToLong(&key2val);
+            if (success)
+            {
+                label = SDL_GetKeyName((SDLKey)key1val);
+                m_btn2->SetLabel(SDL_GetKeyName((SDLKey)key2val));
+            }
+            else
+            {
+                label = m_binding;
+                m_btn2->SetLabel("???");
+            }
+        }
+        else
+        {
+            label = m_binding;
+        }
+    }
     else
     {
         label = "??";
         assert(false);
     }
     
-    SetLabel(label);
+    m_btn->SetLabel(label);
 }
 
 // -----------------------------------------------------------------------------------------------------------

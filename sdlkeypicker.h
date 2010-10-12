@@ -22,12 +22,14 @@
 #ifndef SDL_KEY_PICKER_H
 #define SDL_KEY_PICKER_H
 
-#include <wx/button.h>
+#include <wx/panel.h>
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
-class wxSDLKeyPicker : public wxButton
+class wxButton;
+
+class wxSDLKeyPicker : public wxPanel
 {
     enum Format
     {
@@ -35,7 +37,10 @@ class wxSDLKeyPicker : public wxButton
         FORMAT_KEY_INT,
         
         /** A binding string, may be either keyboard or joystick */
-        FORMAT_STRING
+        FORMAT_STRING,
+        
+        /** Two keys */
+        FORMAT_DOUBLE_STRING
     };
     
     /** The selected key SDL code, or SDLK_UNKNOWN if nothing is selected (for int key mode) */
@@ -46,6 +51,11 @@ class wxSDLKeyPicker : public wxButton
     
     /** Format of this binding picker (int or string) */
     Format m_format;
+    
+    wxButton* m_btn;
+    
+    /** Only used for double-string formatted input */
+    wxButton* m_btn2;
     
 public:
 
@@ -65,8 +75,9 @@ public:
    /**
      * Constructor using the string binding (keyboard or gamepad) format
      * @param curr The current binding
+     * @param isDouble whether this parameter's string contains two values
      */
-    wxSDLKeyPicker(wxWindow* parent, wxString curr);
+    wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble);
     
     /**
      * Get the selected key binding, or SDLK_UNKNOWN if nothing was selected
@@ -84,7 +95,7 @@ public:
      */
     wxString getBindingString() const
     {
-        assert(m_format == FORMAT_STRING);
+        assert(m_format == FORMAT_STRING || m_format == FORMAT_DOUBLE_STRING);
         return m_binding;
     }
 };
