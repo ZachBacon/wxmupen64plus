@@ -166,6 +166,12 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) :
     updateLabel();
     
     m_btn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    
+    if (m_btn2 != NULL)
+    {
+        m_btn2->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    }
+    
     SetMinSize( wxSize(150, -1) );
     SetSizerAndFit(sizer);
 }
@@ -189,7 +195,20 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         }
         else if (m_format == FORMAT_DOUBLE_STRING)
         {
-            // TODO
+            // TODO: gamepad bindings?
+            wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
+            wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
+            
+            if (evt.GetId() == m_btn2->GetId())
+            {
+                key2 = wxString::Format("%i", key);
+            }
+            else
+            {
+                key1 = wxString::Format("%i", key);
+            }
+            
+            m_binding = wxString::Format("key(%s,%s)", key1, key2);
         }
         updateLabel();
     }
@@ -242,11 +261,15 @@ void wxSDLKeyPicker::updateLabel()
             // TODO: also support gamepad bindings
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
-            const bool success = key1.ToLong(&key1val) && key2.ToLong(&key2val);
+            const bool success = (key1.IsEmpty() || key1.ToLong(&key1val)) &&
+                                 (key2.IsEmpty() || key2.ToLong(&key2val));
             if (success)
             {
-                label = SDL_GetKeyName((SDLKey)key1val);
-                m_btn2->SetLabel(SDL_GetKeyName((SDLKey)key2val));
+                label = (key1val < 0 ? "" : SDL_GetKeyName((SDLKey)key1val));
+                if (key2val >= 0)
+                {
+                    m_btn2->SetLabel(SDL_GetKeyName((SDLKey)key2val));
+                }
             }
             else
             {
