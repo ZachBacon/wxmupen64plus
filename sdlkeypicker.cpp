@@ -139,7 +139,15 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
     SDLKey key = dialog.getResult();
     if (key != SDLK_UNKNOWN)
     {
-        m_key = key;
+        if (m_format == FORMAT_KEY_INT)
+        {
+            m_key = key;
+        }
+        else if (m_format == FORMAT_STRING)
+        {
+            // TODO: also support gamepad bindings
+            m_binding = wxString::Format("key(%i)", key);
+        }
         updateLabel();
     }
 }
@@ -165,6 +173,7 @@ void wxSDLKeyPicker::updateLabel()
         if (m_binding.StartsWith("key("))
         {
             long keyval = -1;
+            // TODO: also support gamepad bindings
             wxString key = m_binding.AfterFirst('(').BeforeLast(')');
             const bool success = key.ToLong(&keyval);
             if (success)
