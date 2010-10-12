@@ -116,6 +116,8 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxButton(parent, 
     
     updateLabel();
     Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    
+    SetMinSize( wxSize(150, -1) );
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -160,7 +162,24 @@ void wxSDLKeyPicker::updateLabel()
     }
     else if (m_format == FORMAT_STRING)
     {
-        label = m_binding;
+        if (m_binding.StartsWith("key("))
+        {
+            long keyval = -1;
+            wxString key = m_binding.AfterFirst('(').BeforeLast(')');
+            const bool success = key.ToLong(&keyval);
+            if (success)
+            {
+                label = SDL_GetKeyName((SDLKey)keyval);
+            }
+            else
+            {
+                label = m_binding;
+            }
+        }
+        else
+        {
+            label = m_binding;
+        }
     }
     else
     {
