@@ -62,7 +62,7 @@ public:
         evt.RequestMore();
                 
         SDL_Event event;
-        if (SDL_PollEvent(&event))
+        while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED)
             {
@@ -90,6 +90,8 @@ public:
                 }
             }
         }
+        
+        wxMilliSleep(50);
     }
     
     void onCancel(wxCommandEvent& evt)
@@ -107,6 +109,7 @@ public:
     PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250))
     {
         m_result = SDLK_UNKNOWN;
+        m_type = CANCELLED;
         
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
         wxStaticText* label = new wxStaticText(this, wxID_ANY, _("Please use your keyboard/gamepad now"),
