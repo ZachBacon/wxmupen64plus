@@ -35,7 +35,25 @@
 
 class PressAKey : public wxDialog
 {
+    
+public:
+
+    enum ResultType
+    {
+        KEY,
+        GAMEPAD_BUTTON,
+        GAMEPAD_AXIS,
+        CANCELLED,
+        DELETE_BINDING
+    };
+
+private:
     SDLKey m_result;
+    int m_button;
+    int m_axis;
+    char m_axis_dir;
+    
+    ResultType m_type;
     
 public:
 
@@ -48,24 +66,41 @@ public:
         {
             if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED)
             {
+                m_type = KEY;
                 m_result = event.key.keysym.sym;
                 EndModal( GetReturnCode() );
+            }
+            else if (event.type == SDL_JOYAXISMOTION)
+            {
+                if (abs(event.jaxis.value) > 32767*2/3)
+                {
+                    m_type = GAMEPAD_AXIS;
+                    m_axis = event.jaxis.axis;
+                    m_axis_dir = (event.jaxis.value > 0 ? '+' : '-');
+                    EndModal( GetReturnCode() );
+                }
+            }
+            else if (event.type == SDL_JOYBUTTONDOWN)
+            {
+                if (event.jbutton.state == SDL_PRESSED)
+                {
+                    m_type = GAMEPAD_BUTTON;
+                    m_button = event.jbutton.button;
+                    EndModal( GetReturnCode() );
+                }
             }
         }
     }
     
     void onCancel(wxCommandEvent& evt)
     {
-        // m_result is probably already SDLK_UNKNOWN but let's play on the safe side...
-        m_result = SDLK_UNKNOWN;
-        
+        m_type = CANCELLED;
         EndModal( GetReturnCode() );
     }
 
     void onErase(wxCommandEvent& evt)
     {
-        // TODO: make the "erase" button actually work
-        
+        m_type = DELETE_BINDING;
         EndModal( GetReturnCode() );
     }
 
@@ -74,7 +109,7 @@ public:
         m_result = SDLK_UNKNOWN;
         
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-        wxStaticText* label = new wxStaticText(this, wxID_ANY, _("Please press a keyboard key now"),
+        wxStaticText* label = new wxStaticText(this, wxID_ANY, _("Please use your keyboard/gamepad now"),
                                                wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
                                                
         sizer->AddStretchSpacer();
@@ -98,12 +133,42 @@ public:
         ShowModal();        
     }
     
+    /** Get the key/button/axis that was selected by the user, or CANCELLED if it was cancelled */
+    ResultType getResultType() const
+    {
+        return m_type;
+    }
+    
     /**
-     * Get the key selected by the user, or SDLK_UNKNOWN if the dialog was cancelled.
+     * Get the keyboard key selected by the user (only valid if getResultType() returned KEY)
      */
-    SDLKey getResult() const
+    SDLKey getKey() const
     {
         return m_result;
+    }
+    
+    /**
+     * Get the gamepad button selected by the user (only valid if getResultType() returned GAMEPAD_BUTTON)
+     */
+    int getButton() const
+    {
+        return m_button;
+    }
+    
+    /**
+     * Get the gamepad axis selected by the user (only valid if getResultType() returned GAMEPAD_AXIS)
+     */
+    int getAxis() const
+    {
+        return m_axis;
+    }
+    
+    /**
+     * Get the gamepad axis direction selected by the user (only valid if getResultType() returned GAMEPAD_AXIS)
+     */
+    char getAxisDir() const
+    {
+        return m_axis_dir;
     }
 };
 
@@ -153,6 +218,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) :
 
     if (m_format == FORMAT_DOUBLE_STRING)
     {
+        // TODO: indicate in some way which is up, which is down; or which is left, which is right, etc...
         m_btn2 = new wxButton(this, wxID_ANY, "");
 #ifdef __WXMAC__
         sizer->AddSpacer(2);
@@ -181,24 +247,64 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) :
 void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 {
     PressAKey dialog;
-    SDLKey key = dialog.getResult();
-    if (key != SDLK_UNKNOWN)
+    const PressAKey::ResultType type = dialog.getResultType();
+    if (type == PressAKey::CANCELLED) return;
+    if (type == PressAKey::DELETE_BINDING)
     {
-        if (m_format == FORMAT_KEY_INT)
+        m_key = SDLK_UNKNOWN;
+        m_binding = "";
+        updateLabel();
+        return;
+    }
+
+
+    if (m_format == FORMAT_KEY_INT)
+    {
+        if (type == PressAKey::KEY)
         {
-            m_key = key;
+            SDLKey key = dialog.getKey();
+            if (key != SDLK_UNKNOWN)
+            {
+                m_key = key;
+            }
         }
-        else if (m_format == FORMAT_STRING)
+        else
         {
-            // TODO: also support gamepad bindings
-            m_binding = wxString::Format("key(%i)", key);
+            wxBell();
+            // TODO: something else possible for int bindings?
         }
-        else if (m_format == FORMAT_DOUBLE_STRING)
+    }
+    else if (m_format == FORMAT_STRING)
+    {
+        if (type == PressAKey::KEY)
         {
-            // TODO: gamepad bindings?
+            SDLKey key = dialog.getKey();
+            if (key != SDLK_UNKNOWN)
+            {
+                m_binding = wxString::Format("key(%i)", key);
+            }
+        }
+        else if (type == PressAKey::GAMEPAD_BUTTON)
+        {
+            int button = dialog.getButton();
+            m_binding = wxString::Format("button(%i)", button);
+        }
+        else
+        {
+             wxBell();
+            // TODO: what to do if an axis was used here?
+        }
+    }
+    else if (m_format == FORMAT_DOUBLE_STRING)
+    {
+        if (type == PressAKey::KEY)
+        {
+            SDLKey key = dialog.getKey();
+            
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
             
+            // TODO: check both types match (i.e. don't allow "key(123, 0+)")
             if (evt.GetId() == m_btn2->GetId())
             {
                 key2 = wxString::Format("%i", key);
@@ -210,8 +316,34 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
             
             m_binding = wxString::Format("key(%s,%s)", key1, key2);
         }
-        updateLabel();
+        else if (type == PressAKey::GAMEPAD_AXIS)
+        {
+            const int axis = dialog.getAxis();
+            const char dir = dialog.getAxisDir();
+            
+            // TODO: check both types match (i.e. don't allow "key(123, 0+)")
+            wxString val1 = m_binding.AfterFirst('(').BeforeLast(',');
+            wxString val2 = m_binding.AfterLast(',').BeforeLast(')');
+            
+            if (evt.GetId() == m_btn2->GetId())
+            {
+                val2 = wxString::Format("%i%c", axis, dir);
+            }
+            else
+            {
+                val1 = wxString::Format("%i%c", axis, dir);
+            }
+            
+            m_binding = wxString::Format("axis(%s,%s)", val1, val2);
+        }
+        else
+        {
+             wxBell();
+            // TODO: what to do if a button was used here?
+        }
+
     }
+    updateLabel();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -260,6 +392,10 @@ void wxSDLKeyPicker::updateLabel()
             {
                 label = m_binding;
             }
+        }
+        else if (m_binding.IsEmpty())
+        {
+            label = _("Select a key...");
         }
         else
         {

@@ -197,6 +197,21 @@ bool wxMiniApp::OnInit()
     printf("|_|  |_|\\__,_| .__/ \\___|_| |_|\\___/   |_| |_|   |_|\\__,_|___/  \n");
     printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
     
+    
+    // ==================
+    // Gamepads
+    printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
+    printf("The names of the joysticks are:\n");
+    SDL_JoystickEventState(SDL_ENABLE);
+    
+    for (int i=0; i<SDL_NumJoysticks(); i++) 
+    {
+        printf("    %s\n", SDL_JoystickName(i));
+        /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
+    }
+    printf("\n");
+    // ==================
+    
     wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
     printf("Will look for resources in <%s>\n", (const char*)resources.utf8_str());
     
