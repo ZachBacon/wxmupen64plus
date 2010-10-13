@@ -236,12 +236,25 @@ void wxSDLKeyPicker::updateLabel()
         if (m_binding.StartsWith("key("))
         {
             long keyval = -1;
-            // TODO: also support gamepad bindings
             wxString key = m_binding.AfterFirst('(').BeforeLast(')');
             const bool success = key.ToLong(&keyval);
             if (success)
             {
                 label = SDL_GetKeyName((SDLKey)keyval);
+            }
+            else
+            {
+                label = m_binding;
+            }
+        }
+        else if (m_binding.StartsWith("button("))
+        {
+            long btnval = -1;
+            wxString btn = m_binding.AfterFirst('(').BeforeLast(')');
+            const bool success = btn.ToLong(&btnval);
+            if (success)
+            {
+                label = wxString::Format(_("Button %i"), btnval);
             }
             else
             {
@@ -258,7 +271,6 @@ void wxSDLKeyPicker::updateLabel()
         if (m_binding.StartsWith("key("))
         {
             long key1val = -1, key2val = -1;
-            // TODO: also support gamepad bindings
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
             const bool success = (key1.IsEmpty() || key1.ToLong(&key1val)) &&
@@ -276,6 +288,14 @@ void wxSDLKeyPicker::updateLabel()
                 label = m_binding;
                 m_btn2->SetLabel("???");
             }
+        }
+        else if (m_binding.StartsWith("axis("))
+        {
+            wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
+            wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
+            
+            label = key1;
+            m_btn2->SetLabel(key2);
         }
         else
         {
