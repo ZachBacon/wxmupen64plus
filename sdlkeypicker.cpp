@@ -398,7 +398,7 @@ void wxSDLKeyPicker::updateLabel()
         }
         else if (m_binding.IsEmpty())
         {
-            label = _("Select a key...");
+            label = _("Select a binding...");
         }
         else
         {
