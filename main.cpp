@@ -39,7 +39,7 @@
 // --------------------------------------------------------------------------------------------------------------
 
 // application class
-class wxMiniApp : public wxApp
+class MupenFrontendApp : public wxApp
 {
     Mupen64PlusPlus* m_api;
     wxFrame* m_frame;
@@ -180,10 +180,11 @@ public:
         
 };
 
-IMPLEMENT_APP(wxMiniApp);
+IMPLEMENT_APP(MupenFrontendApp);
 
+// -----------------------------------------------------------------------------------------------------------
 
-bool wxMiniApp::OnInit()
+bool MupenFrontendApp::OnInit()
 {
     m_curr_panel = NULL;
     
@@ -252,7 +253,6 @@ bool wxMiniApp::OnInit()
     m_toolbar->SetToolBitmapSize(wxSize(32,32));
     
     wxInitAllImageHandlers();
-    //wxImage::AddHandler(new wxPNGHandler());
     wxBitmap icon_mupen  (resources + "mupenicon.png", wxBITMAP_TYPE_PNG);    
     wxBitmap icon_input  (resources + "input.png",     wxBITMAP_TYPE_PNG);
     wxBitmap icon_cpu    (resources + "emulation.png", wxBITMAP_TYPE_PNG);
@@ -307,8 +307,6 @@ bool wxMiniApp::OnInit()
             }
             
             videoSections.push_back(section);
-            //m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, section.m_section_name,
-            //                                           icon_video, icon_video), section));
         }
         else if (section.m_section_name == "Audio-SDL")
         {                
@@ -340,7 +338,7 @@ bool wxMiniApp::OnInit()
     m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Video"),
                                               icon_video, icon_video), videoSections));
     
-    m_toolbar->Connect(wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(wxMiniApp::onToolbarItem), NULL, this);
+    m_toolbar->Connect(wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MupenFrontendApp::onToolbarItem), NULL, this);
     
     m_toolbar->Realize();
     
@@ -352,18 +350,20 @@ bool wxMiniApp::OnInit()
     m_frame->Centre();
     m_frame->Show();
     
-    m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(wxMiniApp::onClose), NULL, this);
-    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(wxMiniApp::onQuitMenu), NULL, this);
-    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(wxMiniApp::onQuitMenu), NULL, this);
+    m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
+    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
     
     SetTopWindow( m_frame );
-    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(wxMiniApp::onActivate), NULL, this);
+    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
     
     // enter the application's main loop
     return true;
 }
 
-std::vector<ConfigSection> wxMiniApp::getOptions()
+// -----------------------------------------------------------------------------------------------------------
+
+std::vector<ConfigSection> MupenFrontendApp::getOptions()
 {
     std::vector<ConfigSection> config = m_api->getConfigContents();
     
@@ -408,6 +408,7 @@ std::vector<ConfigSection> wxMiniApp::getOptions()
             {
                 // TODO: create a special display type for joystick
                 //section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
+                section.m_parameters[p].m_special_type = BINDING_STRING;
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
             }
@@ -631,3 +632,5 @@ std::vector<ConfigSection> wxMiniApp::getOptions()
     config.push_back(inputSection);
     return config;
 }
+
+// -----------------------------------------------------------------------------------------------------------

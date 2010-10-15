@@ -359,7 +359,7 @@ void wxSDLKeyPicker::updateLabel()
     {
         if (m_key == SDLK_UNKNOWN)
         {
-            label = _("Select a key...");
+            label = _("Select a binding...");
         }
         else
         {
