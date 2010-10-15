@@ -198,7 +198,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxPanel(parent, w
     m_btn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
     
     SetMinSize( wxSize(150, -1) );
-    SetSizerAndFit(sizer);
+    SetSizer(sizer);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) :
     }
     
     SetMinSize( wxSize(150, -1) );
-    SetSizerAndFit(sizer);
+    SetSizer(sizer);
 }
 
 // -----------------------------------------------------------------------------------------------------------
