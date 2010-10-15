@@ -326,75 +326,7 @@ bool wxMiniApp::OnInit()
             
             section.m_section_name = wxString::Format(_("Input Control %i"), (int)id).mb_str();
             
-            // add any missing parameter (FIXME: don't hardcode names?) 
-            // TODO: add help strings so that they get tooltips
-#define CREATE_PARAM_IF_MISSING( name, val, type, disp )                  \
-            if (!section.hasChildNamed(name))                             \
-                section.addNewParam(name, wxVariant( val ), type, disp);  \
-            else                                                          \
-                section.getParamWithName(name)->m_special_type = disp
-            
-            try
-            {
-                CREATE_PARAM_IF_MISSING("plugged",           true,          M64TYPE_BOOL,   NOTHING_SPECIAL);
-                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL);
-                CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL);
-                CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT,    NOTHING_SPECIAL);
-                CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING, NOTHING_SPECIAL);
-                CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING, NOTHING_SPECIAL);
-                CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("DPad U",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("Start",             "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("Z Trig",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("B Button",          "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("A Button",          "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("C Button R",        "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("C Button L",        "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("C Button D",        "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("C Button U",        "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("R Trig",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING, BINDING_STRING);
-                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING);
-                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING);
-            }
-            catch (std::exception& e)
-            {
-                fprintf(stderr, "Error caught while trying to set up %s : %s\n", (const char*)idString.mb_str(), e.what());
-            }
-
-#undef CREATE_PARAM_IF_MISSING
-
-            ConfigParam* pluginParam = section.getParamWithName("plugin");
-            if (pluginParam != NULL)
-            {
-                pluginParam->m_choices.push_back( ConfigParamChoice(_("None"), 1) );
-                pluginParam->m_choices.push_back( ConfigParamChoice(_("Mem Pack"), 2) );
-                pluginParam->m_choices.push_back( ConfigParamChoice(_("Rumble Pack"), 5) );
-            }
-
-            ConfigParam* deviceParam = section.getParamWithName("device");
-            if (deviceParam != NULL)
-            {
-                deviceParam->m_choices.push_back( ConfigParamChoice(_("Keyboard/Mouse"), -2) );
-                deviceParam->m_choices.push_back( ConfigParamChoice(_("Auto Config"), -1) );
-                
-                for (int n=0; n<9; n++)
-                {
-                    deviceParam->m_choices.push_back( ConfigParamChoice(wxString::Format(_("Joystick %i"), n), n) );
-                }
-            }
             inputSections.push_back(section);
-            
-            /*
-            m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY,
-                                                                               wxString::Format(_("Input Control %i"),
-                                                                                                (int)id),
-                                                      icon_input, icon_input), section));
-            */
         }
         else
         {
@@ -627,6 +559,70 @@ std::vector<ConfigSection> wxMiniApp::getOptions()
             {
                 volumeCtrType->m_choices.push_back( ConfigParamChoice(_("SDL (mupen output only)"), 1) );
                 volumeCtrType->m_choices.push_back( ConfigParamChoice(_("OSS mixer (master PC volume)"), 2) );
+            }
+        }
+        else if (wxString(section.m_section_name.c_str()).StartsWith("Input-SDL-Control"))
+        {
+            // add any missing parameter (FIXME: don't hardcode names?) 
+            // TODO: add help strings so that they get tooltips
+#define CREATE_PARAM_IF_MISSING( name, val, type, disp )                  \
+            if (!section.hasChildNamed(name))                             \
+                section.addNewParam(name, wxVariant( val ), type, disp);  \
+            else                                                          \
+                section.getParamWithName(name)->m_special_type = disp
+            
+            try
+            {
+                CREATE_PARAM_IF_MISSING("plugged",           true,          M64TYPE_BOOL,   NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT,    NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING, NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING, NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("DPad U",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Start",             "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Z Trig",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("B Button",          "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("A Button",          "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button R",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button L",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button D",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("C Button U",        "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("R Trig",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING, BINDING_STRING);
+                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING);
+                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING);
+            }
+            catch (std::exception& e)
+            {
+                fprintf(stderr, "Error caught while trying to set up %s : %s\n", (const char*)section.m_section_name.c_str(), e.what());
+            }
+
+#undef CREATE_PARAM_IF_MISSING
+
+            ConfigParam* pluginParam = section.getParamWithName("plugin");
+            if (pluginParam != NULL)
+            {
+                pluginParam->m_choices.push_back( ConfigParamChoice(_("None"), 1) );
+                pluginParam->m_choices.push_back( ConfigParamChoice(_("Mem Pack"), 2) );
+                pluginParam->m_choices.push_back( ConfigParamChoice(_("Rumble Pack"), 5) );
+            }
+
+            ConfigParam* deviceParam = section.getParamWithName("device");
+            if (deviceParam != NULL)
+            {
+                deviceParam->m_choices.push_back( ConfigParamChoice(_("Keyboard/Mouse"), -2) );
+                deviceParam->m_choices.push_back( ConfigParamChoice(_("Auto Config"), -1) );
+                
+                for (int n=0; n<9; n++)
+                {
+                    deviceParam->m_choices.push_back( ConfigParamChoice(wxString::Format(_("Joystick %i"), n), n) );
+                }
             }
         }
         
