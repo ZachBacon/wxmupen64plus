@@ -53,9 +53,11 @@ class GamesPanel : public wxPanel, public IConfigurationPanel
     static std::vector<RomInfo> getRomsInDir(wxString dirpath);
     void populateList();
     
+    Mupen64PlusPlus* m_api;
+    
 public:
 
-	GamesPanel(wxWindow* parent);
+	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api);
 	~GamesPanel();
 
     virtual void commitNewValues() {}
@@ -66,6 +68,7 @@ public:
     }
     
     void onPathChange(wxFileDirPickerEvent& event);
+    void onPlay(wxCommandEvent& evt);
 };
 
 #endif // GAMES_PANEL_H

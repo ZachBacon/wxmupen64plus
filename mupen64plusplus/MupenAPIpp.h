@@ -139,9 +139,47 @@ public:
 
     ~Mupen64PlusPlus();
 
+    /** Retrieve configuration through the config API */
     std::vector<ConfigSection> getConfigContents();
 
+    /** Write the config file with any modified values any parameter may have had since reading it */
     m64p_error saveConfig();
+    
+    /**
+     * @pre The emulator cannot be currently running. A ROM image must not be currently opened
+     */
+    void loadRom(wxString filename);
+
+    /**
+     * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
+     */
+    void closeRom();
+    
+    /**
+     * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
+     * @note This function call will not return until the game has been stopped. 
+     */
+    void runEmulation();
+    
+    /**
+     * This will stop the emulator, if it is currently running.
+     * @note This command will execute asynchronously. 
+     */
+    void stopEmulation();
+    
+    /**
+     * This command will pause the emulator if it is running.
+     * @return This function will return a non-successful error code if the emulator is in the stopped state.
+     * @note This command may execute asynchronously. 
+     */
+    void pauseEmulation();
+    
+    /**
+     * This command will resume execution of the emulator if it is paused. 
+     * @return This function will return a non-successful error code if the emulator is in the stopped state.
+     * @note This command may execute asynchronously. 
+     */
+    void resumeEmulation();
 };
 
 #endif

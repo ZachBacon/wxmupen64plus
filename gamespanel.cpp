@@ -27,12 +27,18 @@
 #include <wx/filepicker.h>
 #include <wx/listctrl.h>
 #include <wx/dir.h>
+#include <wx/stdpaths.h>
+#include <wx/bmpbuttn.h>
+#include <wx/msgdlg.h>
+
+#include <stdexcept>
 
 // -----------------------------------------------------------------------------------------------------------
 
-GamesPanel::GamesPanel(wxWindow* parent) :
-    wxPanel(parent, wxID_ANY)
+GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api) : wxPanel(parent, wxID_ANY)
 {
+    m_api = api;
+    
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
     
     // TODO: retrieve ROM path from config
@@ -42,10 +48,25 @@ GamesPanel::GamesPanel(wxWindow* parent) :
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                           wxFileDirPickerEventHandler(GamesPanel::onPathChange), NULL, this);
     
-    m_item_list = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
+    m_item_list = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                                 wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES);
     sizer->Add(m_item_list, 1, wxALL | wxEXPAND, 5);
     
     populateList();
+    
+    wxBoxSizer* buttons = new wxBoxSizer(wxHORIZONTAL);
+    
+    // FIXME: don't duplicate this line from main.cpp
+    wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+    
+    wxBitmap icon_play(resources + "play.png", wxBITMAP_TYPE_PNG);  
+    wxBitmapButton* playBtn = new wxBitmapButton(this, wxID_ANY, icon_play);
+    buttons->Add(playBtn, 0, wxALL, 5);
+    
+    sizer->Add(buttons);
+    
+    playBtn->Connect(playBtn->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
+                    wxCommandEventHandler(GamesPanel::onPlay), NULL, this);
     
     SetSizer(sizer);
 }
@@ -140,3 +161,33 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 {
     populateList();
 }
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onPlay(wxCommandEvent& evt)
+{
+    wxString path = m_dir_picker->GetPath();        
+    if (path.IsEmpty())
+    {
+        wxBell();
+        return;
+    }
+    
+    long item = m_item_list->GetNextItem(-1,
+                                        wxLIST_NEXT_ALL,
+                                        wxLIST_STATE_SELECTED);
+    wxString file = path + wxFileName::GetPathSeparator() + m_item_list->GetItemText(item);
+    printf("\n==== Running file '%s' ====\n\n", (const char*)file.utf8_str());
+
+    try
+    {
+        m_api->loadRom(file);
+        m_api->runEmulation();
+    }
+    catch (std::runtime_error& ex)
+    {
+        wxMessageBox(ex.what());
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------

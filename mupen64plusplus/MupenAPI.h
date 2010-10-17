@@ -83,6 +83,46 @@ m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
 extern ptr_CoreShutdown  CoreShutdown;
 extern ptr_CoreStartup   CoreStartup;
 
+/**
+ * @pre The emulator cannot be currently running. A ROM image must not be currently opened
+ */
+m64p_error openRom(int byteSize, void* romImage);
+
+/**
+ * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
+ *      There should be no plugins currently attached. 
+ */
+m64p_error closeRom();
+
+/**
+ * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
+ * @note This function call will not return until the game has been stopped. 
+ */
+m64p_error runEmulation();
+
+/**
+ * This will stop the emulator, if it is currently running.
+ * @note This command will execute asynchronously. 
+ */
+m64p_error stopEmulation();
+
+/**
+ * This command will pause the emulator if it is running.
+ * @return This function will return a non-successful error code if the emulator is in the stopped state.
+ * @note This command may execute asynchronously. 
+ */
+m64p_error pauseEmulation();
+
+/**
+ * This command will resume execution of the emulator if it is paused. 
+ * @return This function will return a non-successful error code if the emulator is in the stopped state.
+ * @note This command may execute asynchronously. 
+ */
+m64p_error resumeEmulation();
+
+m64p_error attachPlugins();
+m64p_error detachPlugins();
+
 #ifdef __cplusplus
 }
 #endif

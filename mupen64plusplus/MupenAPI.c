@@ -640,3 +640,71 @@ m64p_error saveConfig()
 {
     return (*PtrConfigSaveFile)();
 }
+
+m64p_error openRom(int byteSize, void* romImage)
+{
+    return (*CoreDoCommand)(M64CMD_ROM_OPEN, byteSize, romImage);
+}
+
+m64p_error closeRom()
+{
+    return (*CoreDoCommand)(M64CMD_ROM_CLOSE, 0 /* unused */, NULL /* unused */);
+}
+
+/*
+m64p_error getRomHeader()
+{
+    rom_header out;
+    return (*CoreDoCommand)(M64CMD_ROM_GET_HEADER, sizeof(rom_header), &rom_header);
+}*/
+
+m64p_error runEmulation()
+{
+    return (*CoreDoCommand)(M64CMD_ROM_CLOSE, 0 /* unused */, NULL /* unused */);
+}
+
+m64p_error stopEmulation()
+{
+    return (*CoreDoCommand)(M64CMD_STOP, 0 /* unused */, NULL /* unused */);
+}
+
+m64p_error pauseEmulation()
+{
+    return (*CoreDoCommand)(M64CMD_PAUSE, 0 /* unused */, NULL /* unused */);
+}
+
+m64p_error resumeEmulation()
+{
+    return (*CoreDoCommand)(M64CMD_RESUME , 0 /* unused */, NULL /* unused */);
+}
+
+m64p_error attachPlugins()
+{
+    int i;
+    
+    /* attach plugins to core */
+    for (i = 0; i < 4; i++)
+    {
+        m64p_error result = (*CoreAttachPlugin)(g_PluginMap[i].type, g_PluginMap[i].handle);
+        if (result != M64ERR_SUCCESS)
+        {
+            return result;
+        }
+    }
+    return M64ERR_SUCCESS;
+    // ptr_CoreAttachPlugin    CoreAttachPlugin = NULL;
+}
+
+m64p_error detachPlugins()
+{
+    int i;
+    
+    /* detach plugins from core and unload them */
+    for (i = 0; i < 4; i++)
+    {
+        (*CoreDetachPlugin)(g_PluginMap[i].type);
+    }
+    return M64ERR_SUCCESS;
+    
+    // ptr_CoreDetachPlugin    CoreDetachPlugin = NULL;
+}

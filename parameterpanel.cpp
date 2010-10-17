@@ -176,6 +176,8 @@ ParameterPanel::~ParameterPanel()
 
 // -----------------------------------------------------------------------------------------------------------
 
+#define CHATTY 0
+
 void ParameterPanel::commitNewValues()
 {
     assert(m_magic_number == 0xCAFECAFE);
@@ -194,7 +196,11 @@ void ParameterPanel::commitNewValues()
                 if (dynamic_cast<wxSpinCtrl*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxSpinCtrl* ctrl = (wxSpinCtrl*)m_parameter_widgets[n];
+                    
+                    #if CHATTY
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), ctrl->GetValue());
+                    #endif
+                    
                     param->setIntValue(ctrl->GetValue());
                 }
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n]) != NULL)
@@ -202,13 +208,20 @@ void ParameterPanel::commitNewValues()
                     wxChoice* ctrl = (wxChoice*)m_parameter_widgets[n];
                     const int value = (int)ctrl->GetClientData( ctrl->GetSelection() );
                     
+                    #if CHATTY
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), value);
+                    #endif
+                    
                     param->setIntValue(value);
                 }
                 else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxSDLKeyPicker* ctrl = (wxSDLKeyPicker*)m_parameter_widgets[n];
+                    
+                    #if CHATTY
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), ctrl->getKey());
+                    #endif
+                    
                     param->setIntValue(ctrl->getKey());
                 }
                 else
@@ -221,7 +234,11 @@ void ParameterPanel::commitNewValues()
             case M64TYPE_FLOAT:
             {
                 wxSpinCtrlDouble* ctrl = (wxSpinCtrlDouble*)m_parameter_widgets[n];
+                
+                #if CHATTY
                 printf("[float] parameter %s has value %f\n", param->m_param_name.c_str(), ctrl->GetValue());
+                #endif
+                
                 param->setFloatValue(ctrl->GetValue());
                 break;
             }
@@ -229,8 +246,12 @@ void ParameterPanel::commitNewValues()
             case M64TYPE_BOOL:
             {
                 wxCheckBox* ctrl = (wxCheckBox*)m_parameter_widgets[n];
+                
+                #if CHATTY
                 printf("[bool] parameter %s has value %s\n", param->m_param_name.c_str(),
                        ctrl->IsChecked() ? "true" : "false");
+                #endif
+                
                 param->setBoolValue(ctrl->IsChecked() ? 1 : 0);
                 break;
             }
@@ -240,22 +261,34 @@ void ParameterPanel::commitNewValues()
                 if (dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxTextCtrl* ctrl = (wxTextCtrl*)m_parameter_widgets[n];
+                    
+                    #if CHATTY
                     printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
                            (const char*)ctrl->GetValue().mb_str());
+                    #endif
+                    
                     param->setStringValue((const char*)ctrl->GetValue().mb_str());
                 }
                 else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxSDLKeyPicker* ctrl = (wxSDLKeyPicker*)m_parameter_widgets[n];
+                    
+                    #if CHATTY
                     printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
                            (const char*)ctrl->getBindingString().mb_str());
+                    #endif
+                    
                     param->setStringValue((const char*)ctrl->getBindingString().mb_str());
                 }
                 else if (dynamic_cast<wxDirPickerCtrl*>(m_parameter_widgets[n])  != NULL)
                 {
                     wxDirPickerCtrl* ctrl = (wxDirPickerCtrl*)m_parameter_widgets[n];
+                    
+                    #if CHATTY
                     printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
                            (const char*)ctrl->GetPath().mb_str());
+                    #endif
+                    
                     param->setStringValue((const char*)ctrl->GetPath().mb_str());
                 }
                 else

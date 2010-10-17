@@ -154,7 +154,7 @@ public:
         if (sectionId == 0) // FIXME: don't rely that the "games" section is first?
         {
             // games section
-            GamesPanel* newPanel = new GamesPanel(m_frame);
+            GamesPanel* newPanel = new GamesPanel(m_frame, m_api);
             newPanel->Layout();
             m_sizer->Add(newPanel, 1, wxEXPAND);
             m_curr_panel = newPanel;
@@ -287,9 +287,7 @@ bool MupenFrontendApp::OnInit()
     for (unsigned int n=0; n<config.size(); n++)
     {
         ConfigSection& section = config[n];
-        
-        printf("Adding toolbar button [%s]\n", section.m_section_name.c_str());
-        
+                
         // FIXME: find better way than hardcoding sections?
         if (section.m_section_name == "Core")
         {
@@ -355,7 +353,7 @@ bool MupenFrontendApp::OnInit()
     
     m_sizer = new wxBoxSizer(wxHORIZONTAL);
     
-    GamesPanel* games = new GamesPanel(m_frame);
+    GamesPanel* games = new GamesPanel(m_frame, m_api);
     m_sizer->Add(games, 1, wxEXPAND);
     m_curr_panel = games;
     
@@ -377,6 +375,8 @@ bool MupenFrontendApp::OnInit()
 
 // -----------------------------------------------------------------------------------------------------------
 
+#define CHATTY 0
+
 std::vector<ConfigSection> MupenFrontendApp::getOptions()
 {
     std::vector<ConfigSection> config = m_api->getConfigContents();
@@ -390,13 +390,16 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
     {
         ConfigSection& section = config[n];
         
+#if CHATTY
         printf("==== Section [%s] ====\n", section.m_section_name.c_str());
-        
+#endif
+
         for (unsigned int p=0; p<section.m_parameters.size(); p++)
         {
+#if CHATTY
             const char* type = "other";
             char buffer[256];
-                        switch (section.m_parameters[p].m_param_type)            {                case M64TYPE_INT:                    type = "int";
+            switch (section.m_parameters[p].m_param_type)            {                case M64TYPE_INT:                    type = "int";
                     sprintf(buffer, "%i", section.m_parameters[p].getIntValue());                    break;                case M64TYPE_FLOAT:                    type = "float";
                     sprintf(buffer, "%f", section.m_parameters[p].getFloatValue());                    break;                case M64TYPE_BOOL:                    type = "bool";
                     sprintf(buffer, "%i", section.m_parameters[p].getBoolValue());                    break;                case M64TYPE_STRING:                    type = "string";
@@ -407,7 +410,8 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                    section.m_parameters[p].m_param_name.c_str(),
                    section.m_parameters[p].m_help_string.c_str(),
                    buffer);
-            
+#endif
+
             wxString param_wxname(section.m_parameters[p].m_param_name);
             
             // Move key mappings from wherever they are into a separate input section
@@ -588,7 +592,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
             
             try
             {
-                CREATE_PARAM_IF_MISSING("plugged",           true,          M64TYPE_BOOL,   NOTHING_SPECIAL);
+                CREATE_PARAM_IF_MISSING("plugged",           false,         M64TYPE_BOOL,   NOTHING_SPECIAL);
                 CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL);
                 CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL);
                 CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT,    NOTHING_SPECIAL);

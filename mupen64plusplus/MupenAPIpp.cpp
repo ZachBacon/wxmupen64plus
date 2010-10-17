@@ -24,6 +24,9 @@
 #include "mupen64plusplus/plugin.h"
 #include <stdexcept>
 #include <string>
+#include <wx/stream.h>
+#include <wx/mstream.h>
+#include <wx/wfstream.h>
 
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
@@ -64,7 +67,9 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
 
 Mupen64PlusPlus::~Mupen64PlusPlus()
 {
+    (*PluginUnload)();
     (*CoreShutdown)();
+    DetachCoreLib();
 }
 
 m64p_error Mupen64PlusPlus::saveConfig()
@@ -157,6 +162,111 @@ std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
     }
 
     return g_config_sections;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::loadRom(wxString filename)
+{
+    wxFileInputStream input(filename);
+    if (!input.IsOk())
+    {
+        throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" + filename + "'").ToStdString());
+    }
+    wxMemoryOutputStream memoryImage;
+    input.Read(memoryImage);
+    
+    wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
+    
+    m64p_error result = ::openRom(buffer->GetBufferSize(), buffer->GetBufferStart());
+    
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Loading ROM failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+    
+    result = ::attachPlugins();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Attaching plugins when opening ROM failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::closeRom()
+{
+    m64p_error result = ::detachPlugins();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Detaching plugins when closing ROM failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+    
+    result = ::closeRom();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Closing ROM failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::runEmulation()
+{
+    m64p_error result = ::runEmulation();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Running emulation failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::stopEmulation()
+{
+    m64p_error result = ::stopEmulation();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Stopping emulation failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::pauseEmulation()
+{
+    m64p_error result = ::pauseEmulation();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Pausing emulation failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::resumeEmulation()
+{
+    m64p_error result = ::resumeEmulation();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Resuming emulation failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
