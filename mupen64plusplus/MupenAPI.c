@@ -660,7 +660,7 @@ m64p_error getRomHeader()
 
 m64p_error runEmulation()
 {
-    return (*CoreDoCommand)(M64CMD_ROM_CLOSE, 0 /* unused */, NULL /* unused */);
+    return (*CoreDoCommand)(M64CMD_EXECUTE, 0 /* unused */, NULL /* unused */);
 }
 
 m64p_error stopEmulation()
