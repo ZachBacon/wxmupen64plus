@@ -685,6 +685,7 @@ m64p_error attachPlugins()
     /* attach plugins to core */
     for (i = 0; i < 4; i++)
     {
+        printf("Attaching plugin %i of type %i : %s\n", i, g_PluginMap[i].type, g_PluginMap[i].name);
         m64p_error result = (*CoreAttachPlugin)(g_PluginMap[i].type, g_PluginMap[i].handle);
         if (result != M64ERR_SUCCESS)
         {

@@ -60,10 +60,11 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api) : wxPanel(parent,
     wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
     
     wxBitmap icon_play(resources + "play.png", wxBITMAP_TYPE_PNG);  
-    wxBitmapButton* playBtn = new wxBitmapButton(this, wxID_ANY, icon_play);
+    wxBitmapButton* playBtn = new wxBitmapButton(this, wxID_ANY, icon_play, wxDefaultPosition, wxDefaultSize,
+                                                 wxBORDER_NONE);
     buttons->Add(playBtn, 0, wxALL, 5);
     
-    sizer->Add(buttons);
+    sizer->Add(buttons, 0, wxALL, 5);
     
     playBtn->Connect(playBtn->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
                     wxCommandEventHandler(GamesPanel::onPlay), NULL, this);
