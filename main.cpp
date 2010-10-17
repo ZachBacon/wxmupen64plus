@@ -30,6 +30,7 @@
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "mupen64plusplus/plugin.h"
 #include "parameterpanel.h"
+#include "gamespanel.h"
 #include <stdexcept>
 #include <algorithm>
 
@@ -150,7 +151,15 @@ public:
         
         assert(m_toolbar_items[sectionId].m_config.size() > 0);
         
-        if (m_toolbar_items[sectionId].m_config.size() == 1)
+        if (sectionId == 0) // FIXME: don't rely that the "games" section is first?
+        {
+            // games section
+            GamesPanel* newPanel = new GamesPanel(m_frame);
+            newPanel->Layout();
+            m_sizer->Add(newPanel, 1, wxEXPAND);
+            m_curr_panel = newPanel;
+        }
+        else if (m_toolbar_items[sectionId].m_config.size() == 1)
         {
             ParameterPanel* newPanel = new ParameterPanel(m_frame, m_toolbar_items[sectionId].m_config[0]);
             newPanel->Layout();
@@ -345,6 +354,11 @@ bool MupenFrontendApp::OnInit()
     m_status_bar = m_frame->CreateStatusBar();
     
     m_sizer = new wxBoxSizer(wxHORIZONTAL);
+    
+    GamesPanel* games = new GamesPanel(m_frame);
+    m_sizer->Add(games, 1, wxEXPAND);
+    m_curr_panel = games;
+    
     m_frame->SetSizer(m_sizer);
         
     m_frame->Centre();

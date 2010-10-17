@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=mmg
-Date                   :=10/15/10
+Date                   :=10/17/10
 CodeLitePath           :="/Users/mmg/Library/Application Support/codelite"
 LinkerName             :=g++
 ArchiveTool            :=ar rcus
@@ -49,7 +49,7 @@ LibPath                := "$(LibraryPathSwitch)."
 ##
 CodeLiteDir:=/Applications/CodeLite.app/Contents/SharedSupport/
 DYLD_LIBRARY_PATH:=/Developer/hg/mupen64plus/mupen64plus-core/projects/unix
-Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
+Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 
 ##
 ## Main Build Targets 
@@ -99,6 +99,14 @@ $(IntermediateDirectory)/sdlkeypicker$(DependSuffix): sdlkeypicker.cpp
 
 $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix): sdlkeypicker.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp"
+
+$(IntermediateDirectory)/gamespanel$(ObjectSuffix): gamespanel.cpp $(IntermediateDirectory)/gamespanel$(DependSuffix)
+	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/gamespanel$(DependSuffix): gamespanel.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/gamespanel$(ObjectSuffix) -MF$(IntermediateDirectory)/gamespanel$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp"
+
+$(IntermediateDirectory)/gamespanel$(PreprocessSuffix): gamespanel.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/gamespanel$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp"
 
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix): mupen64plusplus/MupenAPI.c $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IncludePath)
@@ -155,6 +163,9 @@ clean:
 	$(RM) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/sdlkeypicker$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix)
+	$(RM) $(IntermediateDirectory)/gamespanel$(ObjectSuffix)
+	$(RM) $(IntermediateDirectory)/gamespanel$(DependSuffix)
+	$(RM) $(IntermediateDirectory)/gamespanel$(PreprocessSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix)
