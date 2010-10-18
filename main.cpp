@@ -229,6 +229,7 @@ bool MupenFrontendApp::OnInit()
     {
         // TODO: on OS X, the default path may need to be updated if the application is moved around
         // TODO: support "OSAL_CURRENT_DIR" for running locally without install?
+        // FIXME: On Linux/Unices, the plugins should be looked for in /lib, not /share
         m_api = new Mupen64PlusPlus(resources + "libmupen64plus" + OSAL_DLL_EXTENSION,
                                     resources.utf8_str(),
                                     "mupen64plus-video-rice",

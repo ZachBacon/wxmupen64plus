@@ -118,7 +118,7 @@ public:
     bool hasChildNamed(const char* name) const;
     ConfigParam* getParamWithName(const char* name);
 
-    void addNewParam(const char* name, wxVariant value, m64p_type type, SpecialParamType type = NOTHING_SPECIAL);
+    void addNewParam(const char* name, wxVariant value, m64p_type type, SpecialParamType specialtype = NOTHING_SPECIAL);
 
     static bool compare(const ConfigSection& a, const ConfigSection& b)
     {
