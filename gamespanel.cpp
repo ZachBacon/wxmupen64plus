@@ -167,6 +167,8 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 
 void GamesPanel::onPlay(wxCommandEvent& evt)
 {
+    // TODO: add some kind of progress indicator, launching ROM can take a little while
+    
     wxString path = m_dir_picker->GetPath();        
     if (path.IsEmpty())
     {

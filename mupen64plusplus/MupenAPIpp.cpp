@@ -169,7 +169,7 @@ std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
 
 void Mupen64PlusPlus::loadRom(wxString filename)
 {
-    //SDL_Quit();
+    // SDL_Quit();
     
     wxFileInputStream input(filename);
     if (!input.IsOk())

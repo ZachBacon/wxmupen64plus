@@ -136,6 +136,7 @@ const char* concat(const char* a, const char* b)
 /* functions */
 void DebugCallback(void *Context, int level, const char *message)
 {
+    // TODO: notify user or errors and warnings
     if (level <= 1)
         printf("%s Error: %s\n", (const char *) Context, message);
     else if (level == 2)

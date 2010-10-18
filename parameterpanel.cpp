@@ -35,6 +35,10 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
+// TODO: when changing device type (e.g. from gamepad to keyboard), types may need to be changed in all
+//       following input buttons, otherwise changing the selected binding won't work
+
+
 // -----------------------------------------------------------------------------------------------------------
 
 ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
