@@ -19,7 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "GamesPanel.h"
+#include "gamespanel.h"
 #include "mupen64plusplus/MupenAPIpp.h"
 
 #include "sdlkeypicker.h"
