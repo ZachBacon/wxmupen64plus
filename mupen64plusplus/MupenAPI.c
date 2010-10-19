@@ -28,7 +28,7 @@
 #include "m64p_debugger.h"
 #include "version.h"
 #include "plugin.h"
-#include "main/main.h"
+//#include "main/main.h"
 
 #include "mupen64plusplus/osal_preproc.h"
 #include "mupen64plusplus/osal_dynamiclib.h"
@@ -623,7 +623,7 @@ m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *Pa
 
 m64p_error InitCore(void)
 {
-    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath, "Core",
+    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath, (void*)("Core"),
                                       DebugCallback, NULL, NULL);
 }
 

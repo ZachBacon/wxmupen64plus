@@ -30,7 +30,7 @@
 #include "mupen64plusplus/osal_dynamiclib.h"
 #include "mupen64plusplus/osal_files.h"
 #include "mupen64plusplus/plugin.h"
-#include "main/main.h"  /* for the debug callback function */
+//#include "main/main.h"  /* for the debug callback function */
 
 #include "version.h"
 
