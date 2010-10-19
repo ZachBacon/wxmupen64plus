@@ -218,7 +218,8 @@ void ParameterPanel::commitNewValues()
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxChoice* ctrl = (wxChoice*)m_parameter_widgets[n];
-                    const int value = (int)ctrl->GetClientData( ctrl->GetSelection() );
+                    // FIXME: remove this hack (see above for hack start)
+                    const int value = (int)((long)ctrl->GetClientData( ctrl->GetSelection() ));
                     
                     #if CHATTY
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), value);
