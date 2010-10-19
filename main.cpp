@@ -400,11 +400,26 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
 #if CHATTY
             const char* type = "other";
             char buffer[256];
-            switch (section.m_parameters[p].m_param_type)            {                case M64TYPE_INT:                    type = "int";
-                    sprintf(buffer, "%i", section.m_parameters[p].getIntValue());                    break;                case M64TYPE_FLOAT:                    type = "float";
-                    sprintf(buffer, "%f", section.m_parameters[p].getFloatValue());                    break;                case M64TYPE_BOOL:                    type = "bool";
-                    sprintf(buffer, "%i", section.m_parameters[p].getBoolValue());                    break;                case M64TYPE_STRING:                    type = "string";
-                    sprintf(buffer, "%s", section.m_parameters[p].getStringValue().c_str());                    break;            }
+
+            switch (section.m_parameters[p].m_param_type)
+            {
+                case M64TYPE_INT:
+                    type = "int";
+                    sprintf(buffer, "%i", section.m_parameters[p].getIntValue());
+                    break;
+                case M64TYPE_FLOAT:
+                    type = "float";
+                    sprintf(buffer, "%f", section.m_parameters[p].getFloatValue());
+                    break;
+                case M64TYPE_BOOL:
+                    type = "bool";
+                    sprintf(buffer, "%i", section.m_parameters[p].getBoolValue());
+                    break;
+                case M64TYPE_STRING:
+                    type = "string";
+                    sprintf(buffer, "%s", section.m_parameters[p].getStringValue().c_str());
+                    break;
+            }
             
             printf("    - %s %s (%s) = %s\n",
                    type,

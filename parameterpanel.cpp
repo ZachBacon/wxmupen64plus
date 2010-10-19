@@ -62,7 +62,9 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
         sizer->Add( label, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 15 );
         wxWindow* ctrl;
 
-        switch (section.m_parameters[p].m_param_type)        {            case M64TYPE_INT:
+        switch (section.m_parameters[p].m_param_type)
+        {
+            case M64TYPE_INT:
             {
                 int currVal = section.m_parameters[p].getIntValue();
                 
@@ -83,7 +85,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                     {
                         const int choiceVal = section.m_parameters[p].m_choices[n].m_value;
                         
-                        // the user data pointer is abused to contain an int (FIXME)
+                        // FIXME: the user data pointer is abused to contain an int
                         const int index = choice->Append(section.m_parameters[p].m_choices[n].m_name,
                                                          (void*)choiceVal);
                                                          
@@ -105,9 +107,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                                           0 /* min */, 99999 /* max */);
                     ctrl->SetMaxSize(wxSize(100, -1));
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
-                }                break;
+                }
+                break;
             }
-                            case M64TYPE_FLOAT:
+                
+            case M64TYPE_FLOAT:
             {
                 float currVal = section.m_parameters[p].getFloatValue();
                 ctrl = new wxSpinCtrlDouble(this, wxID_ANY, wxString::Format("%f", currVal),
@@ -115,15 +119,18 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
                 break;
             }
-                        case M64TYPE_BOOL:
+            
+            case M64TYPE_BOOL:
             {
                 bool currVal = section.m_parameters[p].getBoolValue();
                 wxCheckBox* cbox = new wxCheckBox(this, wxID_ANY, "");
                 cbox->SetValue(currVal);
                 ctrl = cbox;
-                sizer->Add(ctrl, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);                break;
+                sizer->Add(ctrl, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
+                break;
             }
-                        case M64TYPE_STRING:
+            
+            case M64TYPE_STRING:
             {
                 std::string currVal = section.m_parameters[p].getStringValue();
                 
@@ -155,7 +162,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 ctrl = new wxStaticText(this, wxID_ANY, "[???]");
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
                 break;
-            }        }
+            }
+        }
         
         label->SetToolTip( section.m_parameters[p].m_help_string );
         ctrl->SetToolTip( section.m_parameters[p].m_help_string );
@@ -210,7 +218,8 @@ void ParameterPanel::commitNewValues()
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxChoice* ctrl = (wxChoice*)m_parameter_widgets[n];
-                    const int value = (int)ctrl->GetClientData( ctrl->GetSelection() );
+                    // FIXME: remove this hack (see above for hack start)
+                    const int value = (int)((long)ctrl->GetClientData( ctrl->GetSelection() ));
                     
                     #if CHATTY
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), value);
