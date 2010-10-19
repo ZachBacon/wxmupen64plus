@@ -98,3 +98,6 @@ def build(bld):
                 uselib = 'SDL wxWidgets',
                 includes=['.', api_path])
 
+def install(ctx):
+    ctx.install_files('${PREFIX}/bin', ['wxMupen64Plus'])
+    ctx.install_files('${PREFIX}/share/wxmupen64plus', ['data/*'])
