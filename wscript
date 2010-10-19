@@ -58,12 +58,7 @@ def configure(ctx):
     ctx.check_cc(header_name="m64p_types.h", includes=[api_path])
     
     ctx.check_cfg(path=sdl_config, args='--cflags --libs', package='', uselib_store='SDL')
-    
-    # FIXME: Work around a bug in Waf. wx-config is checked for but the result is unused; and
-    #        instead I manually get the build flags through "subprocess.check_output"
     ctx.check_cfg(path=wx_config, args='--cxxflags --libs', package='', uselib_store='wxWidgets')
-    ctx.env['wxCppFlags'] = subprocess.check_output(wx_config.split() + ["--cppflags","core,base,gl"])
-    ctx.env['wxLdFlags']  = subprocess.check_output(wx_config.split() + ["--libs", "core,base,gl"])
 
 # --------------------------------------------------------------------------------------------
 #                                            BUILD
@@ -72,29 +67,8 @@ def configure(ctx):
 def build(bld):
     api_path = bld.env['api_path']
 
-    print(bld.env['wxCppFlags'])
-    print(bld.env['wxLdFlags'])
-
     link_flags = []
     build_flags = []
-    framework_list = [] # for OS X
-    
-    build_flags += bld.env['wxCppFlags'].split()
-    
-    # FIXME: hack to extract frameworks out of link flags, see above FIXME, we can't let waf
-    #        parse the output of wx-config... I need to make a bug report to waf, get
-    #        check_cfg fixed, then this whole hack can be removed
-    temp_ld_flags = bld.env['wxLdFlags'].split()
-    fw = False
-    for n in temp_ld_flags:
-        if n == "-framework":
-            fw = True
-        elif fw:
-            framework_list.append(n)
-            link_flags.append("-Wl,-framework,"+n)
-            fw = False
-        else:
-            link_flags.append(n)
     
     if bld.env['is_debug']:
         build_flags += ['-g']
@@ -110,7 +84,6 @@ def build(bld):
                         'mupen64plusplus/osal_dynamiclib_unix.c',
                         'mupen64plusplus/osal_files_unix.c', 'mupen64plusplus/plugin.c'],
                 target='wxMupen64Plus',
-                uselib = 'SDL',
-                framework=framework_list,
+                uselib = 'SDL wxWidgets',
                 includes=['.', api_path])
 
