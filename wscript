@@ -113,4 +113,6 @@ def build(bld):
                 uselib = 'SDL',
                 framework=framework_list,
                 includes=['.', api_path])
-
+    
+    data_dir = bld.path.find_dir('data')
+    bld.install_files('${PREFIX}/share/wxmupen64plus/', data_dir.ant_glob('*'))
