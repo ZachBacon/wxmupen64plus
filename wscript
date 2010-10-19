@@ -65,16 +65,27 @@ def configure(ctx):
 # --------------------------------------------------------------------------------------------
 
 def build(bld):
+    import os
+    
     api_path = bld.env['api_path']
 
     link_flags = []
     build_flags = []
     
+    # Set up debug or release build options
     if bld.env['is_debug']:
         build_flags += ['-g']
     else:
         build_flags += ['-O2']
 
+    # A few OSX-specific flags
+    if os.uname()[0] == 'Darwin':
+        link_flags += ['-Wl,-framework,IOKit', '-Wl,-framework,Carbon',
+                       '-Wl,-framework,Cocoa', '-Wl,-framework,AudioToolbox',
+                       '-Wl,-framework,System', '-Wl,-framework,OpenGL',
+                       '-Wl,-framework,QuickTime', '-Wl,-framework,WebKit']
+
+    # Build the program
     bld.program(features='c cxx cxxprogram',
                 cxxflags=build_flags,
                 cflags=build_flags,
