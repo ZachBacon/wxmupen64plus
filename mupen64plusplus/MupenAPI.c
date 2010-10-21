@@ -460,7 +460,9 @@ m64p_error SaveConfigurationOptions(void)
 
 const char* getErrorMessage(m64p_error err)
 {
-    return (*CoreErrorMessage)(err);
+    static char buffer[1024];
+    snprintf(buffer, 1024, "(%i) %s", (int)err, (*CoreErrorMessage)(err));
+    return buffer;
 }
 
 const char* getParameterHelp(m64p_handle* section, const char* ParamName)
