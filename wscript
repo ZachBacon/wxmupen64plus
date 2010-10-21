@@ -38,10 +38,10 @@ def configure(ctx):
     import Options
     import subprocess
     
-    api_path = Options.options.mupenapi
-    wx_config = Options.options.wxconfig
+    api_path   = Options.options.mupenapi
+    wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
-    is_debug = Options.options.debugmode
+    is_debug   = Options.options.debugmode
     
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
@@ -54,11 +54,11 @@ def configure(ctx):
     ctx.check_cc(header_name="stdio.h", function_name='printf', msg='Checking C compiler works', errmsg="No")
     ctx.check_cxx(header_name="cstdio", function_name='printf', msg='Checking C++ compiler works', errmsg="No")
     ctx.check_cc(header_name="m64p_frontend.h", includes=[api_path])
-    ctx.check_cc(header_name="m64p_config.h", includes=[api_path])
-    ctx.check_cc(header_name="m64p_types.h", includes=[api_path])
+    ctx.check_cc(header_name="m64p_config.h",   includes=[api_path])
+    ctx.check_cc(header_name="m64p_types.h",    includes=[api_path])
     
-    ctx.check_cfg(path=sdl_config, args='--cflags --libs', package='', uselib_store='SDL')
-    ctx.check_cfg(path=wx_config, args='--cxxflags --libs', package='', uselib_store='wxWidgets')
+    ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
+    ctx.check_cfg(path=wx_config,  args='--cxxflags --libs', package='', uselib_store='wxWidgets')
 
 # --------------------------------------------------------------------------------------------
 #                                            BUILD
@@ -98,5 +98,6 @@ def build(bld):
                 uselib = 'SDL wxWidgets',
                 includes=['.', api_path])
     
+    # install target
     data_dir = bld.path.find_dir('data')
     bld.install_files('${PREFIX}/share/wxmupen64plus/', data_dir.ant_glob('*'))
