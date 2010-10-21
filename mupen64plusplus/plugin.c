@@ -115,7 +115,7 @@ m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
         lib_filelist = osal_library_search(g_PluginDir);
         if (lib_filelist == NULL)
         {
-            fprintf(stderr, "Error: No plugins found in --plugindir path: %s\n", g_PluginDir);
+            fprintf(stderr, "Error: No plugins found in plugindir path: %s\n", g_PluginDir);
             return M64ERR_INPUT_NOT_FOUND;
         }
     }

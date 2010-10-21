@@ -252,6 +252,7 @@ bool MupenFrontendApp::OnInit()
     {
         // TODO: if plugins are not found, offer fixing the paths instead of aborting
         fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
+        wxMessageBox( wxString::Format( _("Sorry, a fatal error was caught :\n%s"),  e.what() ) );
         return false;
     }
     

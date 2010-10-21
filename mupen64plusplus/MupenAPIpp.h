@@ -130,6 +130,12 @@ class Mupen64PlusPlus
 {
     void loadPlugins();
 
+    std::string m_defaultPluginPath;
+    std::string m_defaultVideoPlugin;
+    std::string m_defaultAudioPlugin;
+    std::string m_defaultInputPlugin;
+    std::string m_defaultRspPlugin;
+ 
 public:
 
     Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaultPluginPath,

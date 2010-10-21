@@ -36,6 +36,12 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
                                  const char* defaultVideoPlugin, const char* defaultAudioPlugin,
                                  const char* defaultInputPlugin, const char* defaultRspPlugin)
 {
+    m_defaultPluginPath = defaultPluginPath;
+    m_defaultVideoPlugin = defaultVideoPlugin;
+    m_defaultAudioPlugin = defaultAudioPlugin;
+    m_defaultInputPlugin = defaultInputPlugin;
+    m_defaultRspPlugin = defaultRspPlugin;
+    
     m64p_error result = AttachCoreLib(CoreLibFilepath);
     if (result != M64ERR_SUCCESS)
     {
@@ -107,9 +113,22 @@ void Mupen64PlusPlus::loadPlugins()
     result = PluginSearchLoad(getConfigUI());
     if (result != M64ERR_SUCCESS)
     {
-        std::string errmsg = "[Mupen64PlusPlus::loadPlugins] PluginSearchLoad failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        // if loading plugins failed, try if default path works any better (this is especially needed on OS X
+        // where the application can be moved around, and thus break the path stored in the config)
+        g_PluginDir = m_defaultPluginPath.c_str();
+        result = PluginSearchLoad(getConfigUI());
+        if (result == M64ERR_SUCCESS)
+        {
+            // TODO: store updated path in config
+        }
+        else
+        {
+            // if loading plugins failed, offer to fall back to defaults
+            //wxMessageBox (wxString::Format(_("Failed to load plugins, reason : <%s>\n\nWould you like to revert to def"), getErrorMessage(result)), _("Plugin(s) not found"), int style=wxOK
+            std::string errmsg = "[Mupen64PlusPlus::loadPlugins] PluginSearchLoad failed with error : ";
+            errmsg = errmsg + getErrorMessage(result);
+            throw std::runtime_error(errmsg);
+        }
     }
 }
 
