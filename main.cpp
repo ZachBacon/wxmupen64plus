@@ -151,28 +151,37 @@ public:
         
         assert(m_toolbar_items[sectionId].m_config.size() > 0);
         
-        if (sectionId == 0) // FIXME: don't rely that the "games" section is first?
+        try
         {
-            // games section
-            GamesPanel* newPanel = new GamesPanel(m_frame, m_api);
-            newPanel->Layout();
-            m_sizer->Add(newPanel, 1, wxEXPAND);
-            m_curr_panel = newPanel;
+            if (sectionId == 0) // FIXME: don't rely that the "games" section is first?
+            {
+                // games section
+                GamesPanel* newPanel = new GamesPanel(m_frame, m_api);
+                newPanel->Layout();
+                m_sizer->Add(newPanel, 1, wxEXPAND);
+                m_curr_panel = newPanel;
+            }
+            else if (m_toolbar_items[sectionId].m_config.size() == 1)
+            {
+                ParameterPanel* newPanel = new ParameterPanel(m_frame, m_toolbar_items[sectionId].m_config[0]);
+                newPanel->Layout();
+                m_sizer->Add(newPanel, 1, wxEXPAND);
+                m_curr_panel = newPanel;
+            }
+            else
+            {
+                ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame, m_toolbar_items[sectionId].m_config);
+                newPanel->Layout();
+                m_sizer->Add(newPanel, 1, wxEXPAND);
+                m_curr_panel = newPanel;
+            }
         }
-        else if (m_toolbar_items[sectionId].m_config.size() == 1)
+        catch (std::runtime_error& e)
         {
-            ParameterPanel* newPanel = new ParameterPanel(m_frame, m_toolbar_items[sectionId].m_config[0]);
-            newPanel->Layout();
-            m_sizer->Add(newPanel, 1, wxEXPAND);
-            m_curr_panel = newPanel;
+            wxMessageBox( wxString("Sorry, an error occurred : ") + e.what() );
+            m_curr_panel = NULL;
         }
-        else
-        {
-            ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame, m_toolbar_items[sectionId].m_config);
-            newPanel->Layout();
-            m_sizer->Add(newPanel, 1, wxEXPAND);
-            m_curr_panel = newPanel;
-        }
+
         m_frame->Layout();
         
     }
