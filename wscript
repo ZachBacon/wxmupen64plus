@@ -52,7 +52,7 @@ def configure(ctx):
     ctx.find_program('gcc', var='GCC', mandatory=True)
     ctx.find_program('g++', var='GPP', mandatory=True)
     ctx.check_cc(header_name="stdio.h", function_name='printf', msg='Checking C compiler works', errmsg="No")
-    ctx.check_cxx(header_name="string", function_name='printf', msg='Checking C++ compiler works', errmsg="No")
+    ctx.check_cxx(header_name="cstdio", function_name='printf', msg='Checking C++ compiler works', errmsg="No")
     ctx.check_cc(header_name="m64p_frontend.h", includes=[api_path])
     ctx.check_cc(header_name="m64p_config.h", includes=[api_path])
     ctx.check_cc(header_name="m64p_types.h", includes=[api_path])
