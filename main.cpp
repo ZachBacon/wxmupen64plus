@@ -351,6 +351,7 @@ bool MupenFrontendApp::OnInit()
     m_toolbar->Connect(wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MupenFrontendApp::onToolbarItem), NULL, this);
     
     m_toolbar->Realize();
+    m_toolbar->ToggleTool( m_toolbar_items[0].m_tool->GetId(), true );
     
     m_status_bar = m_frame->CreateStatusBar();
     
