@@ -29,11 +29,13 @@
 #include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/cshelp.h>
+#include <wx/log.h>
 #include <wx/filepicker.h>
 
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
 #include <SDL_events.h>
+#include <stdexcept>
 
 // TODO: when changing device type (e.g. from gamepad to keyboard), types may need to be changed in all
 //       following input buttons, otherwise changing the selected binding won't work
@@ -66,8 +68,17 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
         {
             case M64TYPE_INT:
             {
-                int currVal = section.m_parameters[p].getIntValue();
-                
+                int currVal = 0;
+
+                try
+                {
+                    currVal = section.m_parameters[p].getIntValue();
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                }
+
                 if (section.m_parameters[p].m_special_type == KEYBOARD_KEY_INT)
                 {
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
@@ -113,7 +124,16 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 
             case M64TYPE_FLOAT:
             {
-                float currVal = section.m_parameters[p].getFloatValue();
+                float currVal = 0.0f;
+                try
+                {                
+                    currVal = section.m_parameters[p].getFloatValue();
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                }
+
                 ctrl = new wxSpinCtrlDouble(this, wxID_ANY, wxString::Format("%f", currVal),
                                             wxDefaultPosition, wxSize(100, -1));
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
@@ -122,7 +142,17 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
             
             case M64TYPE_BOOL:
             {
-                bool currVal = section.m_parameters[p].getBoolValue();
+                bool currVal = false;
+
+                try
+                {
+                    currVal = section.m_parameters[p].getBoolValue();
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                }
+                
                 wxCheckBox* cbox = new wxCheckBox(this, wxID_ANY, "");
                 cbox->SetValue(currVal);
                 ctrl = cbox;
@@ -132,7 +162,16 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
             
             case M64TYPE_STRING:
             {
-                std::string currVal = section.m_parameters[p].getStringValue();
+                std::string currVal = "";
+
+                try
+                {
+                    currVal = section.m_parameters[p].getStringValue();
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                }
                 
                 if (section.m_parameters[p].m_special_type == BINDING_STRING)
                 {
@@ -163,7 +202,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
                 break;
             }
-        }
+        } // end swicth
         
         label->SetToolTip( section.m_parameters[p].m_help_string );
         ctrl->SetToolTip( section.m_parameters[p].m_help_string );
