@@ -223,15 +223,17 @@ bool MupenFrontendApp::OnInit()
     // ==================
     
     wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
-    printf("Will look for resources in <%s>\n", (const char*)resources.utf8_str());
+    wxString libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
+    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)resources.utf8_str(),
+                                                                       (const char*)libs.utf8_str());
     
     try
     {
         // TODO: on OS X, the default path may need to be updated if the application is moved around
         // TODO: support "OSAL_CURRENT_DIR" for running locally without install?
         // FIXME: On Linux/Unices, the plugins should be looked for in /lib, not /share
-        m_api = new Mupen64PlusPlus(resources + "libmupen64plus" + OSAL_DLL_EXTENSION,
-                                    resources.utf8_str(),
+        m_api = new Mupen64PlusPlus(libs + "libmupen64plus" + OSAL_DLL_EXTENSION,
+                                    libs.utf8_str(),
                                     "mupen64plus-video-rice",
                                     "mupen64plus-audio-sdl",
                                     "mupen64plus-input-sdl",

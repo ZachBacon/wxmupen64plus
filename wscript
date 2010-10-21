@@ -94,7 +94,7 @@ def build(bld):
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
                         'mupen64plusplus/osal_dynamiclib_unix.c',
                         'mupen64plusplus/osal_files_unix.c', 'mupen64plusplus/plugin.c'],
-                target='wxMupen64Plus',
+                target='wxmupen64plus',
                 uselib = 'SDL wxWidgets',
                 includes=['.', api_path])
     
