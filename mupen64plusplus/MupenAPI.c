@@ -519,7 +519,7 @@ m64p_error getIntConfigParam(m64p_handle ConfigSectionHandle, const char *ParamN
 m64p_error getBoolConfigParam(m64p_handle ConfigSectionHandle, const char *ParamName, int* valueOut)
 {
     int value = -1;
-    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_INT, &value, sizeof(int));
+    m64p_error result = (*PtrConfigGetParameter)(ConfigSectionHandle, ParamName, M64TYPE_BOOL, &value, sizeof(int));
     if (result != M64ERR_SUCCESS)
     {
         return result;
