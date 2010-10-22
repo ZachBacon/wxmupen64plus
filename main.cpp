@@ -232,7 +232,13 @@ bool MupenFrontendApp::OnInit()
     // ==================
     
     wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+    
+#ifdef LIBDIR
+    wxString libs = wxString(LIBDIR) + wxFileName::GetPathSeparator();
+#else
     wxString libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
+#endif
+
     printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)resources.utf8_str(),
                                                                        (const char*)libs.utf8_str());
     
