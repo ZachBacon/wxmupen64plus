@@ -50,10 +50,19 @@ class MupenFrontendApp : public wxApp
     IConfigurationPanel* m_curr_panel;
     wxBoxSizer* m_sizer;
 
-        
+    /**
+     * Associates a configuration section with its toolbar icon
+     * (FIXME: rename this class, what it does is not obvious)
+     */
     struct GraphicalSection
     {
+        /** The associated toolbar button */
         wxToolBarToolBase*         m_tool;
+        
+        /** 
+         * The mupen API config section associated with this button (some buttons may contain more than
+         * one config section)
+         */
         std::vector<ConfigSection> m_config;
         
         GraphicalSection(wxToolBarToolBase* tool, const ConfigSection& config)
@@ -69,11 +78,10 @@ class MupenFrontendApp : public wxApp
         }
     };
     
+    /** List of configuration sections */
     std::vector<GraphicalSection> m_toolbar_items;
 
-
 public:
-    // function called at the application initialization
     virtual bool OnInit();
 
     std::vector<ConfigSection> getOptions();
@@ -104,9 +112,10 @@ public:
         shutdown();
     }
     
-    // event handler for button click
-    void OnClick(wxCommandEvent& event) { GetTopWindow()->Close(); }
-    
+    /**
+     * Callback invoked when a toolbar item is clicked.
+     * The general action to perform when this happens is to change the currently displayed pane
+     */
     void onToolbarItem(wxCommandEvent& evt)
     {
         const int id = evt.GetId();
@@ -139,8 +148,6 @@ public:
             assert(false);
             return;
         }
-        
-        // wxMessageBox( "Toolbar item clicked : " + wxString(section.c_str()) );
         
         if (m_curr_panel != NULL)
         {
@@ -217,8 +224,8 @@ bool MupenFrontendApp::OnInit()
     printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
     
     
-    // ==================
-    // Gamepads
+    // ====================
+    // Init Gamepad Support
     printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
     printf("The names of the joysticks are:\n");
     SDL_JoystickEventState(SDL_ENABLE);
@@ -229,7 +236,7 @@ bool MupenFrontendApp::OnInit()
         /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
     }
     printf("\n");
-    // ==================
+    // ====================
     
 #ifdef DATADIR
     wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
@@ -246,11 +253,10 @@ bool MupenFrontendApp::OnInit()
     printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
                                                                        (const char*)libs.utf8_str());
     
+    // ---- Init mupen core and plugins
     try
     {
-        // TODO: on OS X, the default path may need to be updated if the application is moved around
-        // TODO: support "OSAL_CURRENT_DIR" for running locally without install?
-        // FIXME: On Linux/Unices, the plugins should be looked for in /lib, not /share
+        // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
         m_api = new Mupen64PlusPlus(libs + "libmupen64plus" + OSAL_DLL_EXTENSION,
                                     libs.utf8_str(),
                                     "mupen64plus-video-rice",
@@ -269,6 +275,7 @@ bool MupenFrontendApp::OnInit()
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(800, 600));
     
+    // ---- Get config options
     std::vector<ConfigSection> config;
     try
     {
@@ -280,7 +287,7 @@ bool MupenFrontendApp::OnInit()
         return false;
     }
     
-    // -------- Build the toolbar that shows config sections
+    // ---- Build the toolbar that shows config sections
     m_toolbar = m_frame->CreateToolBar(wxTB_HORIZONTAL | wxTB_TEXT, wxID_ANY);
     m_toolbar->SetToolBitmapSize(wxSize(32,32));
     
@@ -403,6 +410,10 @@ bool MupenFrontendApp::OnInit()
 
 std::vector<ConfigSection> MupenFrontendApp::getOptions()
 {
+    // FIXME: this entire function could be improved; at this point, the structure of the config is
+    //        hardcoded. Ideally this would be loaded ffrom some config file (but even more ideally
+    //        the mupen core would provide me with this information)
+    
     std::vector<ConfigSection> config = m_api->getConfigContents();
     
     // For now give an untranslated name to this section, this will allow us to identify it;
@@ -454,7 +465,6 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
             wxString param_wxname(section.m_parameters[p].m_param_name);
             
             // Move key mappings from wherever they are into a separate input section
-            // TODO: find better way to identify key mappings?
             if (param_wxname.StartsWith("Kbd Mapping"))
             {
                 section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
@@ -463,8 +473,6 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
             }
             else if (param_wxname.StartsWith("Joy Mapping"))
             {
-                // TODO: create a special display type for joystick
-                //section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
                 section.m_parameters[p].m_special_type = BINDING_STRING;
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
@@ -621,7 +629,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
         }
         else if (wxString(section.m_section_name.c_str()).StartsWith("Input-SDL-Control"))
         {
-            // add any missing parameter (FIXME: don't hardcode names?) 
+            // Add any missing parameter
             // TODO: add help strings so that they get tooltips
 #define CREATE_PARAM_IF_MISSING( name, val, type, disp )                  \
             if (!section.hasChildNamed(name))                             \
