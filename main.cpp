@@ -243,7 +243,7 @@ bool MupenFrontendApp::OnInit()
     wxString libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
 #endif
 
-    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)resources.utf8_str(),
+    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
                                                                        (const char*)libs.utf8_str());
     
     try
