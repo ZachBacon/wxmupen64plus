@@ -56,10 +56,13 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api) : wxPanel(parent,
     
     wxBoxSizer* buttons = new wxBoxSizer(wxHORIZONTAL);
     
-    // FIXME: don't duplicate this line from main.cpp
-    wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
-    
-    wxBitmap icon_play(resources + "play.png", wxBITMAP_TYPE_PNG);  
+#ifdef DATADIR
+    wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
+#else
+    wxString datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+#endif
+
+    wxBitmap icon_play(datadir + "play.png", wxBITMAP_TYPE_PNG);  
     wxBitmapButton* playBtn = new wxBitmapButton(this, wxID_ANY, icon_play, wxDefaultPosition, wxDefaultSize,
                                                  wxBORDER_NONE);
     buttons->Add(playBtn, 0, wxALL, 5);

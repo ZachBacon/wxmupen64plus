@@ -231,8 +231,12 @@ bool MupenFrontendApp::OnInit()
     printf("\n");
     // ==================
     
-    wxString resources = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
-    
+#ifdef DATADIR
+    wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
+#else
+    wxString datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+#endif
+
 #ifdef LIBDIR
     wxString libs = wxString(LIBDIR) + wxFileName::GetPathSeparator();
 #else
@@ -281,13 +285,13 @@ bool MupenFrontendApp::OnInit()
     m_toolbar->SetToolBitmapSize(wxSize(32,32));
     
     wxInitAllImageHandlers();
-    wxBitmap icon_mupen  (resources + "mupenicon.png", wxBITMAP_TYPE_PNG);    
-    wxBitmap icon_input  (resources + "input.png",     wxBITMAP_TYPE_PNG);
-    wxBitmap icon_cpu    (resources + "emulation.png", wxBITMAP_TYPE_PNG);
-    wxBitmap icon_audio  (resources + "audio.png",     wxBITMAP_TYPE_PNG);
-    wxBitmap icon_plugins(resources + "plugins.png",   wxBITMAP_TYPE_PNG);
-    wxBitmap icon_video  (resources + "video.png",     wxBITMAP_TYPE_PNG);
-    wxBitmap icon_other  (resources + "other.png",     wxBITMAP_TYPE_PNG);
+    wxBitmap icon_mupen  (datadir + "mupenicon.png", wxBITMAP_TYPE_PNG);    
+    wxBitmap icon_input  (datadir + "input.png",     wxBITMAP_TYPE_PNG);
+    wxBitmap icon_cpu    (datadir + "emulation.png", wxBITMAP_TYPE_PNG);
+    wxBitmap icon_audio  (datadir + "audio.png",     wxBITMAP_TYPE_PNG);
+    wxBitmap icon_plugins(datadir + "plugins.png",   wxBITMAP_TYPE_PNG);
+    wxBitmap icon_video  (datadir + "video.png",     wxBITMAP_TYPE_PNG);
+    wxBitmap icon_other  (datadir + "other.png",     wxBITMAP_TYPE_PNG);
     
     assert(icon_mupen.IsOk());    
     assert(icon_input.IsOk());
