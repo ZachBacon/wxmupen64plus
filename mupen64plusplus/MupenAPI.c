@@ -50,8 +50,8 @@ static m64p_handle l_ConfigPlugins = NULL;
 static const char *l_ConfigDirPath = NULL;
 //static const char *l_ROMFilepath = NULL;       // filepath of ROM to load & run at startup
 
-#if defined(SHAREDIR)
-  static const char *l_DataDirPath = SHAREDIR;
+#if defined(DATADIR)
+  static const char *l_DataDirPath = DATADIR;
 #else
   static const char *l_DataDirPath = NULL;
 #endif
