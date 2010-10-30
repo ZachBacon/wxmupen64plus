@@ -456,21 +456,15 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 {
     killThread();
     
-    //if (m_gamesPathParam != NULL)
+    try
     {
-        try
-        {
-            m_gamesPathParam.setStringValue(m_dir_picker->GetPath().ToStdString());
-        }
-        catch (std::runtime_error& ex)
-        {
-            wxLogWarning("Failed to save ROM path to config file : %s", ex.what());
-        }
+        m_gamesPathParam.setStringValue(m_dir_picker->GetPath().ToStdString());
     }
-    //else
-    //{
-    //    wxLogWarning("The games path config param is NULL, will be unable to remember the selected path");
-    //}
+    catch (std::runtime_error& ex)
+    {
+        wxLogWarning("Failed to save ROM path to config file : %s", ex.what());
+    }
+
     populateList();
 }
 
@@ -506,7 +500,6 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
     {
         wxMessageBox(ex.what());
     }
-    
 }
 
 // -----------------------------------------------------------------------------------------------------------
