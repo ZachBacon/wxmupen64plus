@@ -31,10 +31,108 @@
 #include <wx/bmpbuttn.h>
 #include <wx/msgdlg.h>
 #include <wx/log.h>
+#include <wx/msgqueue.h>
 
 #include <stdexcept>
+#include <map>
+
+// ---------------------------------------------- WORKER THREAD ----------------------------------------------
+// Getting ROM info like internal name, etc. is a slow operation, so it's performed in
+// a worker thread
+
+const int ROM_INFO_READ_ID = 100000;
+
+struct ScheduledOpen
+{
+    wxString m_file;
+    long m_table_id;
+};
+
+wxMessageQueue<ScheduledOpen> workerThreadData;
+
+class WorkerThread : public wxThread
+{
+    Mupen64PlusPlus* m_api;
+    GamesPanel* m_parent;
+    
+public:
+
+    WorkerThread(GamesPanel* parent, Mupen64PlusPlus* api)
+    {
+        m_api = api;
+        m_parent = parent;
+    }
+
+    virtual ExitCode Entry()
+    {
+        ScheduledOpen task;
+        Mupen64PlusPlus::RomInfo info;
+        
+        while (true)
+        {
+            workerThreadData.Receive(task);
+            
+            // ID -1 is the end of the task queue
+            if (task.m_table_id == -1)
+            {
+                return 0;
+            }
+            
+            // FIXME: accesses to m_api needs to be synchronized with main thread
+            // TODO: thread needs to close if user selects a game and wants to run it
+            try
+            {
+                m_api->loadRom(task.m_file, false);
+            }
+            catch (std::runtime_error& e)
+            {
+                wxLogWarning("Can't get info about %s", (const char*)task.m_file.utf8_str());
+                continue;
+            }
+            
+            try
+            {
+                info = m_api->getRomInfo();
+            }
+            catch (std::runtime_error& e)
+            {
+                wxLogWarning("Can't get info about %s", (const char*)task.m_file.utf8_str());
+            }
+            
+            try
+            {
+                m_api->closeRom(false);
+            }
+            catch (std::runtime_error& e)
+            {
+                wxLogWarning("Can't free rom %s", (const char*)task.m_file.utf8_str());
+            }
+            
+            printf("Read ROM info : %s\n", (const char*)info.name.utf8_str());
+            
+            wxCommandEvent event( wxEVT_COMMAND_TEXT_UPDATED, ROM_INFO_READ_ID );
+            event.SetString( task.m_file );
+            event.SetInt( task.m_table_id );
+            // FIXME: potential for leaks there. A lost event will never have this cleaned up
+            event.SetClientData( new Mupen64PlusPlus::RomInfo(info) );
+            m_parent->GetEventHandler()->AddPendingEvent( event );
+        }
+        return 0;
+    }
+};
 
 // -----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------- GAMES CACHE -----------------------------------------------
+// Info like game internal name, CRC, etc. is slow to calculate and should be remembered, hence this small
+// cache
+std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
+
+// -----------------------------------------------------------------------------------------------------------
+
+BEGIN_EVENT_TABLE(GamesPanel, wxPanel)
+EVT_COMMAND  (ROM_INFO_READ_ID, wxEVT_COMMAND_TEXT_UPDATED, GamesPanel::onRomInfoReady)
+END_EVENT_TABLE()
+ 
 
 GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam) :
         wxPanel(parent, wxID_ANY), m_gamesPathParam(gamesPathParam)
@@ -117,6 +215,8 @@ void GamesPanel::populateList()
     
     std::vector<RomInfo> roms = getRomsInDir(path);
     
+    int romsNotInCache = 0;
+    
     const int item_amount = roms.size();
     for (int n=0; n<item_amount; n++)
     {
@@ -126,44 +226,32 @@ void GamesPanel::populateList()
         item.SetId(n);
         item.SetText( curritem.m_file_name );
         
-        
         Mupen64PlusPlus::RomInfo info;
-        
-        // TODO: this is too slow so we'll need some kind of cache
-        /*
-        try
-        {
-            m_api->loadRom(curritem.m_full_path, false);
-        }
-        catch (std::runtime_error& e)
-        {
-            wxLogWarning("Can't get info about %s", curritem.m_full_path.utf8_str());
-            continue;
-        }
-        
-        try
-        {
-            info = m_api->getRomInfo();
-        }
-        catch (std::runtime_error& e)
-        {
-            wxLogWarning("Can't get info about %s", curritem.m_full_path.utf8_str());
-        }
-        
-        try
-        {
-            m_api->closeRom(false);
-        }
-        catch (std::runtime_error& e)
-        {
-            wxLogWarning("Can't free rom %s", curritem.m_full_path.utf8_str());
-        }
-        */
         
         long id = m_item_list->InsertItem( item );
         
         if (id != -1)
         {
+            std::map<wxString, Mupen64PlusPlus::RomInfo>::iterator elem = g_cache.find(curritem.m_full_path);
+            if (elem != g_cache.end())
+            {
+                // Element found in cache, great
+                info = g_cache[curritem.m_full_path];
+            }
+            else
+            {
+                // The item is currently not in cache, schedule to retrieve it
+                ScheduledOpen task;
+                task.m_file = curritem.m_full_path;
+                task.m_table_id = id;
+                workerThreadData.Post(task);
+                romsNotInCache++;
+                
+                info.country = "...";
+                info.goodname = "...";
+                info.name = "...";
+            }
+        
             // set value in first column
             m_item_list->SetItem(id, 0, curritem.m_file_name);
             
@@ -176,6 +264,19 @@ void GamesPanel::populateList()
             // set value in fourth column
             m_item_list->SetItem(id, 3, info.country);
         }
+    } // end for
+    
+    // TODO: if user switches quickly between tabs, make sure no two threads that read the same queue are spawned
+    if (romsNotInCache > 0)
+    {
+        // Send end of work message
+        ScheduledOpen task;
+        task.m_table_id = -1;
+        workerThreadData.Post(task);
+        
+        WorkerThread* thread = new WorkerThread(this, m_api);
+        thread->Create();
+        thread->Run();
     }
 }
 
@@ -183,6 +284,28 @@ void GamesPanel::populateList()
 
 GamesPanel::~GamesPanel()
 {
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onRomInfoReady(wxCommandEvent& evt)
+{
+    Mupen64PlusPlus::RomInfo* info = (Mupen64PlusPlus::RomInfo*)evt.GetClientData();
+    
+    g_cache[evt.GetString()] = *info;
+    
+    const int id = evt.GetInt();
+
+    // set value in second column
+    m_item_list->SetItem(id, 1, info->name);
+    
+    // set value in third column
+    m_item_list->SetItem(id, 2, info->goodname);
+    
+    // set value in fourth column
+    m_item_list->SetItem(id, 3, info->country);
+            
+    delete info;
 }
 
 // -----------------------------------------------------------------------------------------------------------

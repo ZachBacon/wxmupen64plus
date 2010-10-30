@@ -145,6 +145,9 @@ class Mupen64PlusPlus
     std::string m_defaultInputPlugin;
     std::string m_defaultRspPlugin;
  
+    /** Size of the currently open ROM, in bytes */
+    int m_curr_rom_size;
+ 
 public:
 
     struct RomInfo
@@ -154,11 +157,15 @@ public:
         wxString country;
         int CRC1;
         int CRC2;
+        int size;
+        unsigned int manufacturer;
         
         RomInfo()
         {
             CRC1 = 0;
             CRC2 = 0;
+            size = -1;
+            manufacturer = 0;
         }
     };
 

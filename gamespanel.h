@@ -70,6 +70,10 @@ public:
     
     void onPathChange(wxFileDirPickerEvent& event);
     void onPlay(wxCommandEvent& evt);
+    
+    void onRomInfoReady(wxCommandEvent& evt);
+    
+    DECLARE_EVENT_TABLE()
 };
 
 #endif // GAMES_PANEL_H

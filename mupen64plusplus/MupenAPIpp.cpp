@@ -42,6 +42,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
     m_defaultAudioPlugin = defaultAudioPlugin;
     m_defaultInputPlugin = defaultInputPlugin;
     m_defaultRspPlugin = defaultRspPlugin;
+    m_curr_rom_size = -1;
     
     m64p_error result = AttachCoreLib(CoreLibFilepath);
     if (result != M64ERR_SUCCESS)
@@ -203,6 +204,7 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins)
     
     wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
     
+    m_curr_rom_size = buffer->GetBufferSize();
     m64p_error result = ::openRom(buffer->GetBufferSize(), buffer->GetBufferStart());
     
     if (result != M64ERR_SUCCESS)
@@ -275,11 +277,12 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
     RomInfo out;
     
     unsigned short countrycode = header.Country_code;
-    unsigned int manufacturer = header.Manufacturer_ID;
+    out.manufacturer = header.Manufacturer_ID;
     out.name = header.Name;
     out.goodname = settings.goodname;
     out.CRC1 = header.CRC1;
     out.CRC2 = header.CRC2;
+    out.size = m_curr_rom_size;
     
     switch(countrycode)
     {
