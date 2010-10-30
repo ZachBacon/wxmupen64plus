@@ -48,8 +48,18 @@ struct ScheduledOpen
     long m_table_id;
 };
 
+struct CompletedOpen
+{
+    Mupen64PlusPlus::RomInfo rominfo;
+    wxString rompath;
+    int listid;
+};
+
 /** List of tasks for the worker thread to perform */
 wxMessageQueue<ScheduledOpen> workerThreadData;
+
+/** Queue of tasks completed by the worker thread; used to pass data from working thread to GUI thread */
+wxMessageQueue<CompletedOpen> workerThreadResults;
 
 /** The current instance of the thread, always stop a previous thread before creating a new one.
  *  When a thread end, it will automatically set this pointer to NULL
@@ -91,8 +101,14 @@ public:
         {
             assert(threadCount <= 1);
             
-            workerThreadData.Receive(task);
-            
+            wxMessageQueueError result = workerThreadData.Receive(task);
+                
+            if (result != wxMSGQUEUE_NO_ERROR)
+            {
+                wxLogWarning("Problem communicating between threads, the ROM list may not load fully");
+                break;
+            }
+        
             // ID -1 is the end of the task queue
             if (task.m_table_id == -1)
             {
@@ -127,12 +143,14 @@ public:
             {
                 wxLogWarning("Can't free rom %s", (const char*)task.m_file.utf8_str());
             }
-                        
+            
+            CompletedOpen msg;
+            msg.listid = task.m_table_id;
+            msg.rompath = task.m_file;
+            msg.rominfo = info;
+            workerThreadResults.Post(msg);
+            
             wxCommandEvent event( wxEVT_COMMAND_TEXT_UPDATED, ROM_INFO_READ_ID );
-            event.SetString( task.m_file );
-            event.SetInt( task.m_table_id );
-            // FIXME: potential for leaks there. A lost event will never have this cleaned up
-            event.SetClientData( new Mupen64PlusPlus::RomInfo(info) );
             m_parent->GetEventHandler()->AddPendingEvent( event );
         }
         return 0;
@@ -290,6 +308,7 @@ void GamesPanel::populateList()
     
     // We will re-fill the queue if needed
     workerThreadData.Clear();
+    workerThreadResults.Clear();
     
     const int item_amount = roms.size();
     for (int n=0; n<item_amount; n++)
@@ -337,7 +356,7 @@ void GamesPanel::populateList()
                                     (const char*)curritem.m_full_path.utf8_str(),
                                     ex.what());
                 }
-                printf("ROM name : '%s'\n", (const char*)info.name.utf8_str());
+                printf( "ROM name : '%s'\n", (const char*)info.name.utf8_str());
                 printf("ROM country : '%s'\n", (const char*)info.country.utf8_str());
                  */
             }
@@ -378,22 +397,28 @@ GamesPanel::~GamesPanel()
 
 void GamesPanel::onRomInfoReady(wxCommandEvent& evt)
 {
-    Mupen64PlusPlus::RomInfo* info = (Mupen64PlusPlus::RomInfo*)evt.GetClientData();
+    CompletedOpen msg;
+    wxMessageQueueError result = workerThreadResults.ReceiveTimeout( 10 /* max 10 milliseconds */, msg);
     
-    g_cache[evt.GetString()] = *info;
-    
-    const int id = evt.GetInt();
+    if (result == wxMSGQUEUE_NO_ERROR)
+    {
+        g_cache[msg.rompath] = msg.rominfo;
+        
+        const int id = msg.listid;
 
-    // set value in second column
-    m_item_list->SetItem(id, 1, info->name);
-    
-    // set value in third column
-    m_item_list->SetItem(id, 2, info->goodname);
-    
-    // set value in fourth column
-    m_item_list->SetItem(id, 3, info->country);
-            
-    delete info;
+        // set value in second column
+        m_item_list->SetItem(id, 1, msg.rominfo.name);
+        
+        // set value in third column
+        m_item_list->SetItem(id, 2, msg.rominfo.goodname);
+        
+        // set value in fourth column
+        m_item_list->SetItem(id, 3, msg.rominfo.country);
+    }
+    else
+    {
+        wxLogWarning("Problem communicating between threads, ROM list may not load fully");
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
