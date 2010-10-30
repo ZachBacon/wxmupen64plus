@@ -276,7 +276,7 @@ bool MupenFrontendApp::OnInit()
     }
     
     
-    m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(800, 600));
+    m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     
     // ---- Get config options
     std::vector<ConfigSection> config;

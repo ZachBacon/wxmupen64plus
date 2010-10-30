@@ -98,11 +98,12 @@ void GamesPanel::populateList()
         
     if (path.IsEmpty()) return;
     
-    wxArrayString columns;          std::vector<int> sizes;
-    columns.Add( _("File Name") );  sizes.push_back( 300 );
-    columns.Add( _("Good Name") );  sizes.push_back( 225 );
-    columns.Add( _("Country") );    sizes.push_back( 75 );
-    columns.Add( _("Size") );       sizes.push_back( 75 );
+    wxArrayString columns;              std::vector<int> sizes;
+    columns.Add( _("File Name") );      sizes.push_back( 300 );
+    columns.Add( _("Internal Name") );  sizes.push_back( 225 );
+    columns.Add( _("Good Name") );      sizes.push_back( 225 );
+    columns.Add( _("Country") );        sizes.push_back( 75 );
+    //columns.Add( _("Size") );        sizes.push_back( 75 );
     
     const int count = columns.Count();
     for (int n=0; n<count; n++)
@@ -125,19 +126,56 @@ void GamesPanel::populateList()
         item.SetId(n);
         item.SetText( curritem.m_file_name );
         
-        m_item_list->InsertItem( item );
         
-        // set value in first column
-        m_item_list->SetItem(n, 0, curritem.m_file_name);
+        Mupen64PlusPlus::RomInfo info;
         
-        // set value in second column
-        m_item_list->SetItem(n, 1, "..."); // TODO: pass real "good name" value
+        // TODO: this is too slow so we'll need some kind of cache
+        /*
+        try
+        {
+            m_api->loadRom(curritem.m_full_path);
+        }
+        catch (std::runtime_error& e)
+        {
+            wxLogWarning("Can't get info about %s", curritem.m_full_path.utf8_str());
+            continue;
+        }
         
-        // set value in third column
-        m_item_list->SetItem(n, 2, "JA"); // TODO: pass real "Country" value
+        try
+        {
+            info = m_api->getRomInfo();
+        }
+        catch (std::runtime_error& e)
+        {
+            wxLogWarning("Can't get info about %s", curritem.m_full_path.utf8_str());
+        }
         
-        // set value in fourth column
-        m_item_list->SetItem(n, 3, "128 MiB"); // TODO: pass real "Size" value
+        try
+        {
+            m_api->closeRom();
+        }
+        catch (std::runtime_error& e)
+        {
+            wxLogWarning("Can't free rom %s", curritem.m_full_path.utf8_str());
+        }
+        */
+        
+        long id = m_item_list->InsertItem( item );
+        
+        if (id != -1)
+        {
+            // set value in first column
+            m_item_list->SetItem(id, 0, curritem.m_file_name);
+            
+            // set value in second column
+            m_item_list->SetItem(id, 1, info.name);
+            
+            // set value in third column
+            m_item_list->SetItem(id, 2, info.goodname);
+            
+            // set value in fourth column
+            m_item_list->SetItem(id, 3, info.country);
+        }
     }
 }
 

@@ -730,13 +730,19 @@ m64p_error closeRom()
 }
 
 // -----------------------------------------------------------------------------------------------------------
-/*
-m64p_error getRomHeader()
+
+m64p_error getRomHeader(m64p_rom_header* out)
 {
-    rom_header out;
-    return (*CoreDoCommand)(M64CMD_ROM_GET_HEADER, sizeof(rom_header), &rom_header);
+    return (*CoreDoCommand)(M64CMD_ROM_GET_HEADER, sizeof(m64p_rom_header), out);
 }
-*/
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error getRomSettings(m64p_rom_settings* out)
+{
+    return (*CoreDoCommand)(M64CMD_ROM_GET_SETTINGS, sizeof(m64p_rom_settings), out);
+}
+
 // -----------------------------------------------------------------------------------------------------------
 
 m64p_error runEmulation()

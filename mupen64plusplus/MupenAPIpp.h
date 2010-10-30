@@ -147,6 +147,21 @@ class Mupen64PlusPlus
  
 public:
 
+    struct RomInfo
+    {
+        wxString name;
+        wxString goodname;
+        wxString country;
+        int CRC1;
+        int CRC2;
+        
+        RomInfo()
+        {
+            CRC1 = 0;
+            CRC2 = 0;
+        }
+    };
+
     Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaultPluginPath,
                     const char* defaultVideoPlugin, const char* defaultAudioPlugin,
                     const char* defaultInputPlugin, const char* defaultRspPlugin);
@@ -175,6 +190,11 @@ public:
      * @note This function call will not return until the game has been stopped. 
      */
     void runEmulation();
+    
+    /**
+     * Get info about the currently loaded ROM
+     */
+    RomInfo getRomInfo();
     
     /**
      * This will stop the emulator, if it is currently running.
