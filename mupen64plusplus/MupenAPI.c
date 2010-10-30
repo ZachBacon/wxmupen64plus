@@ -382,10 +382,10 @@ m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
         return rval;
     }
 
-    rval = (*PtrConfigOpenSection)("UI-Plugins", &l_ConfigPlugins);
+    rval = (*PtrConfigOpenSection)("UI-wx", &l_ConfigPlugins);
     if (rval != M64ERR_SUCCESS)
     {
-        fprintf(stderr, "Error (%s:%i): failed to open 'UI-Plugins' configuration section\n", __FILE__, __LINE__);
+        fprintf(stderr, "Error (%s:%i): failed to open 'UI-wx' configuration section\n", __FILE__, __LINE__);
         return rval;
     }
 

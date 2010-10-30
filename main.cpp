@@ -324,9 +324,9 @@ bool MupenFrontendApp::OnInit()
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Emulation"),
                                                       icon_cpu, icon_cpu), section) );
         }
-        else if (section.m_section_name == "UI-Plugins")
+        else if (section.m_section_name == "UI-wx")
         {
-            m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, section.m_section_name,
+            m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
                                                       icon_plugins, icon_plugins), section) );
         }
         else if (section.m_section_name == "Input")

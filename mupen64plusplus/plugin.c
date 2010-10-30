@@ -120,7 +120,7 @@ m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
         }
     }
 
-    /* if no plugins found, search the PluginDir in the UI-plugins section of the config file */
+    /* if no plugins found, search the PluginDir in the UI-wx section of the config file */
     if (lib_filelist == NULL)
     {
         const char *plugindir = (*PtrConfigGetParamString)(ConfigPlugins, "PluginDir");
