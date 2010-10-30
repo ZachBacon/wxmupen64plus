@@ -119,7 +119,9 @@ void Mupen64PlusPlus::loadPlugins()
         result = PluginSearchLoad(getConfigUI());
         if (result == M64ERR_SUCCESS)
         {
-            // TODO: store updated path in config
+            // store updated path in config
+            m64p_handle uisection = getConfigUI();
+            setStringConfigParam(uisection, "PluginDir", g_PluginDir);
         }
         else
         {
