@@ -30,19 +30,33 @@
 #include <wx/stdpaths.h>
 #include <wx/bmpbuttn.h>
 #include <wx/msgdlg.h>
+#include <wx/log.h>
 
 #include <stdexcept>
 
 // -----------------------------------------------------------------------------------------------------------
 
-GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api) : wxPanel(parent, wxID_ANY)
+GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam) :
+        wxPanel(parent, wxID_ANY), m_gamesPathParam(gamesPathParam)
 {
     m_api = api;
     
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
     
-    // TODO: retrieve ROM path from config
-    m_dir_picker = new wxDirPickerCtrl(this, wxID_ANY, "");
+    wxString path;
+    //if (m_gamesPathParam != NULL)
+    {
+        try
+        {
+            path = m_gamesPathParam.getStringValue();
+        }
+        catch (std::runtime_error& ex)
+        {
+            wxLogWarning("Failed to read ROMs path from config file : %s", ex.what());
+        }
+    }
+    
+    m_dir_picker = new wxDirPickerCtrl(this, wxID_ANY, path);
     sizer->Add(m_dir_picker, 0, wxALL | wxEXPAND, 5);
 
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
@@ -140,7 +154,9 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
     std::vector<RomInfo> out;
     
     wxArrayString children;
-    const int count = wxDir::GetAllFiles(dirpath, &children);
+    // wxDIR_FILES is used to avoid very long processing (e.g. searching the entire disk if path is set to /...)
+    // TODO: allow limited recursion into directories?
+    const int count = wxDir::GetAllFiles(dirpath, &children, wxEmptyString, wxDIR_FILES);
     
     assert(count == (int)children.Count());
     
@@ -163,6 +179,21 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
 
 void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 {
+    //if (m_gamesPathParam != NULL)
+    {
+        try
+        {
+            m_gamesPathParam.setStringValue(m_dir_picker->GetPath().ToStdString());
+        }
+        catch (std::runtime_error& ex)
+        {
+            wxLogWarning("Failed to save ROM path to config file : %s", ex.what());
+        }
+    }
+    //else
+    //{
+    //    wxLogWarning("The games path config param is NULL, will be unable to remember the selected path");
+    //}
     populateList();
 }
 

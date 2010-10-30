@@ -36,6 +36,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel
 {
     wxListCtrl* m_item_list;
     wxDirPickerCtrl* m_dir_picker;
+    ConfigParam m_gamesPathParam;
     
     struct RomInfo
     {
@@ -57,7 +58,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel
     
 public:
 
-	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api);
+	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam);
 	~GamesPanel();
 
     virtual void commitNewValues() {}

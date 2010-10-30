@@ -123,6 +123,12 @@ m64p_error resumeEmulation();
 m64p_error attachPlugins();
 m64p_error detachPlugins();
 
+/** Get the path where to find games, in config */
+//m64p_error GetGamesPath(char path[], const int pathLen);
+
+/** Set the path where to find games, in config */
+//m64p_error SetGamesPath(char path[]);
+
 #ifdef __cplusplus
 }
 #endif

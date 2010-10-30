@@ -50,6 +50,8 @@ class MupenFrontendApp : public wxApp
     IConfigurationPanel* m_curr_panel;
     wxBoxSizer* m_sizer;
 
+    ConfigParam m_gamesPathParam;
+    
     /**
      * Associates a configuration section with its toolbar icon
      * (FIXME: rename this class, what it does is not obvious)
@@ -163,7 +165,7 @@ public:
             if (sectionId == 0) // FIXME: don't rely that the "games" section is first?
             {
                 // games section
-                GamesPanel* newPanel = new GamesPanel(m_frame, m_api);
+                GamesPanel* newPanel = new GamesPanel(m_frame, m_api, m_gamesPathParam);
                 newPanel->Layout();
                 m_sizer->Add(newPanel, 1, wxEXPAND);
                 m_curr_panel = newPanel;
@@ -212,6 +214,7 @@ IMPLEMENT_APP(MupenFrontendApp);
 bool MupenFrontendApp::OnInit()
 {
     m_curr_panel = NULL;
+    m_gamesPathParam = NULL;
     
     // SDL_INIT_VIDEO is necessary to init keyboard support, which is in turn necessary for our input module
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
@@ -326,6 +329,13 @@ bool MupenFrontendApp::OnInit()
         }
         else if (section.m_section_name == "UI-wx")
         {
+            ConfigParam* ptr_param = section.getParamWithName("GamesPath");
+            if (ptr_param != NULL)
+            {
+                ptr_param->m_enabled = false;
+                m_gamesPathParam = *ptr_param;
+            }
+            
             // TODO: offer a nicer way to select plugins than text area where filename is typed
             // TODO: when a plugin is changed, load it, and get its config options
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
@@ -386,7 +396,7 @@ bool MupenFrontendApp::OnInit()
     
     m_sizer = new wxBoxSizer(wxHORIZONTAL);
     
-    GamesPanel* games = new GamesPanel(m_frame, m_api);
+    GamesPanel* games = new GamesPanel(m_frame, m_api, m_gamesPathParam);
     m_sizer->Add(games, 1, wxEXPAND);
     m_curr_panel = games;
     

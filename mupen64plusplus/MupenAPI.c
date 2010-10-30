@@ -409,6 +409,8 @@ m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
     (*PtrConfigSetDefaultString)(l_ConfigPlugins, "RspPlugin",
                                  concat(defaultRspPlugin, OSAL_DLL_EXTENSION),
                                  "Filename of RSP plugin");
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "GamesPath", "",
+                                 "Where to search for games");
 
     return M64ERR_SUCCESS;
 }
@@ -436,6 +438,24 @@ m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
 
     return M64ERR_SUCCESS;
 }
+
+/*
+m64p_error GetGamesPath(char path[], const int pathLen)
+{
+    m64p_error rval = getStringConfigParam(l_ConfigPlugins, "GamesPath", path, pathLen);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error SetGamesPath(char path[])
+{
+    m64p_error rval = (*PtrConfigSetParameter)(l_ConfigPlugins, "GamesPath", M64TYPE_STRING, path);
+    if (rval != M64ERR_SUCCESS) return rval;
+
+    return M64ERR_SUCCESS;
+}
+*/
 
 m64p_error SaveConfigurationOptions(void)
 {

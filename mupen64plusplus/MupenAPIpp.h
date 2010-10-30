@@ -77,6 +77,15 @@ public:
     /** will be non-empty if some pre-defined choices are available */
     std::vector<ConfigParamChoice> m_choices;
 
+    /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
+    ConfigParam()
+    {
+        m_enabled = false;
+        m_parent_section = 0;
+        m_special_type = NOTHING_SPECIAL;
+        m_magic_number = 0xC001C001;
+    }
+
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
     {
         m_enabled = true;
