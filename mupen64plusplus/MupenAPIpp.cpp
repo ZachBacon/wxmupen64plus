@@ -28,6 +28,7 @@
 #include <wx/mstream.h>
 #include <wx/wfstream.h>
 #include <wx/intl.h>
+#include <wx/progdlg.h>
 #include <SDL.h>
 
 // -----------------------------------------------------------------------------------------------------------
@@ -190,7 +191,7 @@ std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins)
+void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressDialog* dialog)
 {
     // SDL_Quit();
     
@@ -202,10 +203,14 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins)
     wxMemoryOutputStream memoryImage;
     input.Read(memoryImage);
     
+    if (dialog != NULL) dialog->Update(50);
+    
     wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
     
     m_curr_rom_size = buffer->GetBufferSize();
     m64p_error result = ::openRom(buffer->GetBufferSize(), buffer->GetBufferStart());
+    
+    if (dialog != NULL) dialog->Update(75);
     
     if (result != M64ERR_SUCCESS)
     {
@@ -224,6 +229,8 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins)
             throw std::runtime_error(errmsg);
         }
     }
+    
+    if (dialog != NULL) dialog->Update(100);
 }
 
 // -----------------------------------------------------------------------------------------------------------

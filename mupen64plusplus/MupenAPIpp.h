@@ -27,6 +27,8 @@
 #include "m64p_types.h"
 #include <wx/variant.h>
 
+class wxProgressDialog;
+
 class ConfigParamChoice
 {
 public:
@@ -188,7 +190,7 @@ public:
      *                      Should be true if you open the ROM to play it, false if you open the
      *                      ROM to get information from its headers, for instance.
      */
-    void loadRom(wxString filename, bool attachPlugins=true);
+    void loadRom(wxString filename, bool attachPlugins=true, wxProgressDialog* dlg=NULL);
 
     /**
      * @pre The emulator cannot be currently running. A ROM image must have been previously opened.

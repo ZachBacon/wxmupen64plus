@@ -32,6 +32,7 @@
 #include <wx/msgdlg.h>
 #include <wx/log.h>
 #include <wx/msgqueue.h>
+#include <wx/progdlg.h>
 
 #include <stdexcept>
 #include <map>
@@ -478,15 +479,16 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 void GamesPanel::onPlay(wxCommandEvent& evt)
 {
     killThread();
-    
-    // TODO: add some kind of progress indicator, launching ROM can take a little while
-    
+        
     wxString path = m_dir_picker->GetPath();        
     if (path.IsEmpty())
     {
         wxBell();
         return;
     }
+    
+    wxProgressDialog dialog( _("Loading..."), _("Your game is loading") );
+    dialog.Show();
     
     long item = m_item_list->GetNextItem(-1,
                                         wxLIST_NEXT_ALL,
@@ -496,13 +498,15 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
 
     try
     {
-        m_api->loadRom(file);
+        m_api->loadRom(file, true, &dialog);
+        dialog.Hide();
         m_api->runEmulation();
     }
     catch (std::runtime_error& ex)
     {
         wxMessageBox(ex.what());
     }
+    
 }
 
 // -----------------------------------------------------------------------------------------------------------
