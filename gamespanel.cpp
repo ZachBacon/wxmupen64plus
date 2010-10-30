@@ -324,6 +324,22 @@ void GamesPanel::populateList()
                 info.country = "...";
                 info.goodname = "...";
                 info.name = "...";
+                
+                /*
+                // TODO: use this faster technique to speed up getting ROM info
+                try
+                {
+                    info = m_api->getRomInfo(curritem.m_full_path.utf8_str());
+                }
+                catch (std::runtime_error& ex)
+                {
+                    fprintf(stderr, "Failed to load rom %s : %s",
+                                    (const char*)curritem.m_full_path.utf8_str(),
+                                    ex.what());
+                }
+                printf("ROM name : '%s'\n", (const char*)info.name.utf8_str());
+                printf("ROM country : '%s'\n", (const char*)info.country.utf8_str());
+                 */
             }
         
             // set value in first column

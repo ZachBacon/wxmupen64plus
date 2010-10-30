@@ -127,7 +127,13 @@ m64p_error detachPlugins();
  * Get information about currently loaded rom
  * @pre A ROM must be loaded
  */
-m64p_error getRomHeader(m64p_rom_header* out);
+m64p_error getCurrentRomHeader(m64p_rom_header* out);
+
+/**
+ * Get information about the given ROM
+ * @pre A ROM must be loaded
+ */
+m64p_error getRomHeader(const char* path, m64p_rom_header* out);
 
 m64p_error getRomSettings(m64p_rom_settings* out);
 

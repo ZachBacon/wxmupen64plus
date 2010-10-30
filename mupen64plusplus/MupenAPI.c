@@ -731,9 +731,28 @@ m64p_error closeRom()
 
 // -----------------------------------------------------------------------------------------------------------
 
-m64p_error getRomHeader(m64p_rom_header* out)
+m64p_error getCurrentRomHeader(m64p_rom_header* out)
 {
     return (*CoreDoCommand)(M64CMD_ROM_GET_HEADER, sizeof(m64p_rom_header), out);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error getRomHeader(const char* path, m64p_rom_header* out)
+{
+    FILE* f;
+    f = fopen(path, "rb");
+    
+    if (!f) return M64ERR_FILES;
+    
+    fread(out, sizeof(m64p_rom_header), 1, f);
+    
+    int error = ferror(f);
+    
+    fclose(f);
+    
+    if (error != 0) return M64ERR_NO_MEMORY;
+    else            return M64ERR_SUCCESS;
 }
 
 // -----------------------------------------------------------------------------------------------------------

@@ -206,6 +206,9 @@ public:
      */
     RomInfo getRomInfo();
     
+    /** Get info about any ROM from disk, without loading it */
+    RomInfo getRomInfo(wxString path);
+    
     /**
      * This will stop the emulator, if it is currently running.
      * @note This command will execute asynchronously. 
