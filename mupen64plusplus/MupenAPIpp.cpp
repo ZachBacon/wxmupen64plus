@@ -189,7 +189,7 @@ std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::loadRom(wxString filename)
+void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins)
 {
     // SDL_Quit();
     
@@ -212,28 +212,34 @@ void Mupen64PlusPlus::loadRom(wxString filename)
         throw std::runtime_error(errmsg);
     }
     
-    result = ::attachPlugins();
-    if (result != M64ERR_SUCCESS)
+    if (attachPlugins)
     {
-        std::string errmsg = "Attaching plugins when opening ROM failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        result = ::attachPlugins();
+        if (result != M64ERR_SUCCESS)
+        {
+            std::string errmsg = "Attaching plugins when opening ROM failed with error : ";
+            errmsg = errmsg + getErrorMessage(result);
+            throw std::runtime_error(errmsg);
+        }
     }
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::closeRom()
+void Mupen64PlusPlus::closeRom(bool detachPlugins)
 {
-    m64p_error result = ::detachPlugins();
-    if (result != M64ERR_SUCCESS)
+    if (detachPlugins)
     {
-        std::string errmsg = "Detaching plugins when closing ROM failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        m64p_error result = ::detachPlugins();
+        if (result != M64ERR_SUCCESS)
+        {
+            std::string errmsg = "Detaching plugins when closing ROM failed with error : ";
+            errmsg = errmsg + getErrorMessage(result);
+            throw std::runtime_error(errmsg);
+        }
     }
     
-    result = ::closeRom();
+    m64p_error result = ::closeRom();
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Closing ROM failed with error : ";

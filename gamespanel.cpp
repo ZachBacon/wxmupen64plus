@@ -133,7 +133,7 @@ void GamesPanel::populateList()
         /*
         try
         {
-            m_api->loadRom(curritem.m_full_path);
+            m_api->loadRom(curritem.m_full_path, false);
         }
         catch (std::runtime_error& e)
         {
@@ -152,7 +152,7 @@ void GamesPanel::populateList()
         
         try
         {
-            m_api->closeRom();
+            m_api->closeRom(false);
         }
         catch (std::runtime_error& e)
         {

@@ -177,13 +177,16 @@ public:
     
     /**
      * @pre The emulator cannot be currently running. A ROM image must not be currently opened
+     * @param attachPlugins whether to automatically attach plugings upon reading the ROM.
+     *                      Should be true if you open the ROM to play it, false if you open the
+     *                      ROM to get information from its headers, for instance.
      */
-    void loadRom(wxString filename);
+    void loadRom(wxString filename, bool attachPlugins=true);
 
     /**
      * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
      */
-    void closeRom();
+    void closeRom(bool detachPlugins=true);
     
     /**
      * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
