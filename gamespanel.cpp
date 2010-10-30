@@ -100,7 +100,6 @@ public:
             }
             
             // FIXME: accesses to m_api needs to be synchronized with main thread
-            // TODO: thread needs to close if user selects a game and wants to run it
             try
             {
                 m_api->loadRom(task.m_file, false);
