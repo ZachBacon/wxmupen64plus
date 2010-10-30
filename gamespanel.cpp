@@ -48,8 +48,24 @@ struct ScheduledOpen
     long m_table_id;
 };
 
+/** List of tasks for the worker thread to perform */
 wxMessageQueue<ScheduledOpen> workerThreadData;
 
+/** The current instance of the thread, always stop a previous thread before creating a new one.
+ *  When a thread end, it will automatically set this pointer to NULL
+ */
+class WorkerThread;
+WorkerThread* workerThread = NULL;
+
+int threadCount = 0;
+
+// so that we can wait until a thread is deleted
+wxMutex conditionBackend;
+wxCondition threadDeleted(conditionBackend);
+
+wxMutex threadDeleteMutex;
+
+/** The worker thread class */
 class WorkerThread : public wxThread
 {
     Mupen64PlusPlus* m_api;
@@ -61,6 +77,9 @@ public:
     {
         m_api = api;
         m_parent = parent;
+        threadCount++;
+        
+        assert(threadCount <= 1);
     }
 
     virtual ExitCode Entry()
@@ -68,8 +87,10 @@ public:
         ScheduledOpen task;
         Mupen64PlusPlus::RomInfo info;
         
-        while (true)
+        while (!TestDestroy())
         {
+            assert(threadCount <= 1);
+            
             workerThreadData.Receive(task);
             
             // ID -1 is the end of the task queue
@@ -107,9 +128,7 @@ public:
             {
                 wxLogWarning("Can't free rom %s", (const char*)task.m_file.utf8_str());
             }
-            
-            printf("Read ROM info : %s\n", (const char*)info.name.utf8_str());
-            
+                        
             wxCommandEvent event( wxEVT_COMMAND_TEXT_UPDATED, ROM_INFO_READ_ID );
             event.SetString( task.m_file );
             event.SetInt( task.m_table_id );
@@ -119,7 +138,54 @@ public:
         }
         return 0;
     }
+    
+    ~WorkerThread()
+    {
+        wxMutexLocker mutex(threadDeleteMutex);
+        
+        workerThread = NULL;
+        threadCount--;
+        assert(threadCount <= 1);
+        threadDeleted.Signal();
+    }
+    
+    void waitDelete()
+    {
+        {
+            wxMutexLocker mutex(threadDeleteMutex);
+            wxThread::Delete();
+        }
+        threadDeleted.Wait();
+    }
 };
+
+/** Only to be called from the main thrad. Stops the worker thread */
+void killThread()
+{
+    assert(threadCount <= 1);
+    
+    if (workerThread != NULL)
+    {
+        workerThread->waitDelete();
+        workerThread = NULL;
+    }
+    
+    assert(threadCount <= 1);
+}
+
+/** Only to be called from the main thrad. Starts the worker thread */
+void spawnThread(GamesPanel* parent, Mupen64PlusPlus* api)
+{
+    assert(threadCount <= 1);
+    
+    killThread();
+    
+    workerThread = new WorkerThread(parent, api);
+    workerThread->Create();
+    workerThread->Run();
+    
+    assert(threadCount <= 1);
+}
 
 // -----------------------------------------------------------------------------------------------------------
 // ----------------------------------------------- GAMES CACHE -----------------------------------------------
@@ -128,6 +194,9 @@ public:
 std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 
 // -----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------- GAMES PANEL -----------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+// The main part where the game list is shown
 
 BEGIN_EVENT_TABLE(GamesPanel, wxPanel)
 EVT_COMMAND  (ROM_INFO_READ_ID, wxEVT_COMMAND_TEXT_UPDATED, GamesPanel::onRomInfoReady)
@@ -191,6 +260,9 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam games
 
 void GamesPanel::populateList()
 {
+    // stop any previous working thread
+    killThread();
+    
     wxString path = m_dir_picker->GetPath();
     m_item_list->ClearAll();
         
@@ -216,6 +288,9 @@ void GamesPanel::populateList()
     std::vector<RomInfo> roms = getRomsInDir(path);
     
     int romsNotInCache = 0;
+    
+    // We will re-fill the queue if needed
+    workerThreadData.Clear();
     
     const int item_amount = roms.size();
     for (int n=0; n<item_amount; n++)
@@ -266,7 +341,6 @@ void GamesPanel::populateList()
         }
     } // end for
     
-    // TODO: if user switches quickly between tabs, make sure no two threads that read the same queue are spawned
     if (romsNotInCache > 0)
     {
         // Send end of work message
@@ -274,9 +348,7 @@ void GamesPanel::populateList()
         task.m_table_id = -1;
         workerThreadData.Post(task);
         
-        WorkerThread* thread = new WorkerThread(this, m_api);
-        thread->Create();
-        thread->Run();
+        spawnThread(this, m_api);
     }
 }
 
@@ -284,6 +356,7 @@ void GamesPanel::populateList()
 
 GamesPanel::~GamesPanel()
 {
+    killThread();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -340,6 +413,8 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
 
 void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 {
+    killThread();
+    
     //if (m_gamesPathParam != NULL)
     {
         try
@@ -362,6 +437,8 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 
 void GamesPanel::onPlay(wxCommandEvent& evt)
 {
+    killThread();
+    
     // TODO: add some kind of progress indicator, launching ROM can take a little while
     
     wxString path = m_dir_picker->GetPath();        
