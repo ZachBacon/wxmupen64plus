@@ -326,6 +326,8 @@ bool MupenFrontendApp::OnInit()
         }
         else if (section.m_section_name == "UI-wx")
         {
+            // TODO: offer a nicer way to select plugins than text area where filename is typed
+            // TODO: when a plugin is changed, load it, and get its config options
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
                                                       icon_plugins, icon_plugins), section) );
         }
