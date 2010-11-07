@@ -117,7 +117,8 @@ public:
                 return 0;
             }
             
-            // FIXME: accesses to m_api needs to be synchronized with main thread
+            // m_api is used without synchronization here, but it's safe because this thread is meant to
+			// be stopped before doing anything else
             try
             {
                 m_api->loadRom(task.m_file, false);
