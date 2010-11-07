@@ -274,7 +274,6 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         else
         {
             wxBell();
-            // TODO: something else possible for int bindings?
         }
     }
     else if (m_format == FORMAT_STRING)
@@ -342,7 +341,6 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         else
         {
              wxBell();
-            // TODO: what to do if a button was used here?
         }
 
     }
