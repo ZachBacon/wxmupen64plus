@@ -315,6 +315,7 @@ bool MupenFrontendApp::OnInit()
     catch (std::runtime_error& e)
     {
         fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
+        wxMessageBox( wxString::Format( _("Sorry, a fatal error was caught :\n%s"),  e.what() ) );
         return false;
     }
     
