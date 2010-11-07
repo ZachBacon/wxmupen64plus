@@ -71,8 +71,9 @@ WorkerThread* workerThread = NULL;
 int threadCount = 0;
 
 // so that we can wait until a thread is deleted
-wxMutex conditionBackend;
-wxCondition threadDeleted(conditionBackend);
+// FIXME: according to the docs, it seems like the mutex needs to be manually locked when using the condition??
+wxMutex* conditionBackend = NULL;
+wxCondition* threadDeleted = NULL;
 
 wxMutex threadDeleteMutex;
 
@@ -164,7 +165,7 @@ public:
         workerThread = NULL;
         threadCount--;
         assert(threadCount <= 1);
-        threadDeleted.Signal();
+        threadDeleted->Signal();
     }
     
     void waitDelete()
@@ -173,7 +174,7 @@ public:
             wxMutexLocker mutex(threadDeleteMutex);
             wxThread::Delete();
         }
-        threadDeleted.Wait();
+        threadDeleted->Wait();
     }
 };
 
@@ -194,6 +195,12 @@ void killThread()
 /** Only to be called from the main thrad. Starts the worker thread */
 void spawnThread(GamesPanel* parent, Mupen64PlusPlus* api)
 {
+	if (conditionBackend == NULL)
+	{
+		conditionBackend = new wxMutex();
+		threadDeleted = new wxCondition(*conditionBackend);
+	}
+	
     assert(threadCount <= 1);
     
     killThread();
