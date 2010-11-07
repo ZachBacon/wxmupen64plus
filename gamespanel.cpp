@@ -37,6 +37,13 @@
 #include <stdexcept>
 #include <map>
 
+enum
+{
+	COLUMN_FILE = 0,
+	COLUMN_NAME,
+	COLUMN_COUNTRY
+};
+
 // ---------------------------------------------- WORKER THREAD ----------------------------------------------
 // Getting ROM info like internal name, etc. is a slow operation, so it's performed in
 // a worker thread
@@ -119,6 +126,7 @@ public:
             
             // m_api is used without synchronization here, but it's safe because this thread is meant to
 			// be stopped before doing anything else
+			/*
             try
             {
                 m_api->loadRom(task.m_file, false);
@@ -146,7 +154,19 @@ public:
             {
                 wxLogWarning("Can't free rom %s", (const char*)task.m_file.utf8_str());
             }
-            
+            */
+			
+			try
+			{
+				info = m_api->getRomInfo(task.m_file.utf8_str());
+			}
+			catch (std::runtime_error& ex)
+			{
+				fprintf(stderr, "Failed to load rom %s : %s",
+								(const char*)task.m_file.utf8_str(),
+								ex.what());
+			}
+				
             CompletedOpen msg;
             msg.listid = task.m_table_id;
             msg.rompath = task.m_file;
@@ -297,7 +317,7 @@ void GamesPanel::populateList()
     wxArrayString columns;              std::vector<int> sizes;
     columns.Add( _("File Name") );      sizes.push_back( 300 );
     columns.Add( _("Internal Name") );  sizes.push_back( 225 );
-    columns.Add( _("Good Name") );      sizes.push_back( 225 );
+    //columns.Add( _("Good Name") );      sizes.push_back( 225 );
     columns.Add( _("Country") );        sizes.push_back( 75 );
     //columns.Add( _("Size") );        sizes.push_back( 75 );
     
@@ -352,35 +372,19 @@ void GamesPanel::populateList()
                 info.country = "...";
                 info.goodname = "...";
                 info.name = "...";
-                
-                /*
-                // TODO: use this faster technique to speed up getting ROM info
-                try
-                {
-                    info = m_api->getRomInfo(curritem.m_full_path.utf8_str());
-                }
-                catch (std::runtime_error& ex)
-                {
-                    fprintf(stderr, "Failed to load rom %s : %s",
-                                    (const char*)curritem.m_full_path.utf8_str(),
-                                    ex.what());
-                }
-                printf( "ROM name : '%s'\n", (const char*)info.name.utf8_str());
-                printf("ROM country : '%s'\n", (const char*)info.country.utf8_str());
-                 */
             }
         
             // set value in first column
-            m_item_list->SetItem(id, 0, curritem.m_file_name);
+            m_item_list->SetItem(id, COLUMN_FILE, curritem.m_file_name);
             
             // set value in second column
-            m_item_list->SetItem(id, 1, info.name);
+            m_item_list->SetItem(id, COLUMN_NAME, info.name);
             
             // set value in third column
-            m_item_list->SetItem(id, 2, info.goodname);
+            //m_item_list->SetItem(id, 2, info.goodname);
             
             // set value in fourth column
-            m_item_list->SetItem(id, 3, info.country);
+            m_item_list->SetItem(id, COLUMN_COUNTRY, info.country);
         }
     } // end for
     
@@ -414,15 +418,15 @@ void GamesPanel::onRomInfoReady(wxCommandEvent& evt)
         g_cache[msg.rompath] = msg.rominfo;
         
         const int id = msg.listid;
-
+	
         // set value in second column
-        m_item_list->SetItem(id, 1, msg.rominfo.name);
+        m_item_list->SetItem(id, COLUMN_NAME, msg.rominfo.name);
         
         // set value in third column
-        m_item_list->SetItem(id, 2, msg.rominfo.goodname);
+        //m_item_list->SetItem(id, 2, msg.rominfo.goodname);
         
         // set value in fourth column
-        m_item_list->SetItem(id, 3, msg.rominfo.country);
+        m_item_list->SetItem(id, COLUMN_COUNTRY, msg.rominfo.country);
     }
     else
     {
