@@ -122,8 +122,6 @@ ptr_DebugBreakpointCommand DebugBreakpointCommand = NULL;
 
 m64p_dynlib_handle CoreHandle = NULL;
 
-#define g_Verbose 0
-
 // -----------------------------------------------------------------------------------------------------------
 
 char concat_buff[512];
@@ -132,22 +130,6 @@ const char* concat(const char* a, const char* b)
     strcpy(concat_buff, a);
     strcat(concat_buff, b);
     return concat_buff;
-}
-
-// -----------------------------------------------------------------------------------------------------------
-
-void DebugCallback(void *Context, int level, const char *message)
-{
-    // TODO: notify user or errors and warnings
-    if (level <= 1)
-        printf("%s Error: %s\n", (const char *) Context, message);
-    else if (level == 2)
-        printf("%s Warning: %s\n", (const char *) Context, message);
-    else if (level == 3 || (level == 5 && g_Verbose))
-        printf("%s: %s\n", (const char *) Context, message);
-    else if (level == 4)
-        printf("%s Status: %s\n", (const char *) Context, message);
-    /* ignore the verbose info for now */
 }
 
 // -----------------------------------------------------------------------------------------------------------
