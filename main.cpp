@@ -715,7 +715,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
             try
             {
                 CREATE_PARAM_IF_MISSING("plugged",           false,         M64TYPE_BOOL,   NOTHING_SPECIAL, "Specifies whether this input device is currently enabled");
-                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL, "Plugin type, if any");
+                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL, "Expansion pack type, if any");
                 CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL, "Whether mouse use is enabled");
                 CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT,    NOTHING_SPECIAL, "Specifies which input device to use");
                 
