@@ -59,7 +59,10 @@ enum SpecialParamType
     BINDING_DOUBLE_STRING,
     
     /** A directory parameter (primitive type = string)*/
-    DIRECTORY
+    DIRECTORY,
+	
+	/** Name of a plugin dll */
+	PLUGIN_FILE
 };
 
 class ConfigParam
@@ -79,6 +82,10 @@ public:
     /** will be non-empty if some pre-defined choices are available */
     std::vector<ConfigParamChoice> m_choices;
 
+	/** Only set if m_special_type is PLUGIN_FILE. This contains the parameter that holds the
+	 *  directory to search */
+	ConfigParam* m_dir;
+
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     ConfigParam()
     {
@@ -86,6 +93,7 @@ public:
         m_parent_section = 0;
         m_special_type = NOTHING_SPECIAL;
         m_magic_number = 0xC001C001;
+		m_dir = NULL;
     }
 
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
@@ -94,11 +102,34 @@ public:
         m_parent_section = section;
         m_special_type = type;
         m_magic_number = 0xC001C001;
+		m_dir = NULL;
     }
+
+	ConfigParam(const ConfigParam& other)
+	{
+		m_magic_number = 0xC001C001;
+		m_enabled = other.m_enabled;
+		m_parent_section = other.m_parent_section;
+		m_special_type = other.m_special_type;
+		m_choices = other.m_choices;
+		m_param_name = other.m_param_name;
+		m_param_type = other.m_param_type;
+		m_help_string = other.m_help_string;
+		
+		if (other.m_dir != NULL)
+		{
+			m_dir = new ConfigParam(*other.m_dir);
+		}
+		else
+		{
+			m_dir = NULL;
+		}
+	}
 
     ~ConfigParam()
     {
         m_magic_number = 0xDEADBEEF;
+		delete m_dir;
     }
 
     bool ok() const { return (m_magic_number == 0xC001C001); }

@@ -334,8 +334,44 @@ bool MupenFrontendApp::OnInit()
             {
                 ptr_param->m_enabled = false;
                 m_gamesPathParam = *ptr_param;
+			}
+			
+			ConfigParam* pluginsDir = section.getParamWithName("PluginDir");
+            if (pluginsDir != NULL)
+			{
+				ConfigParam* plugin1 = section.getParamWithName("VideoPlugin");
+				if (plugin1 != NULL)
+				{
+					plugin1->m_special_type = PLUGIN_FILE;
+					plugin1->m_dir = new ConfigParam(*pluginsDir);
+				}
+				
+				ConfigParam* plugin2 = section.getParamWithName("AudioPlugin");
+				if (plugin2 != NULL)
+				{
+					plugin2->m_special_type = PLUGIN_FILE;
+					plugin2->m_dir = new ConfigParam(*pluginsDir);
+				}
+				
+				ConfigParam* plugin3 = section.getParamWithName("InputPlugin");
+				if (plugin3 != NULL)
+				{
+					plugin3->m_special_type = PLUGIN_FILE;
+					plugin3->m_dir = new ConfigParam(*pluginsDir);
+				}
+				
+				ConfigParam* plugin4 = section.getParamWithName("RspPlugin");
+				if (plugin4 != NULL)
+				{
+					plugin4->m_special_type = PLUGIN_FILE;
+					plugin4->m_dir = new ConfigParam(*pluginsDir);
+				}
             }
-            
+			else
+			{
+				wxLogError("Cannot find the plugins path parameter!");
+			}
+			
             // TODO: offer a nicer way to select plugins than text area where filename is typed
             // TODO: when a plugin is changed, load it, and get its config options
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
