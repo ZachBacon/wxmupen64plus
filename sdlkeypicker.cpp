@@ -294,7 +294,6 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         else
         {
              wxBell();
-            // TODO: what to do if an axis was used here?
         }
     }
     else if (m_format == FORMAT_DOUBLE_STRING)
