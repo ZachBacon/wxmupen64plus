@@ -677,7 +677,6 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
         else if (wxString(section.m_section_name.c_str()).StartsWith("Input-SDL-Control"))
         {
             // Add any missing parameter
-            // TODO: add help strings so that they get tooltips
 #define CREATE_PARAM_IF_MISSING( name, val, type, disp, help )                  \
             if (!section.hasChildNamed(name))                                   \
                 section.addNewParam(name, help, wxVariant( val ), type, disp);  \
