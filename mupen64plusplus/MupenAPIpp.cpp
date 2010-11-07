@@ -337,6 +337,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
     return out;
 }
 
+// -----------------------------------------------------------------------------------------------------------
 
 Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
 {
@@ -687,15 +688,13 @@ ConfigParam* ConfigSection::getParamWithName(const char* name)
 
 // -----------------------------------------------------------------------------------------------------------
 
-void ConfigSection::addNewParam(const char* name, wxVariant value, m64p_type type, SpecialParamType sptype)
+void ConfigSection::addNewParam(const char* name, const char* help, wxVariant value, m64p_type type,
+								 SpecialParamType sptype)
 {
     ConfigParam newParam(m_handle, sptype);
     newParam.m_param_type = type;
     newParam.m_param_name = name;
     m_parameters.push_back(newParam);
-
-    // TODO: allow specifying help string
-    const char* help = NULL;
 
     m64p_error result;
     switch (type)

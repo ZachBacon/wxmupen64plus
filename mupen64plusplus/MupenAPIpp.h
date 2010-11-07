@@ -160,7 +160,16 @@ public:
     bool hasChildNamed(const char* name) const;
     ConfigParam* getParamWithName(const char* name);
 
-    void addNewParam(const char* name, wxVariant value, m64p_type type, SpecialParamType specialtype = NOTHING_SPECIAL);
+	/**
+	 * Add a new parameter to this section, if not already present
+	 * @param name	 Name of the new parameter to add
+	 * @param help  Help string associated with this new parameter (may be NULL)
+	 * @param type  Type of the new parameter
+	 * @param value Default value for this parameter
+	 * @param specialtype Additionnal information about this parameter
+	 */
+    void addNewParam(const char* name, const char* help, wxVariant value, m64p_type type,
+					  SpecialParamType specialtype = NOTHING_SPECIAL);
 
     static bool compare(const ConfigSection& a, const ConfigSection& b)
     {
@@ -239,7 +248,11 @@ public:
      */
     RomInfo getRomInfo();
     
-    /** Get info about any ROM from disk, without loading it */
+    /**
+	 * Get info about any ROM from disk, without loading it (this variant does include as much
+	 * informaion as the getRomInfo() function that returns information about the currently loaded
+	 * ROM; for instance, the good name will not be available in the struct returned by this mehtod)
+	 */
     RomInfo getRomInfo(wxString path);
     
     /**
