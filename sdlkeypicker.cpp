@@ -21,6 +21,7 @@
 
 #include "sdlkeypicker.h"
 
+#include <SDL.h>
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
 #include <SDL_events.h>
@@ -28,11 +29,227 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/event.h>
+#include <wx/msgdlg.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 
 // -----------------------------------------------------------------------------------------------------------
 
+// Use the wx picker on OSX, the SDL picker elsewhere... I think this will work OK
+#ifdef __WXMAC__
+#define USE_SDL_KEY_PICKER 0
+#define USE_WX_KEY_PICKER 1
+#else
+#define USE_SDL_KEY_PICKER 1
+#define USE_WX_KEY_PICKER 0
+#endif
+
+#if USE_SDL_KEY_PICKER
+
+// TODO: support hats
+class PressAKey
+{
+public:
+    enum ResultType
+    {
+        KEY,
+        GAMEPAD_BUTTON,
+        GAMEPAD_AXIS,
+        CANCELLED,
+        DELETE_BINDING
+    };
+    
+private:
+    SDL_Surface* message;
+    SDL_Surface* cancel;
+    SDL_Surface* erase;
+    SDL_Surface* screen;
+    
+    SDLKey m_result;
+    int m_button;
+    int m_axis;
+    char m_axis_dir;
+    
+    ResultType m_type;
+public:
+
+    PressAKey()
+    {
+        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        SDL_JoystickEventState(SDL_ENABLE);
+        
+        screen = SDL_SetVideoMode( 550, 200, 32, SDL_SWSURFACE ); 
+        
+        message = SDL_LoadBMP( "presskey.bmp" ); 
+        if (message == NULL)
+        {
+            wxMessageBox(_("Failed to load image, make sure your installation is OK!"));
+            m_type = CANCELLED;
+            return;
+        }
+        
+        cancel = SDL_LoadBMP( "cancel.bmp" ); 
+        if (cancel == NULL)
+        {
+            wxMessageBox(_("Failed to load image, make sure your installation is OK!"));
+            m_type = CANCELLED;
+            return;
+        }
+        
+        erase = SDL_LoadBMP( "erase.bmp" ); 
+        if (erase == NULL)
+        {
+            wxMessageBox(_("Failed to load image, make sure your installation is OK!"));
+            m_type = CANCELLED;
+            return;
+        }
+        
+        bool done = false;
+        
+        SDL_Rect dst_msg;
+        dst_msg.x = 15;
+        dst_msg.y = 25;
+            
+        SDL_Rect dst_cancel;
+        dst_cancel.x = 15;
+        dst_cancel.y = dst_msg.y + message->h + 35;
+        
+        SDL_Rect dst_erase;
+        dst_erase.x = 15;
+        dst_erase.y = dst_cancel.y + cancel->h + 15;
+        
+        SDL_Rect rect;
+        rect.x = 0;
+        rect.y = 0;
+        rect.w = 550;
+        rect.h = 200;
+        
+        Uint32 white = SDL_MapRGB(screen->format, 255, 255, 255);
+        
+        while (not done)
+        {
+            SDL_FillRect(screen, &rect, white);
+
+            SDL_BlitSurface( message, NULL, screen, &dst_msg );
+            SDL_BlitSurface( cancel, NULL, screen, &dst_cancel );
+            SDL_BlitSurface( erase, NULL, screen, &dst_erase);
+            SDL_Flip( screen );
+            SDL_Delay( 100 );
+        
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+                if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED)
+                {
+                    m_type = KEY;
+                    m_result = event.key.keysym.sym;
+                    done = true;
+                }
+                else if (event.type == SDL_JOYAXISMOTION)
+                {
+                    if (abs(event.jaxis.value) > 32767*2/3)
+                    {
+                        m_type = GAMEPAD_AXIS;
+                        m_axis = event.jaxis.axis;
+                        m_axis_dir = (event.jaxis.value > 0 ? '+' : '-');
+                        done = true;
+                    }
+                }
+                else if (event.type == SDL_JOYBUTTONDOWN)
+                {
+                    if (event.jbutton.state == SDL_PRESSED)
+                    {
+                        m_type = GAMEPAD_BUTTON;
+                        m_button = event.jbutton.button;
+                        done = true;
+                    }
+                }
+                else if (event.type == SDL_MOUSEBUTTONUP)
+                {
+                    const int x = event.button.x;
+                    const int y = event.button.y;
+                    
+                    if (x > dst_cancel.x and
+                        y > dst_cancel.y and
+                        x < dst_cancel.x + cancel->w and
+                        y < dst_cancel.y + cancel->h)
+                    {
+                        m_type = CANCELLED;
+                        done = true;
+                    }
+                    else if (x > dst_erase.x and
+                             y > dst_erase.y and
+                             x < dst_erase.x + erase->w and
+                             y < dst_erase.y + erase->h)
+                    {
+                        m_type = DELETE_BINDING;
+                        done = true;
+                    }
+                }
+                else if (event.type == SDL_QUIT)
+                {
+                    m_type = CANCELLED;
+                    done = true;
+                }
+                
+            } // end while SDL_PollEvent
+        } // end while not done
+        
+        SDL_FreeSurface( screen );
+        SDL_FreeSurface( message );
+        SDL_FreeSurface( cancel );
+        SDL_FreeSurface( erase );
+        
+        // Close the frame
+        SDL_Quit();
+    }
+    
+    ~PressAKey()
+    {
+    }
+    
+    /** Get the key/button/axis that was selected by the user, or CANCELLED if it was cancelled */
+    ResultType getResultType() const
+    {
+        return m_type;
+    }
+    
+    /**
+     * Get the keyboard key selected by the user (only valid if getResultType() returned KEY)
+     */
+    SDLKey getKey() const
+    {
+        return m_result;
+    }
+    
+    /**
+     * Get the gamepad button selected by the user (only valid if getResultType() returned GAMEPAD_BUTTON)
+     */
+    int getButton() const
+    {
+        return m_button;
+    }
+    
+    /**
+     * Get the gamepad axis selected by the user (only valid if getResultType() returned GAMEPAD_AXIS)
+     */
+    int getAxis() const
+    {
+        return m_axis;
+    }
+    
+    /**
+     * Get the gamepad axis direction selected by the user (only valid if getResultType() returned GAMEPAD_AXIS)
+     */
+    char getAxisDir() const
+    {
+        return m_axis_dir;
+    }
+};
+
+#endif
+
+#if USE_WX_KEY_PICKER
 // TODO: support hats
 class PressAKey : public wxDialog
 {
@@ -175,6 +392,7 @@ public:
         return m_axis_dir;
     }
 };
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
@@ -252,6 +470,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCou
 void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 {
     PressAKey dialog;
+        
     const PressAKey::ResultType type = dialog.getResultType();
     if (type == PressAKey::CANCELLED) return;
     if (type == PressAKey::DELETE_BINDING)
@@ -261,7 +480,6 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         updateLabel();
         return;
     }
-
 
     if (m_format == FORMAT_KEY_INT)
     {

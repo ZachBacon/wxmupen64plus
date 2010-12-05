@@ -34,7 +34,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include <SDL.h>
+//#include <SDL.h>
 
 const bool g_Verbose = false;
 
@@ -245,7 +245,7 @@ bool MupenFrontendApp::OnInit()
     m_gamesPathParam = NULL;
     
     // SDL_INIT_VIDEO is necessary to init keyboard support, which is in turn necessary for our input module
-    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+    //SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
     
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
@@ -255,6 +255,7 @@ bool MupenFrontendApp::OnInit()
     printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
     
     
+    #if 0
     // ====================
     // Init Gamepad Support
     printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
@@ -268,6 +269,7 @@ bool MupenFrontendApp::OnInit()
     }
     printf("\n");
     // ====================
+    #endif
     
 #ifdef DATADIR
     wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
