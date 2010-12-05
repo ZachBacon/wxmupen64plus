@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=mmg
-Date                   :=11/07/10
+Date                   :=12/05/10
 CodeLitePath           :="/Users/mmg/Library/Application Support/codelite"
 LinkerName             :=g++
 ArchiveTool            :=ar rcus
@@ -47,7 +47,7 @@ LibPath                := "$(LibraryPathSwitch)."
 ##
 ## User defined environment variables
 ##
-CodeLiteDir:=/Developer/svn/CodeLite/Runtime/CodeLite.app/Contents/SharedSupport/
+CodeLiteDir:=/Users/mmg/My Applications/Applications Dev/CodeLite.app/Contents/SharedSupport/
 Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 
 ##

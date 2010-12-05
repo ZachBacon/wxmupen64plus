@@ -549,7 +549,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
             }
             else if (param_wxname.StartsWith("Joy Mapping"))
             {
-                section.m_parameters[p].m_special_type = BINDING_STRING;
+                section.m_parameters[p].m_special_type = BINDING_DIGITAL_STRING;
                 inputSection.m_parameters.push_back(section.m_parameters[p]);
                 section.m_parameters[p].m_enabled = false;
             }
@@ -722,24 +722,24 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                 // TODO: provide nicer way to edit deadzone and peak
                 CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING, NOTHING_SPECIAL, "For analog controls, specifies the dead zone");
                 CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING, NOTHING_SPECIAL, "For analog controls, specifies the peak value");
-                CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING, BINDING_STRING, "Right button on the digital pad");
-                CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING, BINDING_STRING, "Left button on the digital pad");
-                CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING, BINDING_STRING, "Down button on the digital pad");
-                CREATE_PARAM_IF_MISSING("DPad U",            "", M64TYPE_STRING, BINDING_STRING, "Up button on the digital pad");
-                CREATE_PARAM_IF_MISSING("Start",             "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("Z Trig",            "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("B Button",          "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("A Button",          "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("C Button R",        "", M64TYPE_STRING, BINDING_STRING, "C-Right button");
-                CREATE_PARAM_IF_MISSING("C Button L",        "", M64TYPE_STRING, BINDING_STRING, "C-Left button");
-                CREATE_PARAM_IF_MISSING("C Button D",        "", M64TYPE_STRING, BINDING_STRING, "C-Down button");
-                CREATE_PARAM_IF_MISSING("C Button U",        "", M64TYPE_STRING, BINDING_STRING, "C-Up button");
-                CREATE_PARAM_IF_MISSING("R Trig",            "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING, BINDING_STRING, NULL);
-                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING, "Horizontal analog axis");
-                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_DOUBLE_STRING, "Vertical analog axis");
+                CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Right button on the digital pad");
+                CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Left button on the digital pad");
+                CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Down button on the digital pad");
+                CREATE_PARAM_IF_MISSING("DPad U",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Up button on the digital pad");
+                CREATE_PARAM_IF_MISSING("Start",             "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("Z Trig",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("B Button",          "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("A Button",          "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("C Button R",        "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "C-Right button");
+                CREATE_PARAM_IF_MISSING("C Button L",        "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "C-Left button");
+                CREATE_PARAM_IF_MISSING("C Button D",        "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "C-Down button");
+                CREATE_PARAM_IF_MISSING("C Button U",        "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "C-Up button");
+                CREATE_PARAM_IF_MISSING("R Trig",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("L Trig",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("Mempak switch",     "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("Rumblepak switch",  "", M64TYPE_STRING, BINDING_DIGITAL_STRING, NULL);
+                CREATE_PARAM_IF_MISSING("X Axis",            "", M64TYPE_STRING, BINDING_ANALOG_COUPLE_STRING, "Horizontal analog axis");
+                CREATE_PARAM_IF_MISSING("Y Axis",            "", M64TYPE_STRING, BINDING_ANALOG_COUPLE_STRING, "Vertical analog axis");
             }
             catch (std::exception& e)
             {

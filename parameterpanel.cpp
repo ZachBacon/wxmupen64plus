@@ -175,11 +175,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                     wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
                 }
                 
-                if (section.m_parameters[p].m_special_type == BINDING_STRING)
+                if (section.m_parameters[p].m_special_type == BINDING_DIGITAL_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()), false);
                 }
-                else if (section.m_parameters[p].m_special_type == BINDING_DOUBLE_STRING)
+                else if (section.m_parameters[p].m_special_type == BINDING_ANALOG_COUPLE_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()), true);
                 }

@@ -33,6 +33,7 @@
 
 // -----------------------------------------------------------------------------------------------------------
 
+// TODO: support hats
 class PressAKey : public wxDialog
 {
     
@@ -203,14 +204,15 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxPanel(parent, w
 
 // -----------------------------------------------------------------------------------------------------------
 
-wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) : wxPanel(parent, wxID_ANY)
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCouple) : wxPanel(parent, wxID_ANY)
 {
-    m_format = (isDouble ? FORMAT_DOUBLE_STRING : FORMAT_STRING);
+    m_format = (isAnalogCouple ? FORMAT_ANALOG_COUPLE : FORMAT_DIGITAL);
     m_binding = curr;
     m_btn2 = NULL;
     
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     m_btn = new wxButton(this, wxID_ANY, "");
+
 #ifdef __WXMAC__
     sizer->AddSpacer(2);
     sizer->Add(m_btn, 1, wxBOTTOM, 5);
@@ -219,7 +221,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble) :
     sizer->Add(m_btn, 1);
 #endif
 
-    if (m_format == FORMAT_DOUBLE_STRING)
+    if (m_format == FORMAT_ANALOG_COUPLE)
     {
         // TODO: indicate in some way which is up, which is down; or which is left, which is right, etc...
         m_btn2 = new wxButton(this, wxID_ANY, "");
@@ -276,7 +278,7 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
             wxBell();
         }
     }
-    else if (m_format == FORMAT_STRING)
+    else if (m_format == FORMAT_DIGITAL)
     {
         if (type == PressAKey::KEY)
         {
@@ -291,12 +293,16 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
             int button = dialog.getButton();
             m_binding = wxString::Format("button(%i)", button);
         }
+        else if (type == PressAKey::GAMEPAD_AXIS)
+        {
+            m_binding = wxString::Format("axis(%i%c)", dialog.getAxis(), dialog.getAxisDir());
+        }
         else
         {
              wxBell();
         }
     }
-    else if (m_format == FORMAT_DOUBLE_STRING)
+    else if (m_format == FORMAT_ANALOG_COUPLE)
     {
         if (type == PressAKey::KEY)
         {
@@ -363,7 +369,7 @@ void wxSDLKeyPicker::updateLabel()
             label = SDL_GetKeyName(m_key);
         }
     }
-    else if (m_format == FORMAT_STRING)
+    else if (m_format == FORMAT_DIGITAL)
     {
         if (m_binding.StartsWith("key("))
         {
@@ -393,6 +399,7 @@ void wxSDLKeyPicker::updateLabel()
                 label = m_binding;
             }
         }
+        // TODO: axes may also be used in digital context as far as I can tell
         else if (m_binding.IsEmpty())
         {
             label = _("Select a binding...");
@@ -402,7 +409,7 @@ void wxSDLKeyPicker::updateLabel()
             label = m_binding;
         }
     }
-    else if (m_format == FORMAT_DOUBLE_STRING)
+    else if (m_format == FORMAT_ANALOG_COUPLE)
     {
         if (m_binding.StartsWith("key("))
         {

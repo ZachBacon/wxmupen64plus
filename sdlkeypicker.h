@@ -37,10 +37,10 @@ class wxSDLKeyPicker : public wxPanel
         FORMAT_KEY_INT,
         
         /** A binding string, may be either keyboard or joystick */
-        FORMAT_STRING,
+        FORMAT_DIGITAL,
         
         /** Two keys */
-        FORMAT_DOUBLE_STRING
+        FORMAT_ANALOG_COUPLE
     };
     
     /** The selected key SDL code, or SDLK_UNKNOWN if nothing is selected (for int key mode) */
@@ -75,9 +75,9 @@ public:
    /**
      * Constructor using the string binding (keyboard or gamepad) format
      * @param curr The current binding
-     * @param isDouble whether this parameter's string contains two values
+     * @param isAnalogCouple whether this parameter's string contains two values (which also means analog input)
      */
-    wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isDouble);
+    wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCouple);
     
     /**
      * Get the selected key binding, or SDLK_UNKNOWN if nothing was selected
@@ -95,7 +95,7 @@ public:
      */
     wxString getBindingString() const
     {
-        assert(m_format == FORMAT_STRING || m_format == FORMAT_DOUBLE_STRING);
+        assert(m_format == FORMAT_DIGITAL || m_format == FORMAT_ANALOG_COUPLE);
         return m_binding;
     }
 };
