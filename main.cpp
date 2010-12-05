@@ -31,10 +31,12 @@
 #include "mupen64plusplus/plugin.h"
 #include "parameterpanel.h"
 #include "gamespanel.h"
+#include "sdlkeypicker.h" // to get the USE_WX_KEY_PICKER define
+
 #include <stdexcept>
 #include <algorithm>
 
-//#include <SDL.h>
+#include <SDL.h>
 
 const bool g_Verbose = false;
 
@@ -244,8 +246,10 @@ bool MupenFrontendApp::OnInit()
     m_curr_panel = NULL;
     m_gamesPathParam = NULL;
     
+    #if USE_WX_KEY_PICKER
     // SDL_INIT_VIDEO is necessary to init keyboard support, which is in turn necessary for our input module
-    //SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+    #endif
     
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
@@ -255,7 +259,7 @@ bool MupenFrontendApp::OnInit()
     printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
     
     
-    #if 0
+    #if USE_WX_KEY_PICKER
     // ====================
     // Init Gamepad Support
     printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );

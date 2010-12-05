@@ -35,14 +35,6 @@
 
 // -----------------------------------------------------------------------------------------------------------
 
-// Use the wx picker on OSX, the SDL picker elsewhere... I think this will work OK
-#ifdef __WXMAC__
-#define USE_SDL_KEY_PICKER 0
-#define USE_WX_KEY_PICKER 1
-#else
-#define USE_SDL_KEY_PICKER 1
-#define USE_WX_KEY_PICKER 0
-#endif
 
 #if USE_SDL_KEY_PICKER
 
