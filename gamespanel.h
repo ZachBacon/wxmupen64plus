@@ -31,8 +31,10 @@
 class wxListCtrl;
 class wxDirPickerCtrl;
 class wxFileDirPickerEvent;
+class wxBitmapButton;
+class wxStaticText;
 
-class GamesPanel : public wxPanel, public IConfigurationPanel
+class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateListener
 {
     wxListCtrl* m_item_list;
     wxDirPickerCtrl* m_dir_picker;
@@ -56,6 +58,13 @@ class GamesPanel : public wxPanel, public IConfigurationPanel
     
     Mupen64PlusPlus* m_api;
     
+    wxBitmapButton* m_play_button;
+    wxBitmapButton* m_pause_button;
+    wxBitmapButton* m_stop_button;
+    wxStaticText* m_status;
+    
+    wxString m_currently_loaded_rom;
+    
 public:
 
 	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam);
@@ -70,8 +79,17 @@ public:
     
     void onPathChange(wxFileDirPickerEvent& event);
     void onPlay(wxCommandEvent& evt);
+    void onPause(wxCommandEvent& evt);
+    void onStop(wxCommandEvent& evt);
     
     void onRomInfoReady(wxCommandEvent& evt);
+    
+    
+    /** Callback from IEmuStateListener */
+    virtual void onStateChanged(m64p_emu_state newState);
+    
+    /** Callback from IEmuStateListener */
+    virtual void onSaveSlotChanged(int saveSlot){}
     
     DECLARE_EVENT_TABLE()
 };

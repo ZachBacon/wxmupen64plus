@@ -672,10 +672,11 @@ m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *Pa
 
 // -----------------------------------------------------------------------------------------------------------
 
-m64p_error InitCore(void)
+m64p_error InitCore(ptr_StateCallback stateCallback, void* context)
 {
-    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath, (void*)("Core"),
-                                      DebugCallback, NULL, NULL);
+    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath,
+                                      (void*)("Core") /* context */, DebugCallback,
+                                      context, stateCallback);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -769,7 +770,35 @@ m64p_error pauseEmulation()
 
 m64p_error resumeEmulation()
 {
-    return (*CoreDoCommand)(M64CMD_RESUME , 0 /* unused */, NULL /* unused */);
+    return (*CoreDoCommand)(M64CMD_RESUME, 0 /* unused */, NULL /* unused */);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error getState(m64p_core_param  which, int* out)
+{
+    return (*CoreDoCommand)(M64CMD_CORE_STATE_QUERY, which, out );
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error saveGame(int pj64Format, char* path /* optional */)
+{
+    return (*CoreDoCommand)(M64CMD_STATE_SAVE, (pj64Format ? 2 : 1), path);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error setSaveSlot(int slotId)
+{
+    return (*CoreDoCommand)(M64CMD_STATE_SET_SLOT, slotId, NULL);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error takeScreenshot()
+{
+    return (*CoreDoCommand)(M64CMD_TAKE_NEXT_SCREENSHOT, 0 /* unused */, NULL /* unused */);
 }
 
 // -----------------------------------------------------------------------------------------------------------

@@ -178,6 +178,13 @@ public:
     }
 };
 
+class IEmuStateListener
+{
+public:
+    virtual void onStateChanged(m64p_emu_state newState) = 0;
+    virtual void onSaveSlotChanged(int saveSlot) = 0;
+};
+
 class Mupen64PlusPlus
 {
     void loadPlugins();
@@ -190,6 +197,11 @@ class Mupen64PlusPlus
  
     /** Size of the currently open ROM, in bytes */
     int m_curr_rom_size;
+ 
+    static void StateCallback(void *Context, m64p_core_param param_type, int new_value);
+    void onStateChanged(m64p_core_param param_type, int new_value);
+ 
+    IEmuStateListener* m_listener;
  
 public:
 
@@ -275,6 +287,34 @@ public:
      * @note This command may execute asynchronously. 
      */
     void resumeEmulation();
+    
+    /**
+     * @return whether the emulator is running, paused or stopped
+     */
+    m64p_emu_state getEmulationState();
+    
+    int getSaveSlot();
+    void setSaveSlot(int slot);
+    
+    /**
+     * Save the game.
+     * @param pj64Format If true, a Project64 compatible save is produced. Otherwise, a regular mupen save is generated.
+     * @param path       If set, the savegame is written at the given path
+     */
+    void saveGame(bool pj64Format = false, char* path = NULL);
+    
+    /**
+     * This will cause the core to save a screenshot at the next possible opportunity. 
+     * The emulator must be currently running or paused. This command will execute asynchronously.
+     */
+    void takeScreenshot();
+    
+    /**
+     * Set a new listener. Does not take ownership (will not delete it). Only one listener may be set
+     * at a time. Passing NULL clears the current listener.
+     */
+    void setListener(IEmuStateListener* listener) { m_listener = listener; }
+    
 };
 
 #endif

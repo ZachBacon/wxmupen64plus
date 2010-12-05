@@ -40,7 +40,7 @@ extern void DebugCallback(void *Context, int level, const char *message);
 
 m64p_error AttachCoreLib(const char *CoreLibFilepath);
 m64p_error DetachCoreLib(void);
-m64p_error InitCore(void);
+m64p_error InitCore(ptr_StateCallback stateCallback, void* context);
 
 extern m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
                                            const char* defaultVideoPlugin, const char* defaultAudioPlugin,
@@ -136,6 +136,25 @@ m64p_error getCurrentRomHeader(m64p_rom_header* out);
 m64p_error getRomHeader(const char* path, m64p_rom_header* out);
 
 m64p_error getRomSettings(m64p_rom_settings* out);
+
+/** 
+ * @param pj64Format boolean
+ */
+m64p_error saveGame(int pj64Format, char* path /* optional */);
+
+m64p_error getState(m64p_core_param  which, int* out);
+
+/**
+ * @param slotID Value to set for the current slot index. Must be between 0 and 9
+ */
+m64p_error setSaveSlot(int slotId);
+
+/**
+ * This will cause the core to save a screenshot at the next possible opportunity. 
+ * The emulator must be currently running or paused. This command will execute asynchronously.
+ */
+m64p_error takeScreenshot();
+
 
 /** Get the path where to find games, in config */
 //m64p_error GetGamesPath(char path[], const int pathLen);

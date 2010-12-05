@@ -31,6 +31,11 @@
 #include <wx/progdlg.h>
 #include <SDL.h>
 
+void Mupen64PlusPlus::StateCallback(void *Context, m64p_core_param param_type, int new_value)
+{
+    ((Mupen64PlusPlus*)Context)->onStateChanged(param_type, new_value);
+}
+
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
 
@@ -38,6 +43,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
                                  const char* defaultVideoPlugin, const char* defaultAudioPlugin,
                                  const char* defaultInputPlugin, const char* defaultRspPlugin)
 {
+    m_listener = NULL;
     m_defaultPluginPath = defaultPluginPath;
     m_defaultVideoPlugin = defaultVideoPlugin;
     m_defaultAudioPlugin = defaultAudioPlugin;
@@ -53,7 +59,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         throw std::runtime_error(errmsg);
     }
 
-    result = InitCore();
+    result = InitCore(&StateCallback, this);
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "[Mupen64PlusPlus::Mupen64PlusPlus] InitCore failed with error : ";
@@ -75,6 +81,8 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
     loadPlugins();
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 Mupen64PlusPlus::~Mupen64PlusPlus()
 {
     (*PluginUnload)();
@@ -82,10 +90,14 @@ Mupen64PlusPlus::~Mupen64PlusPlus()
     DetachCoreLib();
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 m64p_error Mupen64PlusPlus::saveConfig()
 {
     return ::saveConfig();;
 }
+
+// -----------------------------------------------------------------------------------------------------------
 
 void Mupen64PlusPlus::loadPlugins()
 {
@@ -247,8 +259,9 @@ void Mupen64PlusPlus::closeRom(bool detachPlugins)
             throw std::runtime_error(errmsg);
         }
     }
-    
+        
     m64p_error result = ::closeRom();
+        
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Closing ROM failed with error : ";
@@ -466,6 +479,107 @@ void Mupen64PlusPlus::resumeEmulation()
         std::string errmsg = "Resuming emulation failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_emu_state Mupen64PlusPlus::getEmulationState()
+{
+    int val;
+    m64p_error result = ::getState(M64CORE_EMU_STATE, &val);
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Retrieving emulation state failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+    
+    /*
+     *  M64EMU_STOPPED = 1,
+     *  M64EMU_RUNNING,
+     *  M64EMU_PAUSED
+     */
+    
+    return (m64p_emu_state)val;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+int Mupen64PlusPlus::getSaveSlot()
+{
+    int val;
+    m64p_error result = ::getState(M64CORE_SAVESTATE_SLOT, &val);
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Retrieving save slot failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+    return val;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::setSaveSlot(int slotId)
+{
+    m64p_error result = ::setSaveSlot(slotId);
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Setting save slot failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::saveGame(bool pj64Format, char* path)
+{
+    m64p_error result = ::saveGame(pj64Format, path);
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Saving game failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::takeScreenshot()
+{
+    m64p_error result = ::takeScreenshot();
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Taking screenshot failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::onStateChanged(m64p_core_param param_type, int new_value)
+{    
+    switch (param_type)
+    {
+        case M64CORE_SAVESTATE_SLOT:
+        {
+            if (m_listener != NULL) m_listener->onSaveSlotChanged(new_value);
+            break;
+        }
+        
+        case M64CORE_EMU_STATE:
+        {
+            m64p_emu_state state = (m64p_emu_state)new_value;
+            if (m_listener != NULL) m_listener->onStateChanged(state);
+            break;
+        }
+        
+        default:
+            // we don't care for other types
+            break;
     }
 }
 

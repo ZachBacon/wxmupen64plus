@@ -33,6 +33,8 @@
 #include <wx/log.h>
 #include <wx/msgqueue.h>
 #include <wx/progdlg.h>
+#include <wx/stattext.h>
+#include <wx/statbmp.h>
 
 #include <stdexcept>
 #include <map>
@@ -253,6 +255,7 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam games
         wxPanel(parent, wxID_ANY), m_gamesPathParam(gamesPathParam)
 {
     m_api = api;
+    api->setListener(this);
     
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
     
@@ -290,15 +293,42 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam games
 #endif
 
     wxBitmap icon_play(datadir + "play.png", wxBITMAP_TYPE_PNG);  
-    wxBitmapButton* playBtn = new wxBitmapButton(this, wxID_ANY, icon_play, wxDefaultPosition, wxDefaultSize,
-                                                 wxBORDER_NONE);
-    buttons->Add(playBtn, 0, wxALL, 5);
+    m_play_button = new wxBitmapButton(this, wxID_ANY, icon_play, wxDefaultPosition, wxDefaultSize,
+                                       wxBORDER_NONE);
+    buttons->Add(m_play_button, 0, wxALL, 5);
     
-    sizer->Add(buttons, 0, wxALL, 5);
+    wxBitmap icon_pause(datadir + "pause.png", wxBITMAP_TYPE_PNG);  
+    m_pause_button = new wxBitmapButton(this, wxID_ANY, icon_pause, wxDefaultPosition, wxDefaultSize,
+                                       wxBORDER_NONE);
+    buttons->Add(m_pause_button, 0, wxALL, 5);
     
-    playBtn->Connect(playBtn->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
-                    wxCommandEventHandler(GamesPanel::onPlay), NULL, this);
+    wxBitmap icon_stop(datadir + "stop.png", wxBITMAP_TYPE_PNG);  
+    m_stop_button = new wxBitmapButton(this, wxID_ANY, icon_stop, wxDefaultPosition, wxDefaultSize,
+                                       wxBORDER_NONE);
+    buttons->Add(m_stop_button, 0, wxALL, 5);
     
+    buttons->AddStretchSpacer();
+    
+    m_status = new wxStaticText(this, wxID_ANY, _("Emulation is stopped"));
+    buttons->Add(m_status, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
+    
+    wxBitmap icon_cart(datadir + "mupen64cart.png", wxBITMAP_TYPE_PNG);  
+    wxStaticBitmap* icon = new wxStaticBitmap(this, wxID_ANY, icon_cart);
+    buttons->Add(icon, 0, wxALL, 5);
+    
+    
+    sizer->Add(buttons, 0, wxEXPAND | wxALL, 5);
+    
+
+    
+    m_play_button->Connect(m_play_button->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
+                           wxCommandEventHandler(GamesPanel::onPlay), NULL, this);
+    m_pause_button->Connect(m_pause_button->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
+                            wxCommandEventHandler(GamesPanel::onPause), NULL, this);
+    m_stop_button->Connect(m_stop_button->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
+                           wxCommandEventHandler(GamesPanel::onStop), NULL, this);
+    m_pause_button->Disable();
+    m_stop_button->Disable();
     SetSizer(sizer);
 }
 
@@ -404,6 +434,7 @@ void GamesPanel::populateList()
 GamesPanel::~GamesPanel()
 {
     killThread();
+    m_api->setListener(NULL);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -485,7 +516,13 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 void GamesPanel::onPlay(wxCommandEvent& evt)
 {
     killThread();
-        
+    
+    if (m_api->getEmulationState() == M64EMU_PAUSED)
+    {
+        m_api->resumeEmulation();
+        return;
+    }
+    
     wxString path = m_dir_picker->GetPath();        
     if (path.IsEmpty())
     {
@@ -505,12 +542,75 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
     try
     {
         m_api->loadRom(file, true, &dialog);
+        m_currently_loaded_rom = m_item_list->GetItemText(item);
         dialog.Hide();
         m_api->runEmulation();
     }
     catch (std::runtime_error& ex)
     {
         wxMessageBox(ex.what());
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onPause(wxCommandEvent& evt)
+{
+    try
+    {
+        m_api->pauseEmulation();
+    }
+    catch (std::runtime_error& ex)
+    {
+        wxMessageBox( wxString(_("An error occurred while trying to pause emulation :")) + ex.what() );
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onStop(wxCommandEvent& evt)
+{
+    try
+    {
+        m_api->stopEmulation();
+        m_api->closeRom();
+        m_currently_loaded_rom = "";
+    }
+    catch (std::runtime_error& ex)
+    {
+        wxMessageBox( wxString(_("An error occurred while trying to stop emulation :")) + ex.what() );
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onStateChanged(m64p_emu_state newState)
+{
+    switch (newState)
+    {
+        case M64EMU_STOPPED:
+            m_play_button->Enable();
+            m_stop_button->Disable();
+            m_pause_button->Disable();
+            m_status->SetLabel(_("Emulation is stopped"));
+            Layout();
+            break;
+        
+        case M64EMU_RUNNING:
+            m_play_button->Disable();
+            m_stop_button->Enable();
+            m_pause_button->Enable();
+            m_status->SetLabel(wxString::Format(_("'%s' is running"), m_currently_loaded_rom.mb_str()));
+            Layout();
+            break;
+        
+        case M64EMU_PAUSED:
+            m_play_button->Enable();
+            m_stop_button->Enable();
+            m_pause_button->Disable();
+            m_status->SetLabel(wxString::Format(_("'%s' is paused"), m_currently_loaded_rom.mb_str()));
+            Layout();
+            break;
     }
 }
 
