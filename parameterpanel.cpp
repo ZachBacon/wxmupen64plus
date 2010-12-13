@@ -288,7 +288,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
                 break;
             }
-        } // end swicth
+        } // end switch
         
         label->SetToolTip( section.m_parameters[p].m_help_string );
         ctrl->SetToolTip( section.m_parameters[p].m_help_string );
