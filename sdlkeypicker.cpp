@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "sdlkeypicker.h"
+#include "main.h"
 
 #include <SDL.h>
 #include <SDL_keyboard.h>
@@ -72,7 +73,7 @@ public:
         
         screen = SDL_SetVideoMode( 550, 200, 32, SDL_SWSURFACE ); 
         
-        message = SDL_LoadBMP( "presskey.bmp" ); 
+        message = SDL_LoadBMP( datadir + "/presskey.bmp" ); 
         if (message == NULL)
         {
             wxMessageBox(_("Failed to load image, make sure your installation is OK!"));
@@ -80,7 +81,7 @@ public:
             return;
         }
         
-        cancel = SDL_LoadBMP( "cancel.bmp" ); 
+        cancel = SDL_LoadBMP( datadir + "/cancel.bmp" ); 
         if (cancel == NULL)
         {
             wxMessageBox(_("Failed to load image, make sure your installation is OK!"));
@@ -88,7 +89,7 @@ public:
             return;
         }
         
-        erase = SDL_LoadBMP( "erase.bmp" ); 
+        erase = SDL_LoadBMP( datadir + "/erase.bmp" ); 
         if (erase == NULL)
         {
             wxMessageBox(_("Failed to load image, make sure your installation is OK!"));

@@ -256,6 +256,9 @@ public:
     }
 };
 
+wxString datadir;
+wxString libs;
+
 IMPLEMENT_APP(MupenFrontendApp);
 
 // -----------------------------------------------------------------------------------------------------------
@@ -300,15 +303,15 @@ bool MupenFrontendApp::OnInit()
     #endif
     
 #ifdef DATADIR
-    wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
+    datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else
-    wxString datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+    datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
 #endif
 
 #ifdef LIBDIR
-    wxString libs = wxString(LIBDIR) + wxFileName::GetPathSeparator();
+    libs = wxString(LIBDIR) + wxFileName::GetPathSeparator();
 #else
-    wxString libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
+    libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
 #endif
 
     printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
