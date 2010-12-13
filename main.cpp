@@ -265,6 +265,8 @@ bool MupenFrontendApp::OnInit()
     // FIXME: the first time a video plugin is selected, it does not appear in optioms =(
     // (at least with Glide, I needed to first launch a game with it, then restart the frontend)
     
+    // FIXME: the first time mupen opens, a warning that the config file was not found is sent...
+    
     m_curr_panel = NULL;
     m_gamesPathParam = NULL;
     
