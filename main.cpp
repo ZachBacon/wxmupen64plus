@@ -167,8 +167,9 @@ public:
                 }
                 else
                 {
-                    // TODO: find name for group of sections
-                    section = curr.m_config[0].m_section_name;
+                    // Make a dummy name for the grouped section; not too important since at this
+                    // point we will most likely not read the name except for debugging purposes
+                    section = curr.m_config[0].m_section_name + "-group";
                 }
                 sectionId = n;
                 break;
