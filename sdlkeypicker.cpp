@@ -452,6 +452,10 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCou
     if (m_btn2 != NULL)
     {
         m_btn2->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+
+        // help the sizers give space equally to the two buttons (seems only necessary under wxGTK)
+        m_btn->SetMinSize( wxSize(75, -1) );
+        m_btn2->SetMinSize( wxSize(75, -1) );
     }
     
     SetMinSize( wxSize(150, -1) );
