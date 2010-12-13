@@ -272,6 +272,43 @@ void Mupen64PlusPlus::closeRom(bool detachPlugins)
 
 // -----------------------------------------------------------------------------------------------------------
 
+wxString getCountryName(unsigned short countrycode)
+{
+    switch (countrycode)
+    {
+    case 0x41:
+        return _("Japan/USA");
+
+    case 0x44:
+        return _("Germany");
+
+    case 0x45:
+        return _("USA");
+
+    case 0x46:
+        return _("France");
+
+    case 'I':
+        return _("Italy");
+
+    case 0x4A:
+        return _("Japan");
+
+    case 'S':
+        return _("Spain");
+
+    case 0x55: case 0x59:
+        return _("Australia");
+
+    case 0x50: case 0x58: case 0x20:
+    case 0x21: case 0x38: case 0x70:
+        return _("Europe");
+
+    default:
+        return _("Other");
+    }
+}
+
 Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
 {
     m64p_rom_header header;
@@ -303,50 +340,8 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
     out.CRC1 = header.CRC1;
     out.CRC2 = header.CRC2;
     out.size = m_curr_rom_size;
+    out.country = getCountryName(countrycode);
     
-    switch (countrycode)
-    {
-    case 0x41:
-        out.country = _("Japan/USA");
-        break;
-
-    case 0x44:
-        out.country = _("Germany");
-        break;
-
-    case 0x45:
-        out.country = _("USA");
-        break;
-
-    case 0x46:
-        out.country = _("France");
-        break;
-
-    case 'I':
-        out.country = _("Italy");
-        break;
-
-    case 0x4A:
-        out.country = _("Japan");
-        break;
-
-    case 'S':
-        out.country = _("Spain");
-        break;
-
-    case 0x55: case 0x59:
-        out.country = _("Australia");
-        break;
-
-    case 0x50: case 0x58: case 0x20:
-    case 0x21: case 0x38: case 0x70:
-        out.country = _("Europe");
-        break;
-
-    default:
-        out.country = _("Other");
-        break;
-    }
     return out;
 }
 
@@ -363,70 +358,17 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-    
-    // TODO: get settings for ROMs loaded this way too
-    /*
-    result = getRomSettings(&settings);
-    if (result != M64ERR_SUCCESS)
-    {
-        std::string errmsg = "Reading ROM settings failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
-    }*/
-    
+
     RomInfo out;
     
     unsigned short countrycode = header.Country_code;
     out.manufacturer = header.Manufacturer_ID;
     out.name = header.Name;
-    //out.goodname = settings.goodname;
     out.CRC1 = header.CRC1;
     out.CRC2 = header.CRC2;
     out.size = m_curr_rom_size;
+    out.country = getCountryName(countrycode);
     
-    switch (countrycode)
-    {
-    case 0x41:
-        out.country = _("Japan/USA");
-        break;
-
-    case 0x44:
-        out.country = _("Germany");
-        break;
-
-    case 0x45:
-        out.country = _("USA");
-        break;
-
-    case 0x46:
-        out.country = _("France");
-        break;
-
-    case 'I':
-        out.country = _("Italy");
-        break;
-
-    case 0x4A:
-        out.country = _("Japan");
-        break;
-
-    case 'S':
-        out.country = _("Spain");
-        break;
-
-    case 0x55: case 0x59:
-        out.country = _("Australia");
-        break;
-
-    case 0x50: case 0x58: case 0x20:
-    case 0x21: case 0x38: case 0x70:
-        out.country = _("Europe");
-        break;
-
-    default:
-        out.country = _("Other");
-        break;
-    }
     return out;
 }
 
