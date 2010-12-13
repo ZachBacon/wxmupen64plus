@@ -195,7 +195,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 }
                 catch (std::runtime_error& ex)
                 {
-                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                    wxLogError("Could not read value of parameter <%s> : %s\n",
+                               section.m_parameters[p].m_param_name.c_str(), ex.what());
                 }
                 
                 if (section.m_parameters[p].m_special_type == BINDING_DIGITAL_STRING)
@@ -210,13 +211,14 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 {
                     ctrl = new wxDirPickerCtrl(this, wxID_ANY, wxString(currVal.c_str()));
                     ctrl->SetMinSize( wxSize(350, -1) );
+                    ctrl->Connect(ctrl->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
+                                  wxFileDirPickerEventHandler(ParameterPanel::onPathChanged),
+                                  NULL, this);
                 }
                 else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
                 {
-                    // TODO: when the "path" parameter changes, plugin choices need to be updated!
                     // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
-                    // FIXME: this code is run once for every 'PLUGIN_FILE' type parameter; it could be
-                    //        run once and for all per 'm_dir'
+                    // TODO: 'getPluginsIn' will be called several times with the same parameter
                     
                     wxComboBox* combo = new wxComboBox(this, wxID_ANY);
                     
@@ -411,6 +413,53 @@ void ParameterPanel::commitNewValues()
                         param->m_param_type, param->m_param_name.c_str());
                 assert(false);
             }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
+{
+    const int count = m_parameter_widgets.size();
+    
+    ConfigParam* eventParam = NULL;
+    for (int n=0; n<count; n++)
+    {
+        wxWindow* w = m_parameter_widgets[n];
+        if (w == event.GetEventObject())
+        {
+            eventParam = (ConfigParam*)w->GetClientData();
+            break;
+        }
+    }
+    if (eventParam == NULL)
+    {
+        wxLogWarning("[ParameterPanel::onPathChanged] Cannot find which path was changed");
+        return;
+    }
+    
+    for (int n=0; n<count; n++)
+    {
+        wxWindow* w = m_parameter_widgets[n];
+        ConfigParam* param = (ConfigParam*)w->GetClientData();
+        assert(param != NULL);
+        assert(param->ok());
+        
+        if (param->m_special_type == PLUGIN_FILE)
+        {
+            if (not param->m_dir->equals(eventParam)) continue;
+            
+            wxComboBox* combo = dynamic_cast<wxComboBox*>(w);
+            assert(combo != NULL);
+            
+            // We have a plugin picker combo, and a path was just changed.
+            // Let's update the plugin choices
+            wxString dir = event.GetPath();
+            
+            // TODO: 'getPluginsIn' will be called several times with the same parameter
+            wxArrayString choices = getPluginsIn(dir);
+            combo->Set(choices);
         }
     }
 }

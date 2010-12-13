@@ -29,6 +29,8 @@
 
 #include "mupen64plusplus/MupenAPIpp.h"
 
+class wxFileDirPickerEvent;
+
 class IConfigurationPanel
 {
 public:
@@ -52,6 +54,8 @@ public:
         parentSizer->Detach(this);
         this->Destroy();
     }
+    
+    void onPathChanged(wxFileDirPickerEvent& event);
 };
 
 class ParameterGroupsPanel : public wxNotebook, public IConfigurationPanel
