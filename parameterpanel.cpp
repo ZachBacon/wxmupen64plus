@@ -39,8 +39,8 @@
 #include <SDL_events.h>
 #include <stdexcept>
 
-// TODO: when changing device type (e.g. from gamepad to keyboard), types may need to be changed in all
-//       following input buttons, otherwise changing the selected binding won't work
+// TODO: atm there is no device type check, i.e. you will get no error if you configure select type to be keyboard
+//       then enter gamepad keys. This would be more user-friendly (and don't forget to handle device type changes)
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -249,7 +249,12 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 }
                 else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
                 {
-                    // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.                    
+                    // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
+                    // Functions that could be checked for in each plugin type :
+                    //    video : void ChangeWindow?(void);
+                    //    audio : void VolumeUp?(void);
+                    //    input : void ControllerCommand?(int Control, BYTE * Command);
+                    //    rsp   : DWORD DoRspCycles?(DWORD Cycles);
                     wxComboBox* combo = new wxComboBox(this, wxID_ANY);
                     
                     assert(section.m_parameters[p].m_dir != NULL);
