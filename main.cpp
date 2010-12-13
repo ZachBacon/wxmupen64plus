@@ -273,10 +273,11 @@ bool MupenFrontendApp::OnInit()
     m_curr_panel = NULL;
     m_gamesPathParam = NULL;
     
-    #if USE_WX_KEY_PICKER
-    // SDL_INIT_VIDEO is necessary to init keyboard support, which is in turn necessary for our input module
+    // (this is needed on OSX for gamepad input configuration to work [SDL_INIT_VIDEO is necessary to init
+    // keyboard support],and is needed on Linux for retrieving the name of each key to work)
+    // FIXME: SDL_init is also called when starting a game, and also when using the SDL key picker; thus
+    //        SDL_init will be called at times where SDL is already inited. I hvae no idea if this is bad
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-    #endif
     
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
@@ -286,7 +287,6 @@ bool MupenFrontendApp::OnInit()
     printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
     
     
-    #if USE_WX_KEY_PICKER
     // ====================
     // Init Gamepad Support
     printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
@@ -300,8 +300,7 @@ bool MupenFrontendApp::OnInit()
     }
     printf("\n");
     // ====================
-    #endif
-    
+
 #ifdef DATADIR
     datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else
