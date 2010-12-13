@@ -42,29 +42,61 @@
 // TODO: when changing device type (e.g. from gamepad to keyboard), types may need to be changed in all
 //       following input buttons, otherwise changing the selected binding won't work
 
-wxArrayString getPluginsIn(wxString dir)
+// -----------------------------------------------------------------------------------------------------------
+
+namespace PluginsFinder
 {
-    if (dir.IsEmpty())
-    {
-        wxArrayString empty;
-        return empty;
-    }
-    else
+    struct GetPluginsInCache
     {
         wxArrayString choices;
-        wxDir::GetAllFiles(dir, &choices, wxString("*") + OSAL_DLL_EXTENSION);
-        
-        wxArrayString filenames;
-        const int count = choices.size();
-        for (int n=0; n<count; n++)
+        wxString path;
+    };
+    GetPluginsInCache* g_cache = NULL;
+
+    wxArrayString getPluginsIn(wxString dir)
+    {
+        if (g_cache != NULL and g_cache->path == dir)
         {
-            wxFileName f(choices[n]);
-            filenames.Add(f.GetFullName());
+            return g_cache->choices;
         }
         
-        return filenames;
+        if (dir.IsEmpty())
+        {
+            wxArrayString empty;
+            return empty;
+        }
+        else
+        {
+            if (g_cache == NULL) g_cache = new GetPluginsInCache();
+            
+            g_cache->path = dir;
+            g_cache->choices.Clear();
+            
+            wxArrayString temp_list;
+            wxDir::GetAllFiles(dir, &temp_list, wxString("*") + OSAL_DLL_EXTENSION);
+            
+            // trim path, keep only filenames
+            const int count = temp_list.size();
+            for (int n=0; n<count; n++)
+            {
+                wxFileName f(temp_list[n]);
+                g_cache->choices.Add(f.GetFullName());
+            }
+            
+            return g_cache->choices;
+        }
     }
-}
+
+    void clearCache()
+    {
+        if (g_cache)
+        {
+            delete g_cache;
+            g_cache = NULL;
+        }
+    }
+
+} // end namespace
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -217,14 +249,12 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 }
                 else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
                 {
-                    // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
-                    // TODO: 'getPluginsIn' will be called several times with the same parameter
-                    
+                    // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.                    
                     wxComboBox* combo = new wxComboBox(this, wxID_ANY);
                     
                     assert(section.m_parameters[p].m_dir != NULL);
                     wxString dir = section.m_parameters[p].m_dir->getStringValue();
-                    wxArrayString choices = getPluginsIn(dir);
+                    wxArrayString choices = PluginsFinder::getPluginsIn(dir);
                     combo->Append(choices);
                     
                     combo->SetValue(currVal.c_str());
@@ -268,6 +298,9 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
 ParameterPanel::~ParameterPanel()
 {
     m_magic_number = 0xDEADBEEF;
+    
+    // Clear any cached results upon leaving
+    PluginsFinder::clearCache();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -457,8 +490,7 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             // Let's update the plugin choices
             wxString dir = event.GetPath();
             
-            // TODO: 'getPluginsIn' will be called several times with the same parameter
-            wxArrayString choices = getPluginsIn(dir);
+            wxArrayString choices = PluginsFinder::getPluginsIn(dir);
             combo->Set(choices);
         }
     }
