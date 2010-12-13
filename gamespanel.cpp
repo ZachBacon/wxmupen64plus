@@ -589,6 +589,7 @@ void GamesPanel::onStateChanged(m64p_emu_state newState)
     switch (newState)
     {
         case M64EMU_STOPPED:
+            if (m_api->isARomOpen()) m_api->closeRom();
             m_play_button->Enable();
             m_stop_button->Disable();
             m_pause_button->Disable();

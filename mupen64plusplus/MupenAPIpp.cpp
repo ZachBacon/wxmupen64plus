@@ -50,6 +50,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
     m_defaultInputPlugin = defaultInputPlugin;
     m_defaultRspPlugin = defaultRspPlugin;
     m_curr_rom_size = -1;
+    m_is_a_rom_open = false;
     
     m64p_error result = AttachCoreLib(CoreLibFilepath);
     if (result != M64ERR_SUCCESS)
@@ -241,6 +242,8 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
         }
     }
     
+    m_is_a_rom_open = true;
+    
     if (dialog != NULL) dialog->Update(100);
 }
 
@@ -258,15 +261,17 @@ void Mupen64PlusPlus::closeRom(bool detachPlugins)
             throw std::runtime_error(errmsg);
         }
     }
-        
+    
     m64p_error result = ::closeRom();
-        
+    
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Closing ROM failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
+    
+    m_is_a_rom_open = false;
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -395,6 +400,8 @@ void Mupen64PlusPlus::stopEmulation()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
+    
+    assert(getEmulationState() == M64EMU_STOPPED);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -408,6 +415,8 @@ void Mupen64PlusPlus::pauseEmulation()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
+    
+    assert(getEmulationState() == M64EMU_PAUSED);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -421,6 +430,8 @@ void Mupen64PlusPlus::resumeEmulation()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
+    
+    assert(getEmulationState() == M64EMU_RUNNING);
 }
 
 // -----------------------------------------------------------------------------------------------------------

@@ -204,6 +204,8 @@ class Mupen64PlusPlus
     std::string m_defaultInputPlugin;
     std::string m_defaultRspPlugin;
  
+    bool m_is_a_rom_open;
+ 
     /** Size of the currently open ROM, in bytes */
     int m_curr_rom_size;
  
@@ -258,6 +260,8 @@ public:
      * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
      */
     void closeRom(bool detachPlugins=true);
+    
+    bool isARomOpen() const { return m_is_a_rom_open; }
     
     /**
      * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
