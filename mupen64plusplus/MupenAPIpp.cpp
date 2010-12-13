@@ -140,8 +140,7 @@ void Mupen64PlusPlus::loadPlugins()
         }
         else
         {
-            // if loading plugins failed, offer to fall back to defaults
-            //wxMessageBox (wxString::Format(_("Failed to load plugins, reason : <%s>\n\nWould you like to revert to def"), getErrorMessage(result)), _("Plugin(s) not found"), int style=wxOK
+            // default fails too, giving up
             std::string errmsg = "[Mupen64PlusPlus::loadPlugins] PluginSearchLoad failed with error : ";
             errmsg = errmsg + getErrorMessage(result);
             throw std::runtime_error(errmsg);
