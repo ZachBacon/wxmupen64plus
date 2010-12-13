@@ -514,21 +514,25 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
     }
     else if (m_format == FORMAT_ANALOG_COUPLE)
     {
+        const bool isBtn2 = evt.GetId() == m_btn2->GetId();
+        
         if (type == PressAKey::KEY)
         {
             SDLKey key = dialog.getKey();
             
+            wxString type = m_binding.BeforeFirst('(');
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
             
-            // TODO: check both types match (i.e. don't allow "key(123, 0+)")
-            if (evt.GetId() == m_btn2->GetId())
+            if (isBtn2) key2 = wxString::Format("%i", key);
+            else        key1 = wxString::Format("%i", key);
+
+            // Check what type this couple use to be. If the type changed, keep both in sync
+            // by clearing the one that hasn't yet been converted to the new type
+            if (type != "key")
             {
-                key2 = wxString::Format("%i", key);
-            }
-            else
-            {
-                key1 = wxString::Format("%i", key);
+                if (isBtn2) key1 = "";
+                else        key2 = "";
             }
             
             m_binding = wxString::Format("key(%s,%s)", key1, key2);
@@ -538,21 +542,45 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
             const int axis = dialog.getAxis();
             const char dir = dialog.getAxisDir();
             
-            // TODO: check both types match (i.e. don't allow "key(123, 0+)")
+            wxString type = m_binding.BeforeFirst('(');
             wxString val1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString val2 = m_binding.AfterLast(',').BeforeLast(')');
             
-            if (evt.GetId() == m_btn2->GetId())
+            if (isBtn2) val2 = wxString::Format("%i%c", axis, dir);
+            else        val1 = wxString::Format("%i%c", axis, dir);
+            
+            // Check what type this couple use to be. If the type changed, keep both in sync
+            // by clearing the one that hasn't yet been converted to the new type
+            if (type != "axis")
             {
-                val2 = wxString::Format("%i%c", axis, dir);
-            }
-            else
-            {
-                val1 = wxString::Format("%i%c", axis, dir);
+                if (isBtn2) val1 = "";
+                else        val2 = "";
             }
             
             m_binding = wxString::Format("axis(%s,%s)", val1, val2);
         }
+        /*
+        else if (type == PressAKey::GAMEPAD_BUTTON)
+        {
+            SDLKey key = dialog.getButton();
+            
+            wxString type = m_binding.BeforeFirst('(');
+            wxString btn1 = m_binding.AfterFirst('(').BeforeLast(',');
+            wxString btn2 = m_binding.AfterLast(',').BeforeLast(')');
+            
+            if (isBtn2) btn2 = wxString::Format("%i", key);
+            else        btn1 = wxString::Format("%i", key);
+            
+            // Check what type this couple use to be. If the type changed, keep both in sync
+            // by clearing the one that hasn't yet been converted to the new type
+            if (type != "button")
+            {
+                if (isBtn2) btn1 = "";
+                else        btn2 = "";
+            }
+            
+            m_binding = wxString::Format("button(%s,%s)", btn1, btn2);
+        }*/
         else
         {
              wxBell();
