@@ -117,7 +117,13 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
         //                                             section.m_parameters[p].m_enabled);
         if (!section.m_parameters[p].m_enabled) continue;
 
-        wxStaticText* label = new wxStaticText(this, wxID_ANY, section.m_parameters[p].m_param_name);
+        // if help string is short enough, use it instead of param name, often it's a clearer string
+        wxString labelstr = (section.m_parameters[p].m_help_string.size() < 30 and
+                             section.m_parameters[p].m_help_string.size() > 0) ?
+                             section.m_parameters[p].m_help_string :
+                             section.m_parameters[p].m_param_name;
+
+        wxStaticText* label = new wxStaticText(this, wxID_ANY, labelstr);
         sizer->Add( label, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 15 );
         wxWindow* ctrl;
 

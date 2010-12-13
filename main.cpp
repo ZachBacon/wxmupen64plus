@@ -262,6 +262,9 @@ IMPLEMENT_APP(MupenFrontendApp);
 
 bool MupenFrontendApp::OnInit()
 {
+    // FIXME: the first time a video plugin is selected, it does not appear in optioms =(
+    // (at least with Glide, I needed to first launch a game with it, then restart the frontend)
+    
     m_curr_panel = NULL;
     m_gamesPathParam = NULL;
     
