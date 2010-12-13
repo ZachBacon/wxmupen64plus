@@ -609,7 +609,20 @@ void wxSDLKeyPicker::updateLabel()
                 label = m_binding;
             }
         }
-        // TODO: axes may also be used in digital context as far as I can tell
+        else if (m_binding.StartsWith("axis("))
+        {
+            long axisval = -1;
+            wxString axis = m_binding.AfterFirst('(').BeforeLast(')');
+            const bool success = axis.ToLong(&axisval);
+            if (success)
+            {
+                label = wxString::Format(_("Axis %i"), axisval);
+            }
+            else
+            {
+                label = m_binding;
+            }
+        }
         else if (m_binding.IsEmpty())
         {
             label = _("Select a binding...");

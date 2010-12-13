@@ -249,7 +249,7 @@ public:
         }
         
         std::cerr << "/!\\ An internal error occurred : an exception was caught unhandled\n" << what.mb_str()
-                  << std::endl();
+                  << std::endl;
         wxMessageBox(_("Sorry an internal error occurred : an exception was caught unhandled : ") + what);
         return true;
     }
