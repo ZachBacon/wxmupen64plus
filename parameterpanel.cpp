@@ -42,6 +42,29 @@
 // TODO: when changing device type (e.g. from gamepad to keyboard), types may need to be changed in all
 //       following input buttons, otherwise changing the selected binding won't work
 
+wxArrayString getPluginsIn(wxString dir)
+{
+    if (dir.IsEmpty())
+    {
+        wxArrayString empty;
+        return empty;
+    }
+    else
+    {
+        wxArrayString choices;
+        wxDir::GetAllFiles(dir, &choices, wxString("*") + OSAL_DLL_EXTENSION);
+        
+        wxArrayString filenames;
+        const int count = choices.size();
+        for (int n=0; n<count; n++)
+        {
+            wxFileName f(choices[n]);
+            filenames.Add(f.GetFullName());
+        }
+        
+        return filenames;
+    }
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -188,40 +211,23 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                     ctrl = new wxDirPickerCtrl(this, wxID_ANY, wxString(currVal.c_str()));
                     ctrl->SetMinSize( wxSize(350, -1) );
                 }
-				else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
+                else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
                 {
-					// TODO: when the "path" parameter changes, plugin choices need to be updated!
-					// TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
-					// FIXME: this code is run once for every 'PLUGIN_FILE' type parameter; it could be
-					//        run once and for all per 'm_dir'
-					
-					wxComboBox* combo = new wxComboBox(this, wxID_ANY);
-					
-					assert(section.m_parameters[p].m_dir != NULL);
-					wxString dir = section.m_parameters[p].m_dir->getStringValue();
-					if (dir.IsEmpty())
-					{
-						wxLogWarning("Could not retrieve plugins path");
-					}
-					else
-					{
-						wxArrayString choices;
-						wxDir::GetAllFiles(dir, &choices, wxString("*") + OSAL_DLL_EXTENSION);
-						
-						wxArrayString filenames;
-						const int count = choices.size();
-						for (int n=0; n<count; n++)
-						{
-							wxFileName f(choices[n]);
-							filenames.Add(f.GetFullName());
-						}
-						
-						combo->Append(filenames);
-					}
-					
-					combo->SetValue(currVal.c_str());
-					ctrl = combo;
-					ctrl->SetMinSize( wxSize(350, -1) );
+                    // TODO: when the "path" parameter changes, plugin choices need to be updated!
+                    // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
+                    // FIXME: this code is run once for every 'PLUGIN_FILE' type parameter; it could be
+                    //        run once and for all per 'm_dir'
+                    
+                    wxComboBox* combo = new wxComboBox(this, wxID_ANY);
+                    
+                    assert(section.m_parameters[p].m_dir != NULL);
+                    wxString dir = section.m_parameters[p].m_dir->getStringValue();
+                    wxArrayString choices = getPluginsIn(dir);
+                    combo->Append(choices);
+                    
+                    combo->SetValue(currVal.c_str());
+                    ctrl = combo;
+                    ctrl->SetMinSize( wxSize(350, -1) );
                 }
                 else
                 {
@@ -380,7 +386,7 @@ void ParameterPanel::commitNewValues()
                     
                     param->setStringValue((const char*)ctrl->GetPath().mb_str());
                 }
-				else if (dynamic_cast<wxComboBox*>(m_parameter_widgets[n])  != NULL)
+                else if (dynamic_cast<wxComboBox*>(m_parameter_widgets[n])  != NULL)
                 {
                     wxComboBox* ctrl = (wxComboBox*)m_parameter_widgets[n];
                     
