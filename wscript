@@ -78,12 +78,28 @@ def build(bld):
     else:
         build_flags += ['-O2']
 
+    bin_install_path = "${PREFIX}/bin"
+
     # A few OSX-specific flags
     if os.uname()[0] == 'Darwin':
         link_flags += ['-Wl,-framework,IOKit', '-Wl,-framework,Carbon',
                        '-Wl,-framework,Cocoa', '-Wl,-framework,AudioToolbox',
                        '-Wl,-framework,System', '-Wl,-framework,OpenGL',
                        '-Wl,-framework,QuickTime', '-Wl,-framework,WebKit']
+        
+        # install target
+        bld.install_files('wxMupen64Plus.app/Contents', 'Info.plist')
+        data_dir = bld.path.find_dir('data')
+        bld.install_files('wxMupen64Plus.app/Contents/Resources', data_dir.ant_glob('*'))
+        bin_install_path = "wxMupen64Plus.app/Contents/MacOS"
+        
+    else:
+        # For other unices
+        
+        # install target
+        data_dir = bld.path.find_dir('data')
+        bld.install_files('${PREFIX}/share/wxmupen64plus/', data_dir.ant_glob('*'))
+
 
     # Build the program
     bld.program(features='c cxx cxxprogram',
@@ -96,8 +112,5 @@ def build(bld):
                         'mupen64plusplus/osal_files_unix.c', 'mupen64plusplus/plugin.c'],
                 target='wxmupen64plus',
                 uselib = 'SDL wxWidgets',
+                install_path = bin_install_path,
                 includes=['.', api_path])
-    
-    # install target
-    data_dir = bld.path.find_dir('data')
-    bld.install_files('${PREFIX}/share/wxmupen64plus/', data_dir.ant_glob('*'))
