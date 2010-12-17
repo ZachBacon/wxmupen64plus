@@ -530,12 +530,19 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         return;
     }
     
-    wxProgressDialog dialog( _("Loading..."), _("Your game is loading") );
-    dialog.Show();
-    
     long item = m_item_list->GetNextItem(-1,
                                         wxLIST_NEXT_ALL,
                                         wxLIST_STATE_SELECTED);
+                                        
+    if (item == -1)
+    {
+        wxMessageBox( _("No game is selected, cannot start emulation") );
+        return;
+    }
+    
+    wxProgressDialog dialog( _("Loading..."), _("Your game is loading") );
+    dialog.Show();
+    
     wxString file = path + wxFileName::GetPathSeparator() + m_item_list->GetItemText(item);
     printf("\n==== Running file '%s' ====\n\n", (const char*)file.utf8_str());
 
