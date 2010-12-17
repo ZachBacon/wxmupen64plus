@@ -24,6 +24,7 @@
 #include "mupen64plusplus/plugin.h"
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <wx/stream.h>
 #include <wx/mstream.h>
 #include <wx/wfstream.h>
@@ -55,9 +56,12 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
     m64p_error result = AttachCoreLib(CoreLibFilepath);
     if (result != M64ERR_SUCCESS)
     {
-        std::string errmsg = "[Mupen64PlusPlus::Mupen64PlusPlus] AttachCoreLib failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        std::ostringstream errmsg;
+        errmsg << "[Mupen64PlusPlus::Mupen64PlusPlus] AttachCoreLib failed with error : ";
+        // the 'getErrorMessage' function cannot be used at this point since the function pointers
+        // are probably not loaded at this point
+        errmsg << result;
+        throw std::runtime_error(errmsg.str());
     }
 
     result = InitCore(&StateCallback, this);
