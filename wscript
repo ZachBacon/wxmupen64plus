@@ -23,10 +23,10 @@ out = 'build'
 # --------------------------------------------------------------------------------------------
 
 def options(opt):
-    opt.add_option('--mupenapi', action='store', help='Where to find Mupen64Plus API headers (optional)', default='/usr/include')
-    opt.add_option('--wxconfig', action='store', help='Which wx-config utility to use (optional)', default='wx-config', dest="wxconfig")
+    opt.add_option('--mupenapi',  action='store', help='Where to find Mupen64Plus API headers (optional)', default='/usr/include')
+    opt.add_option('--wxconfig',  action='store', help='Which wx-config utility to use (optional)', default='wx-config', dest="wxconfig")
     opt.add_option('--sdlconfig', action='store', help='Which sdl-config utility to use (optional)', default='sdl-config', dest="sdlconfig")
-    opt.add_option('--debug', action='store', help='Whether to make a debug build', default=False, dest="debugmode")
+    opt.add_option('--debug',     action='store', help='Whether to make a debug build (may be \'true\' or \'false\')', default=False, dest="debugmode")
     opt.load('compiler_cxx')
     opt.load('compiler_c')
 
@@ -37,11 +37,17 @@ def options(opt):
 def configure(ctx):
     import Options
     import subprocess
+    import waflib
     
     api_path   = Options.options.mupenapi
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
-    is_debug   = Options.options.debugmode
+    
+    
+    if Options.options.debugmode != 'true' and Options.options.debugmode != 'false':
+        waflib.Logs.warn("Warning, the --debug option may only be 'true' or 'false'. Defaulting to 'false'.")
+    
+    is_debug   = (Options.options.debugmode == 'true')
     
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
