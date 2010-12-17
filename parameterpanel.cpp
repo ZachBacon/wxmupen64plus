@@ -109,7 +109,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
     // silly way to leave some space at top
     sizer->AddSpacer(15);
     sizer->AddSpacer(15);
-        
+    
     const int count = section.m_parameters.size();
     for (int p=0; p<count; p++)
     {
