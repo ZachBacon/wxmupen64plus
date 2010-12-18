@@ -46,195 +46,6 @@ enum
 	COLUMN_COUNTRY
 };
 
-// ---------------------------------------------- WORKER THREAD ----------------------------------------------
-// Getting ROM info like internal name, etc. is a slow operation, so it's performed in
-// a worker thread
-
-const int ROM_INFO_READ_ID = 100000;
-
-struct ScheduledOpen
-{
-    wxString m_file;
-    long m_table_id;
-};
-
-struct CompletedOpen
-{
-    Mupen64PlusPlus::RomInfo rominfo;
-    wxString rompath;
-    int listid;
-};
-
-/** List of tasks for the worker thread to perform */
-wxMessageQueue<ScheduledOpen> workerThreadData;
-
-/** Queue of tasks completed by the worker thread; used to pass data from working thread to GUI thread */
-wxMessageQueue<CompletedOpen> workerThreadResults;
-
-/** The current instance of the thread, always stop a previous thread before creating a new one.
- *  When a thread end, it will automatically set this pointer to NULL
- */
-class WorkerThread;
-WorkerThread* workerThread = NULL;
-
-int threadCount = 0;
-
-// so that we can wait until a thread is deleted
-// FIXME: according to the docs, it seems like the mutex needs to be manually locked when using the condition??
-wxMutex* conditionBackend = NULL;
-wxCondition* threadDeleted = NULL;
-
-wxMutex threadDeleteMutex;
-
-/** The worker thread class */
-class WorkerThread : public wxThread
-{
-    Mupen64PlusPlus* m_api;
-    GamesPanel* m_parent;
-    
-public:
-
-    WorkerThread(GamesPanel* parent, Mupen64PlusPlus* api)
-    {
-        m_api = api;
-        m_parent = parent;
-        threadCount++;
-        
-        assert(threadCount <= 1);
-    }
-
-    virtual ExitCode Entry()
-    {
-        ScheduledOpen task;
-        Mupen64PlusPlus::RomInfo info;
-        
-        while (!TestDestroy())
-        {
-            assert(threadCount <= 1);
-            
-            wxMessageQueueError result = workerThreadData.Receive(task);
-                
-            if (result != wxMSGQUEUE_NO_ERROR)
-            {
-                wxLogWarning("Problem communicating between threads, the ROM list may not load fully");
-                break;
-            }
-        
-            // ID -1 is the end of the task queue
-            if (task.m_table_id == -1)
-            {
-                return 0;
-            }
-            
-            // m_api is used without synchronization here, but it's safe because this thread is meant to
-			// be stopped before doing anything else
-			/*
-            try
-            {
-                m_api->loadRom(task.m_file, false);
-            }
-            catch (std::runtime_error& e)
-            {
-                wxLogWarning("Can't get info about %s", (const char*)task.m_file.utf8_str());
-                continue;
-            }
-            
-            try
-            {
-                info = m_api->getRomInfo();
-            }
-            catch (std::runtime_error& e)
-            {
-                wxLogWarning("Can't get info about %s", (const char*)task.m_file.utf8_str());
-            }
-            
-            try
-            {
-                m_api->closeRom(false);
-            }
-            catch (std::runtime_error& e)
-            {
-                wxLogWarning("Can't free rom %s", (const char*)task.m_file.utf8_str());
-            }
-            */
-			
-			try
-			{
-				info = m_api->getRomInfo(task.m_file.utf8_str());
-			}
-			catch (std::runtime_error& ex)
-			{
-				fprintf(stderr, "Failed to load rom %s : %s",
-								(const char*)task.m_file.utf8_str(),
-								ex.what());
-			}
-				
-            CompletedOpen msg;
-            msg.listid = task.m_table_id;
-            msg.rompath = task.m_file;
-            msg.rominfo = info;
-            workerThreadResults.Post(msg);
-            
-            wxCommandEvent event( wxEVT_COMMAND_TEXT_UPDATED, ROM_INFO_READ_ID );
-            m_parent->GetEventHandler()->AddPendingEvent( event );
-        }
-        return 0;
-    }
-    
-    ~WorkerThread()
-    {
-        wxMutexLocker mutex(threadDeleteMutex);
-        
-        workerThread = NULL;
-        threadCount--;
-        assert(threadCount <= 1);
-        threadDeleted->Signal();
-    }
-    
-    void waitDelete()
-    {
-        {
-            wxMutexLocker mutex(threadDeleteMutex);
-            wxThread::Delete();
-        }
-        threadDeleted->Wait();
-    }
-};
-
-/** Only to be called from the main thrad. Stops the worker thread */
-void killThread()
-{
-    assert(threadCount <= 1);
-    
-    if (workerThread != NULL)
-    {
-        workerThread->waitDelete();
-        workerThread = NULL;
-    }
-    
-    assert(threadCount <= 1);
-}
-
-/** Only to be called from the main thrad. Starts the worker thread */
-void spawnThread(GamesPanel* parent, Mupen64PlusPlus* api)
-{
-	if (conditionBackend == NULL)
-	{
-		conditionBackend = new wxMutex();
-		threadDeleted = new wxCondition(*conditionBackend);
-	}
-	
-    assert(threadCount <= 1);
-    
-    killThread();
-    
-    workerThread = new WorkerThread(parent, api);
-    workerThread->Create();
-    workerThread->Run();
-    
-    assert(threadCount <= 1);
-}
-
 // -----------------------------------------------------------------------------------------------------------
 // ----------------------------------------------- GAMES CACHE -----------------------------------------------
 // Info like game internal name, CRC, etc. is slow to calculate and should be remembered, hence this small
@@ -247,9 +58,20 @@ std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 // The main part where the game list is shown
 
 BEGIN_EVENT_TABLE(GamesPanel, wxPanel)
-EVT_COMMAND  (ROM_INFO_READ_ID, wxEVT_COMMAND_TEXT_UPDATED, GamesPanel::onRomInfoReady)
+//EVT_COMMAND  (ROM_INFO_READ_ID, wxEVT_COMMAND_TEXT_UPDATED, GamesPanel::onRomInfoReady)
 END_EVENT_TABLE()
  
+int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPtr sortData)
+{
+    GamesPanel* self = (GamesPanel*)sortData;
+    RomInfo& rom1 = self->m_roms[item1];
+    RomInfo& rom2 = self->m_roms[item2];
+    
+    //printf("Comparing <%s> and <%s>\n", (const char*)rom1.m_file_name.mb_str(),
+    //    (const char*)rom2.m_file_name.mb_str());
+    
+    return rom2.m_file_name.Cmp( rom1.m_file_name );
+}
 
 GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam) :
         wxPanel(parent, wxID_ANY), m_gamesPathParam(gamesPathParam)
@@ -336,9 +158,6 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam games
 
 void GamesPanel::populateList()
 {
-    // stop any previous working thread
-    killThread();
-    
     wxString path = m_dir_picker->GetPath();
     m_item_list->ClearAll();
         
@@ -361,18 +180,12 @@ void GamesPanel::populateList()
         m_item_list->InsertColumn(n, col);
     }
     
-    std::vector<RomInfo> roms = getRomsInDir(path);
+    m_roms = getRomsInDir(path);
     
-    int romsNotInCache = 0;
-    
-    // We will re-fill the queue if needed
-    workerThreadData.Clear();
-    workerThreadResults.Clear();
-    
-    const int item_amount = roms.size();
+    const int item_amount = m_roms.size();
     for (int n=0; n<item_amount; n++)
     {
-        RomInfo& curritem = roms[n];
+        RomInfo& curritem = m_roms[n];
                 
         wxListItem item;
         item.SetId(n);
@@ -392,16 +205,16 @@ void GamesPanel::populateList()
             }
             else
             {
-                // The item is currently not in cache, schedule to retrieve it
-                ScheduledOpen task;
-                task.m_file = curritem.m_full_path;
-                task.m_table_id = id;
-                workerThreadData.Post(task);
-                romsNotInCache++;
-                
-                info.country = "...";
-                info.goodname = "...";
-                info.name = "...";
+                try
+                {
+                    info = m_api->getRomInfo(curritem.m_full_path.utf8_str());
+                }
+                catch (std::runtime_error& ex)
+                {
+                    fprintf(stderr, "Failed to load rom %s : %s",
+                                    (const char*)curritem.m_full_path.utf8_str(),
+                                    ex.what());
+                }
             }
         
             // set value in first column
@@ -415,54 +228,20 @@ void GamesPanel::populateList()
             
             // set value in fourth column
             m_item_list->SetItem(id, COLUMN_COUNTRY, info.country);
+            
+            m_item_list->SetItemData(id, id);
         }
     } // end for
     
-    if (romsNotInCache > 0)
-    {
-        // Send end of work message
-        ScheduledOpen task;
-        task.m_table_id = -1;
-        workerThreadData.Post(task);
-        
-        spawnThread(this, m_api);
-    }
+    m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
 GamesPanel::~GamesPanel()
 {
-    killThread();
+    //killThread();
     m_api->setListener(NULL);
-}
-
-// -----------------------------------------------------------------------------------------------------------
-
-void GamesPanel::onRomInfoReady(wxCommandEvent& evt)
-{
-    CompletedOpen msg;
-    wxMessageQueueError result = workerThreadResults.ReceiveTimeout( 10 /* max 10 milliseconds */, msg);
-    
-    if (result == wxMSGQUEUE_NO_ERROR)
-    {
-        g_cache[msg.rompath] = msg.rominfo;
-        
-        const int id = msg.listid;
-	
-        // set value in second column
-        m_item_list->SetItem(id, COLUMN_NAME, msg.rominfo.name);
-        
-        // set value in third column
-        //m_item_list->SetItem(id, 2, msg.rominfo.goodname);
-        
-        // set value in fourth column
-        m_item_list->SetItem(id, COLUMN_COUNTRY, msg.rominfo.country);
-    }
-    else
-    {
-        wxLogWarning("Problem communicating between threads, ROM list may not load fully");
-    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -497,7 +276,7 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
 
 void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 {
-    killThread();
+    //killThread();
     
     try
     {
@@ -515,7 +294,7 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 
 void GamesPanel::onPlay(wxCommandEvent& evt)
 {
-    killThread();
+    //killThread();
     
     if (m_api->getEmulationState() == M64EMU_PAUSED)
     {

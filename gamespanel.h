@@ -40,6 +40,9 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     wxDirPickerCtrl* m_dir_picker;
     ConfigParam m_gamesPathParam;
     
+    /** Callback to sort the list */
+    static int wxCALLBACK wxListCompareFunction(long item1, long item2, wxIntPtr sortData);
+
     struct RomInfo
     {
         wxString m_file_name;
@@ -65,6 +68,8 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     
     wxString m_currently_loaded_rom;
     
+    std::vector<RomInfo> m_roms;
+    
 public:
 
 	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam);
@@ -81,8 +86,6 @@ public:
     void onPlay(wxCommandEvent& evt);
     void onPause(wxCommandEvent& evt);
     void onStop(wxCommandEvent& evt);
-    
-    void onRomInfoReady(wxCommandEvent& evt);
     
     
     /** Callback from IEmuStateListener */

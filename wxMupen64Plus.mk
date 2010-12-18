@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=mmg
-Date                   :=12/17/10
+Date                   :=2010-12-18
 CodeLitePath           :="/Users/mmg/Library/Application Support/codelite"
 LinkerName             :=g++
 ArchiveTool            :=ar rcus
@@ -37,6 +37,7 @@ ArchiveOutputSwitch    :=
 PreprocessOnlySwitch   :=-E 
 MakeDirCommand         :=mkdir -p
 CmpOptions             :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) $(Preprocessors)
+C_CmpOptions           :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) $(Preprocessors)
 LinkOptions            :=  -mwindows $(shell /usr/local/bin/wx-config-2.9 --debug=yes --libs --unicode=yes) -arch i386 $(shell /usr/local/bin/sdl-config --libs)
 IncludePath            :=  "$(IncludeSwitch)." "$(IncludeSwitch)/Developer/hg/mupen64plus/mupen64plus-core/src/api" "$(IncludeSwitch)/Developer/hg/mupen64plus/mupen64plus-core/src" 
 RcIncludePath          :=
@@ -47,7 +48,7 @@ LibPath                := "$(LibraryPathSwitch)."
 ##
 ## User defined environment variables
 ##
-CodeLiteDir:=/Users/mmg/My Applications/Applications Dev/CodeLite.app/Contents/SharedSupport/
+CodeLiteDir:=/Users/mmg/My Applications/Applications Dev/CodeLite wx2.9.app/Contents/SharedSupport/
 Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 
 ##
@@ -78,7 +79,7 @@ PreBuild:
 $(IntermediateDirectory)/main$(ObjectSuffix): main.cpp $(IntermediateDirectory)/main$(DependSuffix)
 	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/main.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/main$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/main$(DependSuffix): main.cpp
-	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/main$(ObjectSuffix) -MF$(IntermediateDirectory)/main$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/main.cpp"
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/main$(ObjectSuffix) -MF$(IntermediateDirectory)/main$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/main.cpp"
 
 $(IntermediateDirectory)/main$(PreprocessSuffix): main.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/main.cpp"
@@ -86,7 +87,7 @@ $(IntermediateDirectory)/main$(PreprocessSuffix): main.cpp
 $(IntermediateDirectory)/parameterpanel$(ObjectSuffix): parameterpanel.cpp $(IntermediateDirectory)/parameterpanel$(DependSuffix)
 	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/parameterpanel.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/parameterpanel$(DependSuffix): parameterpanel.cpp
-	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/parameterpanel$(ObjectSuffix) -MF$(IntermediateDirectory)/parameterpanel$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/parameterpanel.cpp"
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/parameterpanel$(ObjectSuffix) -MF$(IntermediateDirectory)/parameterpanel$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/parameterpanel.cpp"
 
 $(IntermediateDirectory)/parameterpanel$(PreprocessSuffix): parameterpanel.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/parameterpanel$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/parameterpanel.cpp"
@@ -94,7 +95,7 @@ $(IntermediateDirectory)/parameterpanel$(PreprocessSuffix): parameterpanel.cpp
 $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix): sdlkeypicker.cpp $(IntermediateDirectory)/sdlkeypicker$(DependSuffix)
 	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/sdlkeypicker$(DependSuffix): sdlkeypicker.cpp
-	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) -MF$(IntermediateDirectory)/sdlkeypicker$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp"
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) -MF$(IntermediateDirectory)/sdlkeypicker$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp"
 
 $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix): sdlkeypicker.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlkeypicker.cpp"
@@ -102,47 +103,47 @@ $(IntermediateDirectory)/sdlkeypicker$(PreprocessSuffix): sdlkeypicker.cpp
 $(IntermediateDirectory)/gamespanel$(ObjectSuffix): gamespanel.cpp $(IntermediateDirectory)/gamespanel$(DependSuffix)
 	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/gamespanel$(DependSuffix): gamespanel.cpp
-	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/gamespanel$(ObjectSuffix) -MF$(IntermediateDirectory)/gamespanel$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp"
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/gamespanel$(ObjectSuffix) -MF$(IntermediateDirectory)/gamespanel$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp"
 
 $(IntermediateDirectory)/gamespanel$(PreprocessSuffix): gamespanel.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/gamespanel$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/gamespanel.cpp"
 
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix): mupen64plusplus/MupenAPI.c $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
-	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IncludePath)
+	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix): mupen64plusplus/MupenAPI.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c"
 
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix): mupen64plusplus/MupenAPI.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c"
 
 $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix): mupen64plusplus/osal_files_unix.c $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(DependSuffix)
-	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_files_unix.c" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IncludePath)
+	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_files_unix.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(DependSuffix): mupen64plusplus/osal_files_unix.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_files_unix.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_files_unix.c"
 
 $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(PreprocessSuffix): mupen64plusplus/osal_files_unix.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_files_unix.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_files_unix.c"
 
 $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix): mupen64plusplus/plugin.c $(IntermediateDirectory)/mupen64plusplus_plugin$(DependSuffix)
-	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/plugin.c" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IncludePath)
+	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/plugin.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_plugin$(DependSuffix): mupen64plusplus/plugin.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_plugin$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/plugin.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_plugin$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/plugin.c"
 
 $(IntermediateDirectory)/mupen64plusplus_plugin$(PreprocessSuffix): mupen64plusplus/plugin.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_plugin$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/plugin.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_plugin$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/plugin.c"
 
 $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix): mupen64plusplus/osal_dynamiclib_unix.c $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(DependSuffix)
-	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_dynamiclib_unix.c" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IncludePath)
+	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_dynamiclib_unix.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(DependSuffix): mupen64plusplus/osal_dynamiclib_unix.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_dynamiclib_unix.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_dynamiclib_unix.c"
 
 $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(PreprocessSuffix): mupen64plusplus/osal_dynamiclib_unix.c
-	@$(C_CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_dynamiclib_unix.c"
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/osal_dynamiclib_unix.c"
 
 $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix): mupen64plusplus/MupenAPIpp.cpp $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(DependSuffix)
 	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPIpp.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(DependSuffix): mupen64plusplus/MupenAPIpp.cpp
-	@$(CompilerName) $(CmpOptions) $(IncludePath) -MT$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPIpp.cpp"
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) -MF$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPIpp.cpp"
 
 $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(PreprocessSuffix): mupen64plusplus/MupenAPIpp.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPIpp.cpp"
