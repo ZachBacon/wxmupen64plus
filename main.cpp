@@ -66,8 +66,8 @@ extern "C"
     }
 }
 
-// --------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
 // application class
 class MupenFrontendApp : public wxApp
@@ -210,7 +210,8 @@ public:
             }
             else
             {
-                ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame, m_toolbar_items[sectionId].m_config);
+                ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame,
+                                                                          m_toolbar_items[sectionId].m_config);
                 newPanel->Layout();
                 m_sizer->Add(newPanel, 1, wxEXPAND);
                 m_curr_panel = newPanel;
@@ -372,7 +373,8 @@ bool MupenFrontendApp::OnInit()
     assert(icon_video.IsOk());
     assert(icon_other.IsOk());
     
-    m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Games"), icon_mupen, icon_mupen),
+    m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Games"),
+                                                                       icon_mupen, icon_mupen),
                                                ConfigSection("Games", (m64p_handle)NULL))); // create a dummy ConfigSection (unused)
     
     std::vector<ConfigSection> inputSections;
@@ -448,7 +450,9 @@ bool MupenFrontendApp::OnInit()
             wxString wxSectionName(section.m_section_name);
             if (wxSectionName.Contains("-"))
             {
-                section.m_section_name = (const char*)(wxString(section.m_section_name).AfterFirst('-').mb_str());
+                section.m_section_name = (const char*)(
+                        wxString(section.m_section_name).AfterFirst('-').mb_str()
+                    );
             }
             
             videoSections.push_back(section);
@@ -483,7 +487,8 @@ bool MupenFrontendApp::OnInit()
     m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Video"),
                                               icon_video, icon_video), videoSections));
     
-    m_toolbar->Connect(wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MupenFrontendApp::onToolbarItem), NULL, this);
+    m_toolbar->Connect(wxEVT_COMMAND_TOOL_CLICKED, wxCommandEventHandler(MupenFrontendApp::onToolbarItem),
+                       NULL, this);
     
     m_toolbar->Realize();
     m_toolbar->ToggleTool( m_toolbar_items[0].m_tool->GetId(), true );
@@ -502,8 +507,10 @@ bool MupenFrontendApp::OnInit()
     m_frame->Show();
     
     m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
-    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
-    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+            wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+                     wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
     
     SetTopWindow( m_frame );
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
@@ -796,7 +803,9 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                 
                 for (int n=0; n<9; n++)
                 {
-                    deviceParam->m_choices.push_back( ConfigParamChoice(wxString::Format(_("Joystick %i"), n), n) );
+                    deviceParam->m_choices.push_back(
+                            ConfigParamChoice(wxString::Format(_("Joystick %i"), n), n)
+                        );
                 }
             }
         }
