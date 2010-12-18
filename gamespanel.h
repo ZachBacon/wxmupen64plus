@@ -33,6 +33,7 @@ class wxDirPickerCtrl;
 class wxFileDirPickerEvent;
 class wxBitmapButton;
 class wxStaticText;
+class wxListEvent;
 
 class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateListener
 {
@@ -46,16 +47,23 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     struct RomInfo
     {
         wxString m_file_name;
+        wxString m_internal_name;
         wxString m_full_path;
+        wxString m_country;
         
-        RomInfo(wxString fullpath, wxString filename)
+        RomInfo(wxString fullpath, wxString filename, wxString internal_name, wxString country)
         {
             m_full_path = fullpath;
             m_file_name = filename;
+            m_internal_name = internal_name;
+            m_country = country;
         }
     };
     
-    
+    /**
+     * @return a list of ROMs under the specified directory
+     * @note the RomInfo objects returned are not complete, only file name and path are set
+     */
     static std::vector<RomInfo> getRomsInDir(wxString dirpath);
     void populateList();
     
@@ -69,6 +77,9 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     wxString m_currently_loaded_rom;
     
     std::vector<RomInfo> m_roms;
+    
+    /** currently selected column, starting from 0 */
+    int m_curr_col;
     
 public:
 
@@ -86,15 +97,14 @@ public:
     void onPlay(wxCommandEvent& evt);
     void onPause(wxCommandEvent& evt);
     void onStop(wxCommandEvent& evt);
-    
+    void onColClick(wxListEvent& evt);
     
     /** Callback from IEmuStateListener */
     virtual void onStateChanged(m64p_emu_state newState);
     
     /** Callback from IEmuStateListener */
     virtual void onSaveSlotChanged(int saveSlot){}
-    
-    DECLARE_EVENT_TABLE()
+
 };
 
 #endif // GAMES_PANEL_H

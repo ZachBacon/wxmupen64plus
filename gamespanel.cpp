@@ -48,8 +48,7 @@ enum
 
 // -----------------------------------------------------------------------------------------------------------
 // ----------------------------------------------- GAMES CACHE -----------------------------------------------
-// Info like game internal name, CRC, etc. is slow to calculate and should be remembered, hence this small
-// cache
+// To avoid disk access, cache ROM info after reading a rom header
 std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 
 // -----------------------------------------------------------------------------------------------------------
@@ -57,9 +56,6 @@ std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 // -----------------------------------------------------------------------------------------------------------
 // The main part where the game list is shown
 
-BEGIN_EVENT_TABLE(GamesPanel, wxPanel)
-//EVT_COMMAND  (ROM_INFO_READ_ID, wxEVT_COMMAND_TEXT_UPDATED, GamesPanel::onRomInfoReady)
-END_EVENT_TABLE()
  
 int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPtr sortData)
 {
@@ -70,12 +66,31 @@ int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPt
     //printf("Comparing <%s> and <%s>\n", (const char*)rom1.m_file_name.mb_str(),
     //    (const char*)rom2.m_file_name.mb_str());
     
-    return rom2.m_file_name.Cmp( rom1.m_file_name );
+    if (self->m_curr_col == COLUMN_FILE) 
+    {
+        return rom2.m_file_name.CmpNoCase( rom1.m_file_name );
+    }
+    else if (self->m_curr_col == COLUMN_NAME)
+    {
+        return rom2.m_internal_name.CmpNoCase( rom1.m_internal_name );
+    }
+    else if (self->m_curr_col == COLUMN_COUNTRY)
+    {
+        return rom2.m_country.CmpNoCase( rom1.m_country );
+    }
+    else
+    {
+        fprintf(stderr, "Unknown column %i?\n", self->m_curr_col);
+        return rom2.m_file_name.CmpNoCase( rom1.m_file_name );
+    }
 }
+
+// -----------------------------------------------------------------------------------------------------------
 
 GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam) :
         wxPanel(parent, wxID_ANY), m_gamesPathParam(gamesPathParam)
 {
+    m_curr_col = 0;
     m_api = api;
     api->setListener(this);
     
@@ -152,6 +167,16 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam games
     m_pause_button->Disable();
     m_stop_button->Disable();
     SetSizer(sizer);
+    
+    m_item_list->Connect(m_item_list->GetId(), wxEVT_COMMAND_LIST_COL_CLICK,
+                         wxListEventHandler(GamesPanel::onColClick), NULL, this);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+GamesPanel::~GamesPanel()
+{
+    m_api->setListener(NULL);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -216,6 +241,9 @@ void GamesPanel::populateList()
                                     ex.what());
                 }
             }
+            
+            curritem.m_country = info.country;
+            curritem.m_internal_name = info.name;
         
             // set value in first column
             m_item_list->SetItem(id, COLUMN_FILE, curritem.m_file_name);
@@ -238,10 +266,15 @@ void GamesPanel::populateList()
 
 // -----------------------------------------------------------------------------------------------------------
 
-GamesPanel::~GamesPanel()
+void GamesPanel::onColClick(wxListEvent& evt)
 {
-    //killThread();
-    m_api->setListener(NULL);
+    // FIXME: wxListCtrl is awful, the natice OSX list ordering when clicking on columns is not controllable
+    // (not portable I think)
+    if (m_curr_col != evt.GetColumn())
+    {
+        m_curr_col = evt.GetColumn();
+        m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
+    }  
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -265,7 +298,7 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
         if (filename.EndsWith("64") && !filename.StartsWith("."))
         {
             out.push_back( RomInfo(children[n],
-                                   filename) );
+                                   filename, "", "") );
         }
     }
     
