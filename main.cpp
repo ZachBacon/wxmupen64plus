@@ -123,14 +123,23 @@ public:
         {
             m_curr_panel->commitNewValues();
         }
-                
-        m_frame->Destroy();
-
-        if (m_api->saveConfig() != M64ERR_SUCCESS)
+        
+        if (m_frame != NULL)
         {
-            wxLogWarning("Failed to save config file");
+            m_frame->Destroy();
+            m_frame = NULL;
+            m_curr_panel = NULL;
         }
-        delete m_api;        
+
+        if (m_api != NULL)
+        {
+            if (m_api->saveConfig() != M64ERR_SUCCESS)
+            {
+                wxLogWarning("Failed to save config file");
+            }
+            delete m_api;
+            m_api = NULL;
+        }
     }
 
     void onClose(wxCloseEvent& evt)
