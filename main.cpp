@@ -35,8 +35,7 @@
 
 #include <stdexcept>
 #include <algorithm>
-
-#include <SDL.h>
+#include "sdlhelper.h"
 
 const bool g_Verbose = false;
 
@@ -260,7 +259,15 @@ public:
 wxString datadir;
 wxString libs;
 
-IMPLEMENT_APP(MupenFrontendApp);
+IMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
+
+int main(int argc, char** argv)
+{
+    MupenFrontendApp* app = new MupenFrontendApp(); 
+    wxApp::SetInstance(app);
+    return wxEntry(argc, argv);
+}
+
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -273,13 +280,7 @@ bool MupenFrontendApp::OnInit()
     
     m_curr_panel = NULL;
     m_gamesPathParam = NULL;
-    
-    // (this is needed on OSX for gamepad input configuration to work [SDL_INIT_VIDEO is necessary to init
-    // keyboard support],and is needed on Linux for retrieving the name of each key to work)
-    // FIXME: SDL_init is also called when starting a game, and also when using the SDL key picker; thus
-    //        SDL_init will be called at times where SDL is already inited. I hvae no idea if this is bad
-    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-    
+        
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
     printf("| |\\/| | | | | '_ \\ / _ \\ '_ \\| '_ \\| || |_| |_) | | | | / __|  \n");
@@ -287,21 +288,8 @@ bool MupenFrontendApp::OnInit()
     printf("|_|  |_|\\__,_| .__/ \\___|_| |_|\\___/   |_| |_|   |_|\\__,_|___/  \n");
     printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
     
+    SDL_Helper_Start();
     
-    // ====================
-    // Init Gamepad Support
-    printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
-    printf("The names of the joysticks are:\n");
-    SDL_JoystickEventState(SDL_ENABLE);
-    
-    for (int i=0; i<SDL_NumJoysticks(); i++) 
-    {
-        printf("    %s\n", SDL_JoystickName(i));
-        /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
-    }
-    printf("\n");
-    // ====================
-
 #ifdef DATADIR
     datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else
@@ -501,8 +489,19 @@ bool MupenFrontendApp::OnInit()
     m_sizer->Add(games, 1, wxEXPAND);
     m_curr_panel = games;
     
-    m_frame->SetSizer(m_sizer);
+    wxMenuBar* bar = new wxMenuBar();
         
+    wxMenu* file = new wxMenu();
+    //wxApp::s_macExitMenuItemId = wxID_EXIT;
+    file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
+    file->Append(wxID_ABOUT, _("&About"));
+    file->Append(wxNewId(), _("Blah blah blah"));
+    
+    bar->Append(file, _("File"));
+    m_frame->SetMenuBar(bar);
+    
+    m_frame->SetSizer(m_sizer);
+    
     m_frame->Centre();
     m_frame->Show();
     
