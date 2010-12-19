@@ -26,7 +26,7 @@ def options(opt):
     opt.add_option('--mupenapi',  action='store', help='Where to find Mupen64Plus API headers (optional)', default='/usr/include')
     opt.add_option('--wxconfig',  action='store', help='Which wx-config utility to use (optional)', default='wx-config', dest="wxconfig")
     opt.add_option('--sdlconfig', action='store', help='Which sdl-config utility to use (optional)', default='sdl-config', dest="sdlconfig")
-    opt.add_option('--debug',     action='store', help='Whether to make a debug build (may be \'true\' or \'false\')', default=False, dest="debugmode")
+    opt.add_option('--debug',     action='store', help='Whether to make a debug build (may be \'true\' or \'false\')', default='false', dest="debugmode")
     opt.load('compiler_cxx')
     opt.load('compiler_c')
 
