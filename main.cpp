@@ -282,7 +282,7 @@ int main(int argc, char** argv)
 
 bool MupenFrontendApp::OnInit()
 {
-    // FIXME: the first time a video plugin is selected, it does not appear in optioms =(
+    // FIXME: the first time a video plugin is selected, it does not appear in options =(
     // (at least with Glide, I needed to first launch a game with it, then restart the frontend)
     
     // FIXME: the first time mupen opens, a warning that the config file was not found is sent...
@@ -793,6 +793,13 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                 fprintf(stderr, "Error caught while trying to set up %s : %s\n", (const char*)section.m_section_name.c_str(), e.what());
             }
 
+            ConfigParam* x_axis = section.getParamWithName("X Axis");
+            x_axis->m_icon_1 = datadir + "left.png";
+            x_axis->m_icon_2 = datadir + "right.png";
+            ConfigParam* y_axis = section.getParamWithName("Y Axis");
+            y_axis->m_icon_1 = datadir + "up.png";
+            y_axis->m_icon_2 = datadir + "down.png";
+            
 #undef CREATE_PARAM_IF_MISSING
 
             ConfigParam* pluginParam = section.getParamWithName("plugin");

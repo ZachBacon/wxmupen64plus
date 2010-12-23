@@ -21,6 +21,7 @@
 
 #include "sdlkeypicker.h"
 #include "main.h"
+#include "mupen64plusplus/MupenAPIpp.h"
 
 #include <SDL.h>
 #include <SDL_keyboard.h>
@@ -33,6 +34,8 @@
 #include <wx/msgdlg.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
+#include <wx/log.h>
+#include <wx/statbmp.h>
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -407,15 +410,17 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxPanel(parent, w
 #endif
     updateLabel();
     
-    m_btn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick), NULL, this);
+    m_btn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(wxSDLKeyPicker::onClick),
+                   NULL, this);
     
-    SetMinSize( wxSize(150, -1) );
+    SetMinSize( wxSize(250, -1) );
     SetSizer(sizer);
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCouple) : wxPanel(parent, wxID_ANY)
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigParam& param,
+                               bool isAnalogCouple) : wxPanel(parent, wxID_ANY)
 {
     m_format = (isAnalogCouple ? FORMAT_ANALOG_COUPLE : FORMAT_DIGITAL);
     m_binding = curr;
@@ -423,6 +428,21 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCou
     
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     m_btn = new wxButton(this, wxID_ANY, "");
+
+    if (not param.m_icon_1.IsEmpty())
+    {
+        wxBitmap icon(param.m_icon_1, wxBITMAP_TYPE_ANY );
+        if (not icon.IsOk())
+        {
+            wxLogWarning("Failed to load icon '%s', make sure your installation is OK",
+                         (const char*)param.m_icon_1.mb_str());
+        }
+        else
+        {
+            wxStaticBitmap* icon_widget = new wxStaticBitmap(this, wxID_ANY, icon);
+            sizer->Add(icon_widget);
+        }
+    }
 
 #ifdef __WXMAC__
     sizer->AddSpacer(2);
@@ -434,8 +454,23 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCou
 
     if (m_format == FORMAT_ANALOG_COUPLE)
     {
-        // TODO: indicate in some way which is up, which is down; or which is left, which is right, etc...
         m_btn2 = new wxButton(this, wxID_ANY, "");
+        
+        if (not param.m_icon_2.IsEmpty())
+        {
+            wxBitmap icon(param.m_icon_2, wxBITMAP_TYPE_ANY );
+            if (not icon.IsOk())
+            {
+                wxLogWarning("Failed to load icon '%s', make sure your installation is OK",
+                             (const char*)param.m_icon_2.mb_str());
+            }
+            else
+            {
+                wxStaticBitmap* icon_widget = new wxStaticBitmap(this, wxID_ANY, icon);
+                sizer->Add(icon_widget);
+            }
+        }
+        
 #ifdef __WXMAC__
         sizer->AddSpacer(2);
         sizer->Add(m_btn2, 1, wxBOTTOM, 5);
@@ -458,7 +493,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCou
         m_btn2->SetMinSize( wxSize(75, -1) );
     }
     
-    SetMinSize( wxSize(150, -1) );
+    SetMinSize( wxSize(250, -1) );
     SetSizer(sizer);
 }
 

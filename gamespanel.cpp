@@ -268,7 +268,7 @@ void GamesPanel::populateList()
 
 void GamesPanel::onColClick(wxListEvent& evt)
 {
-    // FIXME: wxListCtrl is awful, the natice OSX list ordering when clicking on columns is not controllable
+    // FIXME: wxListCtrl is awful, the native OSX list ordering when clicking on columns is not controllable
     // (not portable I think)
     if (m_curr_col != evt.GetColumn())
     {

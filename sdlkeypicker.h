@@ -27,6 +27,8 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
+class ConfigParam;
+
 // Use the wx picker on OSX, the SDL picker elsewhere... I think this will work OK
 #ifdef __WXMAC__
 #define USE_SDL_KEY_PICKER 0
@@ -86,7 +88,7 @@ public:
      * @param curr The current binding
      * @param isAnalogCouple whether this parameter's string contains two values (which also means analog input)
      */
-    wxSDLKeyPicker(wxWindow* parent, wxString curr, bool isAnalogCouple);
+    wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigParam& param, bool isAnalogCouple);
     
     /**
      * Get the selected key binding, or SDLK_UNKNOWN if nothing was selected

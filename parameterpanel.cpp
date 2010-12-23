@@ -239,11 +239,13 @@ ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
                 
                 if (section.m_parameters[p].m_special_type == BINDING_DIGITAL_STRING)
                 {
-                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()), false);
+                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
+                                              section.m_parameters[p], false);
                 }
                 else if (section.m_parameters[p].m_special_type == BINDING_ANALOG_COUPLE_STRING)
                 {
-                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()), true);
+                    ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
+                                              section.m_parameters[p], true);
                 }
                 else if (section.m_parameters[p].m_special_type == DIRECTORY)
                 {

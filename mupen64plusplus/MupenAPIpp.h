@@ -61,9 +61,9 @@ enum SpecialParamType
     
     /** A directory parameter (primitive type = string)*/
     DIRECTORY,
-	
-	/** Name of a plugin dll */
-	PLUGIN_FILE
+    
+    /** Name of a plugin dll */
+    PLUGIN_FILE
 };
 
 class ConfigParam
@@ -77,15 +77,19 @@ public:
     std::string m_help_string;
     m64p_handle m_parent_section;
     bool        m_enabled;
+    
+    /** Not read for all types of parameters. Second icon used only for parameter couples */
+    wxString m_icon_1;
+    wxString m_icon_2;
 
     SpecialParamType m_special_type;
 
     /** will be non-empty if some pre-defined choices are available */
     std::vector<ConfigParamChoice> m_choices;
 
-	/** Only set if m_special_type is PLUGIN_FILE. This contains the parameter that holds the
-	 *  directory to search */
-	ConfigParam* m_dir;
+    /** Only set if m_special_type is PLUGIN_FILE. This contains the parameter that holds the
+     *  directory to search */
+    ConfigParam* m_dir;
 
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     ConfigParam()
@@ -94,7 +98,7 @@ public:
         m_parent_section = 0;
         m_special_type = NOTHING_SPECIAL;
         m_magic_number = 0xC001C001;
-		m_dir = NULL;
+        m_dir = NULL;
     }
 
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
@@ -103,34 +107,36 @@ public:
         m_parent_section = section;
         m_special_type = type;
         m_magic_number = 0xC001C001;
-		m_dir = NULL;
+        m_dir = NULL;
     }
 
-	ConfigParam(const ConfigParam& other)
-	{
-		m_magic_number = 0xC001C001;
-		m_enabled = other.m_enabled;
-		m_parent_section = other.m_parent_section;
-		m_special_type = other.m_special_type;
-		m_choices = other.m_choices;
-		m_param_name = other.m_param_name;
-		m_param_type = other.m_param_type;
-		m_help_string = other.m_help_string;
-		
-		if (other.m_dir != NULL)
-		{
-			m_dir = new ConfigParam(*other.m_dir);
-		}
-		else
-		{
-			m_dir = NULL;
-		}
-	}
+    ConfigParam(const ConfigParam& other)
+    {
+        m_magic_number = 0xC001C001;
+        m_enabled = other.m_enabled;
+        m_parent_section = other.m_parent_section;
+        m_special_type = other.m_special_type;
+        m_choices = other.m_choices;
+        m_param_name = other.m_param_name;
+        m_param_type = other.m_param_type;
+        m_help_string = other.m_help_string;
+        m_icon_1 = other.m_icon_1;
+        m_icon_2 = other.m_icon_2;
+        
+        if (other.m_dir != NULL)
+        {
+            m_dir = new ConfigParam(*other.m_dir);
+        }
+        else
+        {
+            m_dir = NULL;
+        }
+    }
 
     ~ConfigParam()
     {
         m_magic_number = 0xDEADBEEF;
-		delete m_dir;
+        delete m_dir;
     }
 
     bool ok() const { return (m_magic_number == 0xC001C001); }
@@ -170,16 +176,16 @@ public:
     bool hasChildNamed(const char* name) const;
     ConfigParam* getParamWithName(const char* name);
 
-	/**
-	 * Add a new parameter to this section, if not already present
-	 * @param name	 Name of the new parameter to add
-	 * @param help  Help string associated with this new parameter (may be NULL)
-	 * @param type  Type of the new parameter
-	 * @param value Default value for this parameter
-	 * @param specialtype Additionnal information about this parameter
-	 */
+    /**
+     * Add a new parameter to this section, if not already present
+     * @param name     Name of the new parameter to add
+     * @param help  Help string associated with this new parameter (may be NULL)
+     * @param type  Type of the new parameter
+     * @param value Default value for this parameter
+     * @param specialtype Additionnal information about this parameter
+     */
     void addNewParam(const char* name, const char* help, wxVariant value, m64p_type type,
-					  SpecialParamType specialtype = NOTHING_SPECIAL);
+                      SpecialParamType specialtype = NOTHING_SPECIAL);
 
     static bool compare(const ConfigSection& a, const ConfigSection& b)
     {
@@ -275,10 +281,10 @@ public:
     RomInfo getRomInfo();
     
     /**
-	 * Get info about any ROM from disk, without loading it (this variant does include as much
-	 * informaion as the getRomInfo() function that returns information about the currently loaded
-	 * ROM; for instance, the good name will not be available in the struct returned by this mehtod)
-	 */
+     * Get info about any ROM from disk, without loading it (this variant does include as much
+     * informaion as the getRomInfo() function that returns information about the currently loaded
+     * ROM; for instance, the good name will not be available in the struct returned by this mehtod)
+     */
     RomInfo getRomInfo(wxString path);
     
     /**
