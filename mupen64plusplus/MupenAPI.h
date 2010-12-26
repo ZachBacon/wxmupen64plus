@@ -26,8 +26,8 @@
 extern "C" {
 #endif
 
-#include "callbacks.h"
-#include "config.h"
+//#include "callbacks.h"
+//#include "config.h"
 #include "m64p_config.h"
 #include "m64p_frontend.h"
 #include "m64p_common.h"
