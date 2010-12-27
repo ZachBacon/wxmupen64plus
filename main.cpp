@@ -323,7 +323,8 @@ bool MupenFrontendApp::OnInit()
                                     "mupen64plus-video-rice",
                                     "mupen64plus-audio-sdl",
                                     "mupen64plus-input-sdl",
-                                    "mupen64plus-rsp-hle");
+                                    "mupen64plus-rsp-hle",
+                                    (const char*)datadir.utf8_str());
     }
     catch (std::runtime_error& e)
     {

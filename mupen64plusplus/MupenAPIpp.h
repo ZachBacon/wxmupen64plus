@@ -243,8 +243,8 @@ public:
 
     Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaultPluginPath,
                     const char* defaultVideoPlugin, const char* defaultAudioPlugin,
-                    const char* defaultInputPlugin, const char* defaultRspPlugin);
-
+                    const char* defaultInputPlugin, const char* defaultRspPlugin,
+                    const char* datapath);
 
     ~Mupen64PlusPlus();
 

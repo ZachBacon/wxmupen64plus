@@ -46,15 +46,7 @@ static m64p_handle l_ConfigCore = NULL;
 static m64p_handle l_ConfigVideo = NULL;
 static m64p_handle l_ConfigPlugins = NULL;
 
-//static const char *l_CoreLibPath = NULL;
 static const char *l_ConfigDirPath = NULL;
-//static const char *l_ROMFilepath = NULL;       // filepath of ROM to load & run at startup
-
-#if defined(DATADIR)
-  static const char *l_DataDirPath = DATADIR;
-#else
-  static const char *l_DataDirPath = NULL;
-#endif
 
 /* global data definitions */
 int g_CoreCapabilities;
@@ -450,10 +442,6 @@ m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
 
 m64p_error SaveConfigurationOptions(void)
 {
-    // Write data path
-    if (l_DataDirPath != NULL)
-        (*PtrConfigSetParameter)(l_ConfigCore, "SharedDataPath", M64TYPE_STRING, l_DataDirPath);
-
     // Write parameter paths
     if (g_PluginDir != NULL)
         (*PtrConfigSetParameter)(l_ConfigPlugins, "PluginDir", M64TYPE_STRING, g_PluginDir);
@@ -672,9 +660,9 @@ m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *Pa
 
 // -----------------------------------------------------------------------------------------------------------
 
-m64p_error InitCore(ptr_StateCallback stateCallback, void* context)
+m64p_error InitCore(ptr_StateCallback stateCallback, void* context, const char* dataPath)
 {
-    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, l_DataDirPath,
+    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, dataPath,
                                       (void*)("Core") /* context */, DebugCallback,
                                       context, stateCallback);
 }

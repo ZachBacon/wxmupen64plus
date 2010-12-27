@@ -42,7 +42,8 @@ void Mupen64PlusPlus::StateCallback(void *Context, m64p_core_param param_type, i
 
 Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaultPluginPath,
                                  const char* defaultVideoPlugin, const char* defaultAudioPlugin,
-                                 const char* defaultInputPlugin, const char* defaultRspPlugin)
+                                 const char* defaultInputPlugin, const char* defaultRspPlugin,
+                                 const char* datapath)
 {
     m_listener = NULL;
     m_defaultPluginPath = defaultPluginPath;
@@ -64,7 +65,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         throw std::runtime_error(errmsg.str());
     }
 
-    result = InitCore(&StateCallback, this);
+    result = InitCore(&StateCallback, this, datapath);
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "[Mupen64PlusPlus::Mupen64PlusPlus] InitCore failed with error : ";

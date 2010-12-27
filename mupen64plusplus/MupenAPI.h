@@ -40,7 +40,7 @@ extern void DebugCallback(void *Context, int level, const char *message);
 
 m64p_error AttachCoreLib(const char *CoreLibFilepath);
 m64p_error DetachCoreLib(void);
-m64p_error InitCore(ptr_StateCallback stateCallback, void* context);
+m64p_error InitCore(ptr_StateCallback stateCallback, void* context, const char* datapath);
 
 extern m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
                                            const char* defaultVideoPlugin, const char* defaultAudioPlugin,
