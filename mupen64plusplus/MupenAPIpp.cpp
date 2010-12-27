@@ -198,7 +198,8 @@ std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
     m64p_error result = ReadConfigSections(&SectionListCallback);
     if (result != M64ERR_SUCCESS)
     {
-        std::string errmsg = "[Mupen64PlusPlus::getConfigContents] ReadConfigSectionParameters failed with error : ";
+        std::string errmsg = "[Mupen64PlusPlus::getConfigContents] ReadConfigSectionParameters"
+                             "failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
@@ -215,7 +216,8 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
     wxFileInputStream input(filename);
     if (!input.IsOk())
     {
-        throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" + filename + "'").ToStdString());
+        throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" +
+                                  filename + "'").ToStdString());
     }
     wxMemoryOutputStream memoryImage;
     input.Read(memoryImage);

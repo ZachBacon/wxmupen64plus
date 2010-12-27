@@ -371,14 +371,20 @@ bool MupenFrontendApp::OnInit()
     assert(icon_video.IsOk());
     assert(icon_other.IsOk());
     
-    m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Games"),
+    m_toolbar_items.push_back(
+                              GraphicalSection(
+                                               m_toolbar->AddRadioTool(wxID_ANY, _("Games"),
                                                                        icon_mupen, icon_mupen),
-                                               ConfigSection("Games", (m64p_handle)NULL))); // create a dummy ConfigSection (unused)
+                                                // create a dummy ConfigSection (unused)
+                                               ConfigSection("Games", (m64p_handle)NULL)
+                                               )
+                             );
     
     std::vector<ConfigSection> inputSections;
     std::vector<ConfigSection> videoSections;
     
-    for (unsigned int n=0; n<config.size(); n++)
+    const unsigned count = config.size();
+    for (unsigned int n=0; n<count; n++)
     {
         ConfigSection& section = config[n];
                 
