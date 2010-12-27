@@ -670,7 +670,7 @@ void wxSDLKeyPicker::updateLabel()
             const bool success = btn.ToLong(&btnval);
             if (success)
             {
-                label = wxString::Format(_("Button %i"), btnval);
+                label = wxString::Format(_("Button %i"), (int)btnval);
             }
             else
             {
@@ -684,7 +684,7 @@ void wxSDLKeyPicker::updateLabel()
             const bool success = axis.ToLong(&axisval);
             if (success)
             {
-                label = wxString::Format(_("Axis %i"), axisval);
+                label = wxString::Format(_("Axis %i"), (int)axisval);
             }
             else
             {
