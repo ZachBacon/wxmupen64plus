@@ -440,26 +440,6 @@ m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
 
 // -----------------------------------------------------------------------------------------------------------
 
-m64p_error SaveConfigurationOptions(void)
-{
-    // Write parameter paths
-    if (g_PluginDir != NULL)
-        (*PtrConfigSetParameter)(l_ConfigPlugins, "PluginDir", M64TYPE_STRING, g_PluginDir);
-    if (g_GfxPlugin != NULL)
-        (*PtrConfigSetParameter)(l_ConfigPlugins, "VideoPlugin", M64TYPE_STRING, g_GfxPlugin);
-    if (g_AudioPlugin != NULL)
-        (*PtrConfigSetParameter)(l_ConfigPlugins, "AudioPlugin", M64TYPE_STRING, g_AudioPlugin);
-    if (g_InputPlugin != NULL)
-        (*PtrConfigSetParameter)(l_ConfigPlugins, "InputPlugin", M64TYPE_STRING, g_InputPlugin);
-    if (g_RspPlugin != NULL)
-        (*PtrConfigSetParameter)(l_ConfigPlugins, "RspPlugin", M64TYPE_STRING, g_RspPlugin);
-
-    // Save the file
-    return (*PtrConfigSaveFile)();
-}
-
-// -----------------------------------------------------------------------------------------------------------
-
 const char* getErrorMessage(m64p_error err)
 {
     static char buffer[1024];
