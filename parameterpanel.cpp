@@ -100,9 +100,10 @@ namespace PluginsFinder
 
 // -----------------------------------------------------------------------------------------------------------
 
-ParameterPanel::ParameterPanel(wxWindow* parent, ConfigSection& section) :
+ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection& section) :
     wxScrolledWindow(parent, wxID_ANY), m_section(section)
 {
+    m_api = api;
     m_magic_number = 0xCAFECAFE;
     wxFlexGridSizer* sizer = new wxFlexGridSizer(2 /* columns */, 2 /* hgap */, 6 /* vgap */);
     
@@ -324,6 +325,8 @@ void ParameterPanel::commitNewValues()
 {
     assert(m_magic_number == 0xCAFECAFE);
     
+    bool havePlugins = false;
+    
     const int count = m_parameter_widgets.size();
     for (int n=0; n<count; n++)
     {
@@ -401,6 +404,7 @@ void ParameterPanel::commitNewValues()
             
             case M64TYPE_STRING:
             {
+                wxString previousValue = param->getStringValue();
                 if (dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxTextCtrl* ctrl = (wxTextCtrl*)m_parameter_widgets[n];
@@ -450,6 +454,12 @@ void ParameterPanel::commitNewValues()
                     assert(false);
                 }
                 
+                wxString newValue = param->getStringValue();
+                if (param->m_special_type == PLUGIN_FILE and previousValue != newValue)
+                {
+                    havePlugins = true;
+                }
+                
                 break;
             }
             
@@ -459,7 +469,13 @@ void ParameterPanel::commitNewValues()
                         param->m_param_type, param->m_param_name.c_str());
                 assert(false);
             }
-        }
+        } // end switch
+    } // end for
+    
+    if (havePlugins)
+    {
+        m_api->reloadPlugins();
+        // TODO: after reloading plugins, reload config options too
     }
 }
 
@@ -512,7 +528,8 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
 
-ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, std::vector<ConfigSection> sections) :
+ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, Mupen64PlusPlus* api,
+                                          std::vector<ConfigSection> sections) :
         wxNotebook(parent, wxID_ANY)
 {
     m_magic_number = 0x12345678;
@@ -520,7 +537,7 @@ ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, std::vector<ConfigS
     const int count = sections.size();
     for (int n=0; n<count; n++)
     {
-        ParameterPanel* panel = new ParameterPanel(this, sections[n]);
+        ParameterPanel* panel = new ParameterPanel(this, api, sections[n]);
         this->AddPage(panel, sections[n].m_section_name.c_str());
         m_panels.push_back(panel);
     }

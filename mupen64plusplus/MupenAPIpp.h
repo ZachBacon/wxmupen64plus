@@ -334,6 +334,10 @@ public:
      */
     void setListener(IEmuStateListener* listener) { m_listener = listener; }
     
+    /**
+     * Call to reload plugins (for instance if the plugins in  the config have been changed)
+     */
+    void reloadPlugins();
 };
 
 #endif

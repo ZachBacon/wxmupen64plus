@@ -211,14 +211,15 @@ public:
             }
             else if (m_toolbar_items[sectionId].m_config.size() == 1)
             {
-                ParameterPanel* newPanel = new ParameterPanel(m_frame, m_toolbar_items[sectionId].m_config[0]);
+                ParameterPanel* newPanel = new ParameterPanel(m_frame, m_api,
+                                                              m_toolbar_items[sectionId].m_config[0]);
                 newPanel->Layout();
                 m_sizer->Add(newPanel, 1, wxEXPAND);
                 m_curr_panel = newPanel;
             }
             else
             {
-                ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame,
+                ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame, m_api,
                                                                           m_toolbar_items[sectionId].m_config);
                 newPanel->Layout();
                 m_sizer->Add(newPanel, 1, wxEXPAND);

@@ -105,6 +105,14 @@ m64p_error Mupen64PlusPlus::saveConfig()
 
 // -----------------------------------------------------------------------------------------------------------
 
+void Mupen64PlusPlus::reloadPlugins()
+{
+    (*PluginUnload)();
+    loadPlugins();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 void Mupen64PlusPlus::loadPlugins()
 {
     char pluginsPath[1024];
