@@ -202,8 +202,6 @@ public:
 
 class Mupen64PlusPlus
 {
-    void loadPlugins();
-
     std::string m_defaultPluginPath;
     std::string m_defaultVideoPlugin;
     std::string m_defaultAudioPlugin;
@@ -247,6 +245,15 @@ public:
                     const char* datapath);
 
     ~Mupen64PlusPlus();
+
+    /**
+      * @return A bitfield with the following bits (starting from least significant) :
+      *         0: GFX plugin found and loaded
+      *         1: Audio plugin found and loaded
+      *         2: Input plugin found and loaded
+      *         3: RSP plugin found and loaded
+      */
+    int loadPlugins();
 
     /** Retrieve configuration through the config API */
     std::vector<ConfigSection> getConfigContents();

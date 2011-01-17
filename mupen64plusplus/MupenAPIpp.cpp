@@ -83,8 +83,6 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
-    loadPlugins();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -113,7 +111,7 @@ void Mupen64PlusPlus::reloadPlugins()
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::loadPlugins()
+int Mupen64PlusPlus::loadPlugins()
 {
     char pluginsPath[1024];
     char videoPlugin[128];
@@ -139,27 +137,22 @@ void Mupen64PlusPlus::loadPlugins()
     g_InputPlugin = inputPlugin;
     g_RspPlugin   = rspPlugin;
     
-    result = PluginSearchLoad(getConfigUI());
-    if (result != M64ERR_SUCCESS)
+    int plugins = PluginSearchLoad(getConfigUI());
+    if (plugins != 15)
     {
         // if loading plugins failed, try if default path works any better (this is especially needed on OS X
         // where the application can be moved around, and thus break the path stored in the config)
         g_PluginDir = m_defaultPluginPath.c_str();
-        result = PluginSearchLoad(getConfigUI());
-        if (result == M64ERR_SUCCESS)
+        plugins = PluginSearchLoad(getConfigUI());
+        if (plugins == 15)
         {
             // store updated path in config
             m64p_handle uisection = getConfigUI();
             setStringConfigParam(uisection, "PluginDir", g_PluginDir);
         }
-        else
-        {
-            // default fails too, giving up
-            std::string errmsg = "[Mupen64PlusPlus::loadPlugins] PluginSearchLoad failed with error : ";
-            errmsg = errmsg + getErrorMessage(result);
-            throw std::runtime_error(errmsg);
-        }
     }
+    
+    return plugins;
 }
 
 // -----------------------------------------------------------------------------------------------------------

@@ -326,6 +326,13 @@ bool MupenFrontendApp::OnInit()
                                     "mupen64plus-input-sdl",
                                     "mupen64plus-rsp-hle",
                                     (const char*)datadir.utf8_str());
+                                    
+        int plugins = m_api->loadPlugins();
+        if (plugins != 15)
+        {
+            // TODO: if plugins are not found, offer fixing the paths        
+            wxMessageBox( _("Warning, some plugins could not be loaded, please fix the paths before trying to use mupen64plus") );
+        }
     }
     catch (std::runtime_error& e)
     {
@@ -334,7 +341,6 @@ bool MupenFrontendApp::OnInit()
         wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
         return false;
     }
-    
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     

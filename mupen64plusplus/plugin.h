@@ -29,7 +29,15 @@ extern "C" {
 #include "m64p_types.h"
 #include "mupen64plusplus/osal_preproc.h"
 
-extern m64p_error PluginSearchLoad(m64p_handle ConfigUI);
+/**
+ * @return A bitfield with the following bits (starting from least significant) :
+ *         0: GFX plugin found and loaded
+ *         1: Audio plugin found and loaded
+ *         2: Input plugin found and loaded
+ *         3: RSP plugin found and loaded
+ */
+extern int PluginSearchLoad(m64p_handle ConfigUI);
+
 extern m64p_error PluginUnload(void);
 
 extern const char *g_PluginDir;        // directory to search for plugins

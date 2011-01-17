@@ -103,29 +103,28 @@ static m64p_error PluginLoadTry(const char *filepath, int MapIndex)
 }
 
 /* global functions */
-m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
+int PluginSearchLoad(m64p_handle ConfigPlugins)
 {
     osal_lib_search *lib_filelist = NULL;
     int i;
 
-    /* start by checking the directory given on the command line */
+    int output = 0;
+
     if (g_PluginDir != NULL)
     {
         lib_filelist = osal_library_search(g_PluginDir);
         if (lib_filelist == NULL)
         {
             fprintf(stderr, "Error: No plugins found in plugindir path: %s\n", g_PluginDir);
-            return M64ERR_INPUT_NOT_FOUND;
+            return output;
         }
     }
-
-    /* if no plugins found, search the PluginDir in the UI-wx section of the config file */
-    if (lib_filelist == NULL)
+    else
     {
-        const char *plugindir = (*PtrConfigGetParamString)(ConfigPlugins, "PluginDir");
-        lib_filelist = osal_library_search(plugindir);
+        assert(0);
+        return 0;
     }
-
+    
     /* if still no plugins found, search some common system folders */
     if (lib_filelist == NULL)
     {
@@ -197,6 +196,7 @@ m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
                 curr = curr->next;
             }
         }
+        
         /* print out the particular plugin used */
         if (g_PluginMap[i].handle == NULL)
         {
@@ -208,12 +208,21 @@ m64p_error PluginSearchLoad(m64p_handle ConfigPlugins)
                    g_PluginMap[i].libname, VERSION_PRINTF_SPLIT(g_PluginMap[i].libversion));
             if (g_Verbose)
                 printf("wxMupen64Plus: %s plugin library: %s\n", g_PluginMap[i].name, g_PluginMap[i].filename);
+            
+            switch (type)
+            {
+                case M64PLUGIN_GFX:    output = output | 0x1; break;
+                case M64PLUGIN_AUDIO:  output = output | 0x2; break;
+                case M64PLUGIN_INPUT:  output = output | 0x4; break;
+                case M64PLUGIN_RSP:    output = output | 0x8; break;
+                default: break;
+            }
         }
     }
 
     /* free up the list of library files in the plugin search directory */
     osal_free_lib_list(lib_filelist);
-    return M64ERR_SUCCESS;
+    return output;
 }
 
 m64p_error PluginUnload(void)
