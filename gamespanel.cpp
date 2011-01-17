@@ -87,11 +87,12 @@ int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPt
 
 // -----------------------------------------------------------------------------------------------------------
 
-GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam) :
-        wxPanel(parent, wxID_ANY), m_gamesPathParam(gamesPathParam)
+GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* gamesPathParam) :
+        wxPanel(parent, wxID_ANY)
 {
     m_curr_col = 0;
     m_api = api;
+    m_gamesPathParam = gamesPathParam;
     api->setListener(this);
     
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
@@ -101,7 +102,7 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam games
     {
         try
         {
-            path = m_gamesPathParam.getStringValue();
+            path = m_gamesPathParam->getStringValue();
         }
         catch (std::runtime_error& ex)
         {
@@ -313,7 +314,7 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
     
     try
     {
-        m_gamesPathParam.setStringValue(m_dir_picker->GetPath().ToStdString());
+        m_gamesPathParam->setStringValue(m_dir_picker->GetPath().ToStdString());
     }
     catch (std::runtime_error& ex)
     {

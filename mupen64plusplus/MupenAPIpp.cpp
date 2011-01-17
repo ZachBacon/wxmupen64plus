@@ -159,20 +159,20 @@ int Mupen64PlusPlus::loadPlugins()
 // -----------------------------------------------------------------------------------------------------------
 
 // FIXME: avoid the use of globals if possible
-std::vector<ConfigSection> g_config_sections;
+std::vector<ConfigSection*> g_config_sections;
 
 void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type ParamType)
 {
     m64p_handle* section = (m64p_handle*)sectionHandle;
 
-    ConfigParam param(*section);
-    param.m_param_type = ParamType;
-    param.m_param_name = ParamName;
+    ConfigParam* param = new ConfigParam(*section);
+    param->m_param_type = ParamType;
+    param->m_param_name = ParamName;
 
     const char* help = getParameterHelp(section, ParamName);
-    if (help != NULL) param.m_help_string = help;
+    if (help != NULL) param->m_help_string = help;
 
-    g_config_sections[g_config_sections.size() - 1].m_parameters.push_back(param);
+    g_config_sections[g_config_sections.size() - 1]->m_parameters.push_back(param);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type
 void SectionListCallback(void* context, const char* SectionName)
 {
     m64p_handle handle = getSectionHandle(SectionName);
-    g_config_sections.push_back(ConfigSection(SectionName, handle));
+    g_config_sections.push_back(new ConfigSection(SectionName, handle));
 
     m64p_error result = ReadConfigSectionParameters(SectionName, &ParameterListCallback);
     if (result != M64ERR_SUCCESS)
@@ -193,7 +193,7 @@ void SectionListCallback(void* context, const char* SectionName)
 
 // -----------------------------------------------------------------------------------------------------------
 
-std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
+std::vector<ConfigSection*> Mupen64PlusPlus::getConfigContents()
 {
     g_config_sections.clear();
 
@@ -636,12 +636,13 @@ float ConfigParam::getFloatValue()
 std::string ConfigParam::getStringValue()
 {
     assert(m_magic_number == 0xC001C001);
+    assert(m_param_name.size() > 0);
 
     if (m_param_type != M64TYPE_STRING)
     {
-        std::string errmsg = "[Mupen64PlusPlus::ConfigParam::getStringValue()] parameter ";
+        std::string errmsg = "[Mupen64PlusPlus::ConfigParam::getStringValue()] parameter '";
         errmsg += m_param_name;
-        errmsg += " is not a string";
+        errmsg += "' is not a string";
         throw std::runtime_error(errmsg);
     }
 
@@ -746,7 +747,7 @@ bool ConfigSection::hasChildNamed(const char* name) const
     const int count = m_parameters.size();
     for (int n=0; n<count; n++)
     {
-        if (m_parameters[n].m_param_name == name) return true;
+        if (m_parameters[n]->m_param_name == name) return true;
     }
     return false;
 }
@@ -758,7 +759,7 @@ ConfigParam* ConfigSection::getParamWithName(const char* name)
     const int count = m_parameters.size();
     for (int n=0; n<count; n++)
     {
-        if (m_parameters[n].m_param_name == name) return &m_parameters[n];
+        if (m_parameters[n]->m_param_name == name) return m_parameters[n];
     }
     return NULL;
 }
@@ -768,9 +769,9 @@ ConfigParam* ConfigSection::getParamWithName(const char* name)
 void ConfigSection::addNewParam(const char* name, const char* help, wxVariant value, m64p_type type,
 								 SpecialParamType sptype)
 {
-    ConfigParam newParam(m_handle, sptype);
-    newParam.m_param_type = type;
-    newParam.m_param_name = name;
+    ConfigParam* newParam = new ConfigParam(m_handle, sptype);
+    newParam->m_param_type = type;
+    newParam->m_param_name = name;
     m_parameters.push_back(newParam);
 
     m64p_error result;

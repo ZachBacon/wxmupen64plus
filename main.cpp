@@ -79,7 +79,7 @@ class MupenFrontendApp : public wxApp
     IConfigurationPanel* m_curr_panel;
     wxBoxSizer* m_sizer;
 
-    ConfigParam m_gamesPathParam;
+    ConfigParam* m_gamesPathParam;
     
     /**
      * Associates a configuration section with its toolbar icon
@@ -94,15 +94,15 @@ class MupenFrontendApp : public wxApp
          * The mupen API config section associated with this button (some buttons may contain more than
          * one config section)
          */
-        std::vector<ConfigSection> m_config;
+        std::vector<ConfigSection*> m_config;
         
-        GraphicalSection(wxToolBarToolBase* tool, const ConfigSection& config)
+        GraphicalSection(wxToolBarToolBase* tool, ConfigSection* config)
         {
             m_tool = tool;
             m_config.push_back(config);
         }
         
-        GraphicalSection(wxToolBarToolBase* tool, const std::vector<ConfigSection>& configs) :
+        GraphicalSection(wxToolBarToolBase* tool, const std::vector<ConfigSection*>& configs) :
             m_config(configs)
         {
             m_tool = tool;
@@ -115,7 +115,7 @@ class MupenFrontendApp : public wxApp
 public:
     virtual bool OnInit();
 
-    std::vector<ConfigSection> getOptions();
+    std::vector<ConfigSection*> getOptions();
 
     void shutdown()
     {
@@ -171,13 +171,13 @@ public:
                 GraphicalSection& curr = m_toolbar_items[n];
                 if (curr.m_config.size() == 1)
                 {
-                    section = curr.m_config[0].m_section_name;
+                    section = curr.m_config[0]->m_section_name;
                 }
                 else
                 {
                     // Make a dummy name for the grouped section; not too important since at this
                     // point we will most likely not read the name except for debugging purposes
-                    section = curr.m_config[0].m_section_name + "-group";
+                    section = curr.m_config[0]->m_section_name + "-group";
                 }
                 sectionId = n;
                 break;
@@ -346,7 +346,7 @@ bool MupenFrontendApp::OnInit()
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     
     // ---- Get config options
-    std::vector<ConfigSection> config;
+    std::vector<ConfigSection*> config; // TODO: free before exiting
     try
     {
         config = getOptions();
@@ -384,37 +384,37 @@ bool MupenFrontendApp::OnInit()
                                                m_toolbar->AddRadioTool(wxID_ANY, _("Games"),
                                                                        icon_mupen, icon_mupen),
                                                 // create a dummy ConfigSection (unused)
-                                               ConfigSection("Games", (m64p_handle)NULL)
+                                               new ConfigSection("Games", (m64p_handle)NULL)
                                                )
                              );
     
-    std::vector<ConfigSection> inputSections;
-    std::vector<ConfigSection> videoSections;
+    std::vector<ConfigSection*> inputSections;
+    std::vector<ConfigSection*> videoSections;
     
     const unsigned count = config.size();
     for (unsigned int n=0; n<count; n++)
     {
-        ConfigSection& section = config[n];
+        ConfigSection* section = config[n];
                 
         // FIXME: find better way than hardcoding sections?
-        if (section.m_section_name == "Core")
+        if (section->m_section_name == "Core")
         {
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Emulation"),
                                                       icon_cpu, icon_cpu), section) );
         }
-        else if (section.m_section_name == "UI-wx")
+        else if (section->m_section_name == "UI-wx")
         {
-            ConfigParam* ptr_param = section.getParamWithName("GamesPath");
+            ConfigParam* ptr_param = section->getParamWithName("GamesPath");
             if (ptr_param != NULL)
             {
                 ptr_param->m_enabled = false;
-                m_gamesPathParam = *ptr_param;
+                m_gamesPathParam = ptr_param;
             }
             
-            ConfigParam* pluginsDir = section.getParamWithName("PluginDir");
+            ConfigParam* pluginsDir = section->getParamWithName("PluginDir");
             if (pluginsDir != NULL)
             {
-                ConfigParam* plugin1 = section.getParamWithName("VideoPlugin");
+                ConfigParam* plugin1 = section->getParamWithName("VideoPlugin");
                 if (plugin1 != NULL)
                 {
                     plugin1->m_special_type = PLUGIN_FILE;
@@ -422,7 +422,7 @@ bool MupenFrontendApp::OnInit()
                     plugin1->m_dir = new ConfigParam(*pluginsDir);
                 }
                 
-                ConfigParam* plugin2 = section.getParamWithName("AudioPlugin");
+                ConfigParam* plugin2 = section->getParamWithName("AudioPlugin");
                 if (plugin2 != NULL)
                 {
                     plugin2->m_special_type = PLUGIN_FILE;
@@ -430,7 +430,7 @@ bool MupenFrontendApp::OnInit()
                     plugin2->m_dir = new ConfigParam(*pluginsDir);
                 }
                 
-                ConfigParam* plugin3 = section.getParamWithName("InputPlugin");
+                ConfigParam* plugin3 = section->getParamWithName("InputPlugin");
                 if (plugin3 != NULL)
                 {
                     plugin3->m_special_type = PLUGIN_FILE;
@@ -438,7 +438,7 @@ bool MupenFrontendApp::OnInit()
                     plugin3->m_dir = new ConfigParam(*pluginsDir);
                 }
                 
-                ConfigParam* plugin4 = section.getParamWithName("RspPlugin");
+                ConfigParam* plugin4 = section->getParamWithName("RspPlugin");
                 if (plugin4 != NULL)
                 {
                     plugin4->m_special_type = PLUGIN_FILE;
@@ -455,45 +455,45 @@ bool MupenFrontendApp::OnInit()
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
                                                       icon_plugins, icon_plugins), section) );
         }
-        else if (section.m_section_name == "Input")
+        else if (section->m_section_name == "Input")
         {
-            section.m_section_name = wxString(_("Shortcut Keys")).mb_str();
+            section->m_section_name = wxString(_("Shortcut Keys")).mb_str();
             inputSections.push_back(section);
         }
-        else if (wxString(section.m_section_name).StartsWith("Video"))
+        else if (wxString(section->m_section_name).StartsWith("Video"))
         {
             // strip the "video-" prefix if any
-            wxString wxSectionName(section.m_section_name);
+            wxString wxSectionName(section->m_section_name);
             if (wxSectionName.Contains("-"))
             {
-                section.m_section_name = (const char*)(
-                        wxString(section.m_section_name).AfterFirst('-').mb_str()
+                section->m_section_name = (const char*)(
+                        wxString(section->m_section_name).AfterFirst('-').mb_str()
                     );
             }
             
             videoSections.push_back(section);
         }
-        else if (section.m_section_name == "Audio-SDL")
+        else if (section->m_section_name == "Audio-SDL")
         {                
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Audio"),
                                                       icon_audio, icon_audio), section));
         }
-        else if (wxString(section.m_section_name.c_str()).StartsWith("Input-SDL-Control"))
+        else if (wxString(section->m_section_name.c_str()).StartsWith("Input-SDL-Control"))
         {
-            wxString idString = wxString(section.m_section_name.c_str()).AfterLast('l');
+            wxString idString = wxString(section->m_section_name.c_str()).AfterLast('l');
             long id = -1;
             if (!idString.ToLong(&id))
             {
-                wxLogWarning("Cannot parse device ID in " + wxString(section.m_section_name.c_str()));
+                wxLogWarning("Cannot parse device ID in " + wxString(section->m_section_name.c_str()));
             }
             
-            section.m_section_name = wxString::Format(_("Input Control %i"), (int)id).mb_str();
+            section->m_section_name = wxString::Format(_("Input Control %i"), (int)id).mb_str();
             
             inputSections.push_back(section);
         }
         else
         {
-            printf("Ignoring config section %s\n", section.m_section_name.c_str());
+            printf("Ignoring config section %s\n", section->m_section_name.c_str());
         }
     }
     
@@ -550,101 +550,101 @@ bool MupenFrontendApp::OnInit()
 
 #define CHATTY 0
 
-std::vector<ConfigSection> MupenFrontendApp::getOptions()
+std::vector<ConfigSection*> MupenFrontendApp::getOptions()
 {
     // FIXME: this entire function could be improved; at this point, the structure of the config is
     //        hardcoded. Ideally this would be loaded ffrom some config file (but even more ideally
     //        the mupen core would provide me with this information)
     
-    std::vector<ConfigSection> config = m_api->getConfigContents();
+    std::vector<ConfigSection*> config = m_api->getConfigContents();
     
     // For now give an untranslated name to this section, this will allow us to identify it;
     // we'll translate the name later (FIXME: unclean)
-    ConfigSection inputSection( "Input", getSectionHandle("Core") ); 
+    ConfigSection* inputSection = new ConfigSection( "Input", getSectionHandle("Core") ); 
     
     const int configSize = config.size();
     for (int n=0; n<configSize; n++)
     {
-        ConfigSection& section = config[n];
+        ConfigSection* section = config[n];
         
 #if CHATTY
-        printf("==== Section [%s] ====\n", section.m_section_name.c_str());
+        printf("==== Section [%s] ====\n", section->m_section_name.c_str());
 #endif
 
-        for (unsigned int p=0; p<section.m_parameters.size(); p++)
+        for (unsigned int p=0; p<section->m_parameters.size(); p++)
         {
 #if CHATTY
             const char* type = "other";
             char buffer[256];
 
-            switch (section.m_parameters[p].m_param_type)
+            switch (section->m_parameters[p].m_param_type)
             {
                 case M64TYPE_INT:
                     type = "int";
-                    sprintf(buffer, "%i", section.m_parameters[p].getIntValue());
+                    sprintf(buffer, "%i", section->m_parameters[p].getIntValue());
                     break;
                 case M64TYPE_FLOAT:
                     type = "float";
-                    sprintf(buffer, "%f", section.m_parameters[p].getFloatValue());
+                    sprintf(buffer, "%f", section->m_parameters[p].getFloatValue());
                     break;
                 case M64TYPE_BOOL:
                     type = "bool";
-                    sprintf(buffer, "%i", section.m_parameters[p].getBoolValue());
+                    sprintf(buffer, "%i", section->m_parameters[p].getBoolValue());
                     break;
                 case M64TYPE_STRING:
                     type = "string";
-                    sprintf(buffer, "%s", section.m_parameters[p].getStringValue().c_str());
+                    sprintf(buffer, "%s", section->m_parameters[p].getStringValue().c_str());
                     break;
             }
             
             printf("    - %s %s (%s) = %s\n",
                    type,
-                   section.m_parameters[p].m_param_name.c_str(),
-                   section.m_parameters[p].m_help_string.c_str(),
+                   section->m_parameters[p].m_param_name.c_str(),
+                   section->m_parameters[p].m_help_string.c_str(),
                    buffer);
 #endif
 
-            wxString param_wxname(section.m_parameters[p].m_param_name);
+            wxString param_wxname(section->m_parameters[p]->m_param_name);
             
             // Move key mappings from wherever they are into a separate input section
             if (param_wxname.StartsWith("Kbd Mapping"))
             {
-                section.m_parameters[p].m_special_type = KEYBOARD_KEY_INT;
-                inputSection.m_parameters.push_back(section.m_parameters[p]);
-                section.m_parameters[p].m_enabled = false;
+                section->m_parameters[p]->m_special_type = KEYBOARD_KEY_INT;
+                inputSection->m_parameters.push_back(section->m_parameters[p]);
+                section->m_parameters[p]->m_enabled = false;
             }
             else if (param_wxname.StartsWith("Joy Mapping"))
             {
-                section.m_parameters[p].m_special_type = BINDING_DIGITAL_STRING;
-                inputSection.m_parameters.push_back(section.m_parameters[p]);
-                section.m_parameters[p].m_enabled = false;
+                section->m_parameters[p]->m_special_type = BINDING_DIGITAL_STRING;
+                inputSection->m_parameters.push_back(section->m_parameters[p]);
+                section->m_parameters[p]->m_enabled = false;
             }
             else if (param_wxname == "PluginDir" || param_wxname == "ScreenshotPath" ||
                      param_wxname == "SaveStatePath" || param_wxname == "SharedDataPath")
             {
-                section.m_parameters[p].m_special_type = DIRECTORY;
+                section->m_parameters[p]->m_special_type = DIRECTORY;
             }
             else if (param_wxname == "R4300Emulator")
             {
-                ConfigParam& param = section.m_parameters[p];
-                param.m_choices.push_back( ConfigParamChoice(_("Pure Interpreter"), 0) );
-                param.m_choices.push_back( ConfigParamChoice(_("Cached Interpreter"), 1) );
-                param.m_choices.push_back( ConfigParamChoice(_("Dynamic Recompiler"), 2) );
+                ConfigParam* param = section->m_parameters[p];
+                param->m_choices.push_back( ConfigParamChoice(_("Pure Interpreter"), 0) );
+                param->m_choices.push_back( ConfigParamChoice(_("Cached Interpreter"), 1) );
+                param->m_choices.push_back( ConfigParamChoice(_("Dynamic Recompiler"), 2) );
             }
         } // end for each parameter
         
-        if (wxString(section.m_section_name).StartsWith("Video"))
+        if (wxString(section->m_section_name).StartsWith("Video"))
         {
-            if (wxString(section.m_section_name).Contains("Rice"))
+            if (wxString(section->m_section_name).Contains("Rice"))
             {
-                ConfigParam* frameBufferSetting = section.getParamWithName("FrameBufferSetting");
+                ConfigParam* frameBufferSetting = section->getParamWithName("FrameBufferSetting");
                 if (frameBufferSetting != NULL)
                 {
                     frameBufferSetting->m_choices.push_back( ConfigParamChoice(_("ROM Default"), 0) );
                     frameBufferSetting->m_choices.push_back( ConfigParamChoice(_("Disabled"), 1) );
                 }
                 
-                ConfigParam* rttSetting = section.getParamWithName("RenderToTexture");
+                ConfigParam* rttSetting = section->getParamWithName("RenderToTexture");
                 if (rttSetting != NULL)
                 {
                     rttSetting->m_choices.push_back( ConfigParamChoice(_("None"), 0) );
@@ -654,7 +654,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     rttSetting->m_choices.push_back( ConfigParamChoice(_("Write Back and Reload"), 4) );
                 }
                 
-                ConfigParam* screenUpSetting = section.getParamWithName("ScreenUpdateSetting");
+                ConfigParam* screenUpSetting = section->getParamWithName("ScreenUpdateSetting");
                 if (screenUpSetting != NULL)
                 {
                     screenUpSetting->m_choices.push_back( ConfigParamChoice(_("ROM Default"), 0) );
@@ -667,7 +667,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     screenUpSetting->m_choices.push_back( ConfigParamChoice(_("After Screen Clear"), 7) );
                 }
                 
-                ConfigParam* fogSetting = section.getParamWithName("FogMethod");
+                ConfigParam* fogSetting = section->getParamWithName("FogMethod");
                 if (fogSetting != NULL)
                 {
                     fogSetting->m_choices.push_back( ConfigParamChoice(_("Disable"), 0) );
@@ -675,7 +675,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     fogSetting->m_choices.push_back( ConfigParamChoice(_("Force Fog"), 2) );                    
                 }
                 
-                ConfigParam* forceTextureFilterSetting = section.getParamWithName("ForceTextureFilter");
+                ConfigParam* forceTextureFilterSetting = section->getParamWithName("ForceTextureFilter");
                 if (forceTextureFilterSetting != NULL)
                 {
                     forceTextureFilterSetting->m_choices.push_back( ConfigParamChoice(_("Auto (N64 Choose)"), 0) );
@@ -683,7 +683,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     forceTextureFilterSetting->m_choices.push_back( ConfigParamChoice(_("Force Filtering"), 2) );                    
                 }
                 
-                ConfigParam* textureFilteringMethod = section.getParamWithName("TextureFilteringMethod");
+                ConfigParam* textureFilteringMethod = section->getParamWithName("TextureFilteringMethod");
                 if (textureFilteringMethod != NULL)
                 {
                     textureFilteringMethod->m_choices.push_back( ConfigParamChoice(_("No Filtering"), 0) );
@@ -691,7 +691,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     textureFilteringMethod->m_choices.push_back( ConfigParamChoice(_("Trilinear"), 2) );                    
                 }
                 
-                ConfigParam* textureEnhancement = section.getParamWithName("TextureEnhancement");
+                ConfigParam* textureEnhancement = section->getParamWithName("TextureEnhancement");
                 if (textureEnhancement != NULL)
                 {
                     textureEnhancement->m_choices.push_back( ConfigParamChoice(_("None"), 0) );
@@ -706,7 +706,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     textureEnhancement->m_choices.push_back( ConfigParamChoice(_("Mirror"), 9) );
                 }
                 
-                ConfigParam* textureQuality = section.getParamWithName("TextureQuality");
+                ConfigParam* textureQuality = section->getParamWithName("TextureQuality");
                 if (textureQuality != NULL)
                 {
                     textureQuality->m_choices.push_back( ConfigParamChoice(_("Defaut"), 0) );
@@ -714,7 +714,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     textureQuality->m_choices.push_back( ConfigParamChoice(_("16 Bits"), 2) );
                 }
                 
-                ConfigParam* multiSampling = section.getParamWithName("MultiSampling");
+                ConfigParam* multiSampling = section->getParamWithName("MultiSampling");
                 if (multiSampling != NULL)
                 {
                     multiSampling->m_choices.push_back( ConfigParamChoice(_("Off"), 0) );
@@ -724,21 +724,21 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                     multiSampling->m_choices.push_back( ConfigParamChoice("16", 16) );
                 }
                 
-                ConfigParam* colorQuality = section.getParamWithName("ColorQuality");
+                ConfigParam* colorQuality = section->getParamWithName("ColorQuality");
                 if (colorQuality != NULL)
                 {
                     colorQuality->m_choices.push_back( ConfigParamChoice(_("32 Bits"), 0) );
                     colorQuality->m_choices.push_back( ConfigParamChoice(_("16 Bits"), 1) );
                 }
                 
-                ConfigParam* openGLDepthBufferSetting = section.getParamWithName("OpenGLDepthBufferSetting");
+                ConfigParam* openGLDepthBufferSetting = section->getParamWithName("OpenGLDepthBufferSetting");
                 if (openGLDepthBufferSetting != NULL)
                 {
                     openGLDepthBufferSetting->m_choices.push_back( ConfigParamChoice(_("32 Bits"), 32) );
                     openGLDepthBufferSetting->m_choices.push_back( ConfigParamChoice(_("16 Bits"), 16) );
                 }
                 
-                ConfigParam* openGLRenderSetting = section.getParamWithName("OpenGLRenderSetting");
+                ConfigParam* openGLRenderSetting = section->getParamWithName("OpenGLRenderSetting");
                 if (openGLRenderSetting != NULL)
                 {
                     openGLRenderSetting->m_choices.push_back( ConfigParamChoice(_("Auto"), 0) );
@@ -753,30 +753,30 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                 }
             }
         }
-        else if (section.m_section_name == "Audio-SDL")
+        else if (section->m_section_name == "Audio-SDL")
         {
-            ConfigParam* resample = section.getParamWithName("RESAMPLE");
+            ConfigParam* resample = section->getParamWithName("RESAMPLE");
             if (resample != NULL)
             {
                 resample->m_choices.push_back( ConfigParamChoice(_("Unfiltered"), 1) );
                 resample->m_choices.push_back( ConfigParamChoice(_("SINC Resampling"), 2) );
             }
             
-            ConfigParam* volumeCtrType = section.getParamWithName("VOLUME_CONTROL_TYPE");
+            ConfigParam* volumeCtrType = section->getParamWithName("VOLUME_CONTROL_TYPE");
             if (volumeCtrType != NULL)
             {
                 volumeCtrType->m_choices.push_back( ConfigParamChoice(_("SDL (mupen output only)"), 1) );
                 volumeCtrType->m_choices.push_back( ConfigParamChoice(_("OSS mixer (master PC volume)"), 2) );
             }
         }
-        else if (wxString(section.m_section_name.c_str()).StartsWith("Input-SDL-Control"))
+        else if (wxString(section->m_section_name.c_str()).StartsWith("Input-SDL-Control"))
         {
             // Add any missing parameter
 #define CREATE_PARAM_IF_MISSING( name, val, type, disp, help )                  \
-            if (!section.hasChildNamed(name))                                   \
-                section.addNewParam(name, help, wxVariant( val ), type, disp);  \
+            if (!section->hasChildNamed(name))                                   \
+                section->addNewParam(name, help, wxVariant( val ), type, disp);  \
             else                                                                \
-                section.getParamWithName(name)->m_special_type = disp
+                section->getParamWithName(name)->m_special_type = disp
             
             try
             {
@@ -809,19 +809,19 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
             }
             catch (std::exception& e)
             {
-                fprintf(stderr, "Error caught while trying to set up %s : %s\n", (const char*)section.m_section_name.c_str(), e.what());
+                fprintf(stderr, "Error caught while trying to set up %s : %s\n", (const char*)section->m_section_name.c_str(), e.what());
             }
 
-            ConfigParam* x_axis = section.getParamWithName("X Axis");
+            ConfigParam* x_axis = section->getParamWithName("X Axis");
             x_axis->m_icon_1 = datadir + "left.png";
             x_axis->m_icon_2 = datadir + "right.png";
-            ConfigParam* y_axis = section.getParamWithName("Y Axis");
+            ConfigParam* y_axis = section->getParamWithName("Y Axis");
             y_axis->m_icon_1 = datadir + "up.png";
             y_axis->m_icon_2 = datadir + "down.png";
             
 #undef CREATE_PARAM_IF_MISSING
 
-            ConfigParam* pluginParam = section.getParamWithName("plugin");
+            ConfigParam* pluginParam = section->getParamWithName("plugin");
             if (pluginParam != NULL)
             {
                 pluginParam->m_choices.push_back( ConfigParamChoice(_("None"), 1) );
@@ -829,7 +829,7 @@ std::vector<ConfigSection> MupenFrontendApp::getOptions()
                 pluginParam->m_choices.push_back( ConfigParamChoice(_("Rumble Pack"), 5) );
             }
 
-            ConfigParam* deviceParam = section.getParamWithName("device");
+            ConfigParam* deviceParam = section->getParamWithName("device");
             if (deviceParam != NULL)
             {
                 deviceParam->m_choices.push_back( ConfigParamChoice(_("Keyboard/Mouse"), -2) );

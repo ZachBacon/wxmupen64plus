@@ -171,8 +171,10 @@ public:
 class ConfigSection
 {
 public:
-    std::string              m_section_name;
-    std::vector<ConfigParam> m_parameters;
+    std::string               m_section_name;
+    
+    // TODO: free them on exit
+    std::vector<ConfigParam*> m_parameters;
     m64p_handle m_handle;
 
     ConfigSection(std::string name, m64p_handle sectionHandle) : m_handle(sectionHandle)
@@ -194,9 +196,9 @@ public:
     void addNewParam(const char* name, const char* help, wxVariant value, m64p_type type,
                       SpecialParamType specialtype = NOTHING_SPECIAL);
 
-    static bool compare(const ConfigSection& a, const ConfigSection& b)
+    static bool compare(const ConfigSection* a, const ConfigSection* b)
     {
-        return (a.m_section_name < b.m_section_name);
+        return (a->m_section_name < b->m_section_name);
     }
 };
 
@@ -265,7 +267,7 @@ public:
     int loadPlugins();
 
     /** Retrieve configuration through the config API */
-    std::vector<ConfigSection> getConfigContents();
+    std::vector<ConfigSection*> getConfigContents();
 
     /** Write the config file with any modified values any parameter may have had since reading it */
     m64p_error saveConfig();

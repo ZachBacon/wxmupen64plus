@@ -39,7 +39,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
 {
     wxListCtrl* m_item_list;
     wxDirPickerCtrl* m_dir_picker;
-    ConfigParam m_gamesPathParam;
+    ConfigParam* m_gamesPathParam;
     
     /** Callback to sort the list */
     static int wxCALLBACK wxListCompareFunction(long item1, long item2, wxIntPtr sortData);
@@ -83,7 +83,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     
 public:
 
-	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam gamesPathParam);
+	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* gamesPathParam);
 	~GamesPanel();
 
     virtual void commitNewValues() {}

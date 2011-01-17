@@ -103,10 +103,11 @@ namespace PluginsFinder
 
 // -----------------------------------------------------------------------------------------------------------
 
-ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection& section) :
-    wxScrolledWindow(parent, wxID_ANY), m_section(section)
+ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection* section) :
+    wxScrolledWindow(parent, wxID_ANY)
 {
     m_api = api;
+    m_section = section;
     m_magic_number = 0xCAFECAFE;
     wxFlexGridSizer* sizer = new wxFlexGridSizer(2 /* columns */, 2 /* hgap */, 6 /* vgap */);
     
@@ -114,24 +115,25 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
     sizer->AddSpacer(15);
     sizer->AddSpacer(15);
     
-    const int count = section.m_parameters.size();
+    const int count = section->m_parameters.size();
     for (int p=0; p<count; p++)
     {
+        ConfigParam* curr = section->m_parameters[p];
         //printf("Parameter %i : %s (enabled = %i)\n", p, section.m_parameters[p].m_param_name.c_str(),
         //                                             section.m_parameters[p].m_enabled);
-        if (!section.m_parameters[p].m_enabled) continue;
+        if (not curr->m_enabled) continue;
 
         // if help string is short enough, use it instead of param name, often it's a clearer string
-        wxString labelstr = (section.m_parameters[p].m_help_string.size() < 30 and
-                             section.m_parameters[p].m_help_string.size() > 0) ?
-                             section.m_parameters[p].m_help_string :
-                             section.m_parameters[p].m_param_name;
+        wxString labelstr = (curr->m_help_string.size() < 30 and
+                             curr->m_help_string.size() > 0) ?
+                             curr->m_help_string :
+                             curr->m_param_name;
 
         wxStaticText* label = new wxStaticText(this, wxID_ANY, labelstr);
         sizer->Add( label, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 15 );
         wxWindow* ctrl;
 
-        switch (section.m_parameters[p].m_param_type)
+        switch (curr->m_param_type)
         {
             case M64TYPE_INT:
             {
@@ -139,32 +141,33 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
 
                 try
                 {
-                    currVal = section.m_parameters[p].getIntValue();
+                    currVal = curr->getIntValue();
                 }
                 catch (std::runtime_error& ex)
                 {
-                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                    wxLogError("Could not read value of parameter <%s> : %s\n",
+                               curr->m_param_name.c_str(), ex.what());
                 }
 
-                if (section.m_parameters[p].m_special_type == KEYBOARD_KEY_INT)
+                if (curr->m_special_type == KEYBOARD_KEY_INT)
                 {
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
-                else if (section.m_parameters[p].m_choices.size() > 0)
+                else if (curr->m_choices.size() > 0)
                 {
                     // if choices are offered, show a combo
  
                     wxChoice* choice = new wxChoice(this, wxID_ANY);
                     
                     int selection = 0;
-                    const int count = section.m_parameters[p].m_choices.size();
+                    const int count = curr->m_choices.size();
                     for (int n=0; n<count; n++)
                     {
-                        const int choiceVal = section.m_parameters[p].m_choices[n].m_value;
+                        const int choiceVal = curr->m_choices[n].m_value;
                         
                         // FIXME: the user data pointer is abused to contain an int
-                        const int index = choice->Append(section.m_parameters[p].m_choices[n].m_name,
+                        const int index = choice->Append(curr->m_choices[n].m_name,
                                                          (void*)choiceVal);
                                                          
                         if (choiceVal == currVal)
@@ -194,11 +197,12 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 float currVal = 0.0f;
                 try
                 {                
-                    currVal = section.m_parameters[p].getFloatValue();
+                    currVal = curr->getFloatValue();
                 }
                 catch (std::runtime_error& ex)
                 {
-                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                    wxLogError("Could not read value of parameter <%s> : %s\n",
+                               curr->m_param_name.c_str(), ex.what());
                 }
 
                 ctrl = new wxSpinCtrlDouble(this, wxID_ANY, wxString::Format("%f", currVal),
@@ -213,11 +217,12 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
 
                 try
                 {
-                    currVal = section.m_parameters[p].getBoolValue();
+                    currVal = curr->getBoolValue();
                 }
                 catch (std::runtime_error& ex)
                 {
-                    wxLogError("Could not read value of parameter <%s> : %s\n", section.m_parameters[p].m_param_name.c_str(), ex.what());
+                    wxLogError("Could not read value of parameter <%s> : %s\n",
+                               curr->m_param_name.c_str(), ex.what());
                 }
                 
                 wxCheckBox* cbox = new wxCheckBox(this, wxID_ANY, "");
@@ -233,27 +238,27 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
 
                 try
                 {
-                    currVal = section.m_parameters[p].getStringValue();
+                    currVal = curr->getStringValue();
                 }
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               section.m_parameters[p].m_param_name.c_str(), ex.what());
+                               curr->m_param_name.c_str(), ex.what());
                 }
                 
-                if (section.m_parameters[p].m_special_type == BINDING_DIGITAL_STRING)
+                if (curr->m_special_type == BINDING_DIGITAL_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
-                                              section.m_parameters[p], false);
+                                              curr, false);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
-                else if (section.m_parameters[p].m_special_type == BINDING_ANALOG_COUPLE_STRING)
+                else if (curr->m_special_type == BINDING_ANALOG_COUPLE_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
-                                              section.m_parameters[p], true);
+                                              curr, true);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
-                else if (section.m_parameters[p].m_special_type == DIRECTORY)
+                else if (curr->m_special_type == DIRECTORY)
                 {
                     ctrl = new wxDirPickerCtrl(this, wxID_ANY, wxString(currVal.c_str()));
                     ctrl->SetMinSize( wxSize(350, -1) );
@@ -262,7 +267,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                   NULL, this);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
-                else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
+                else if (curr->m_special_type == PLUGIN_FILE)
                 {
                     wxPanel* container = new wxPanel(this);
                     
@@ -277,8 +282,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     wxBoxSizer* subsizer = new wxBoxSizer(wxHORIZONTAL);
                     subsizer->Add(combo, 1, wxEXPAND);
                     
-                    assert(section.m_parameters[p].m_dir != NULL);
-                    wxString dir = section.m_parameters[p].m_dir->getStringValue();
+                    assert(curr->m_dir != NULL);
+                    wxString dir = curr->m_dir->getStringValue();
                     wxArrayString choices = PluginsFinder::getPluginsIn(dir);
                     combo->Append(choices);
                     
@@ -290,7 +295,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     container->SetSizer(subsizer);
                     ctrl = combo;
                     
-                    if (not section.m_parameters[p].m_is_ok)
+                    if (not curr->m_is_ok)
                     {
                         wxBitmap icon(datadir + "warning.png", wxBITMAP_TYPE_ANY);
                         if (not icon.IsOk())
@@ -325,9 +330,9 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
             }
         } // end switch
         
-        label->SetToolTip( section.m_parameters[p].m_help_string );
-        ctrl->SetToolTip( section.m_parameters[p].m_help_string );
-        ctrl->SetClientData( &m_section.m_parameters[p] );
+        label->SetToolTip( curr->m_help_string );
+        ctrl->SetToolTip( curr->m_help_string );
+        ctrl->SetClientData( curr );
         m_parameter_widgets.push_back(ctrl);
         
         //wxContextHelpButton* button = new wxContextHelpButton(this, wxID_ANY);
@@ -506,7 +511,34 @@ void ParameterPanel::commitNewValues()
     
     if (havePlugins)
     {
-        m_api->reloadPlugins();
+        int plugins = m_api->reloadPlugins();
+                
+        for (int n=0; n<count; n++)
+        {
+            ConfigParam* param = (ConfigParam*)m_parameter_widgets[n]->GetClientData();
+            assert(param != NULL);
+            assert(param->ok());
+            
+            if (param->m_special_type == PLUGIN_FILE)
+            {
+                if (param->m_param_name == "VideoPlugin")
+                {
+                    param->m_is_ok = (plugins & 0x1) != 0;
+                }
+                else if (param->m_param_name == "AudioPlugin")
+                {
+                    param->m_is_ok = (plugins & 0x2) != 0;
+                }
+                else if (param->m_param_name == "InputPlugin")
+                {
+                    param->m_is_ok = (plugins & 0x4) != 0;
+                }
+                else if (param->m_param_name == "RspPlugin")
+                {
+                    param->m_is_ok = (plugins & 0x8) != 0;
+                }
+            }
+        }
         // TODO: after reloading plugins, reload config options too
     }
 }
@@ -561,7 +593,7 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
 // -----------------------------------------------------------------------------------------------------------
 
 ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, Mupen64PlusPlus* api,
-                                          std::vector<ConfigSection> sections) :
+                                          std::vector<ConfigSection*> sections) :
         wxNotebook(parent, wxID_ANY)
 {
     m_magic_number = 0x12345678;
@@ -570,7 +602,7 @@ ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, Mupen64PlusPlus* ap
     for (int n=0; n<count; n++)
     {
         ParameterPanel* panel = new ParameterPanel(this, api, sections[n]);
-        this->AddPage(panel, sections[n].m_section_name.c_str());
+        this->AddPage(panel, sections[n]->m_section_name.c_str());
         m_panels.push_back(panel);
     }
 }

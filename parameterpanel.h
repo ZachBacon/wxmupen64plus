@@ -40,14 +40,14 @@ public:
 
 class ParameterPanel : public wxScrolledWindow, public IConfigurationPanel
 {
-    ConfigSection m_section;
+    ConfigSection* m_section;
     std::vector<wxWindow*> m_parameter_widgets;
     unsigned long m_magic_number;
     Mupen64PlusPlus* m_api;
     
 public:
 
-	ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection& section);
+	ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection* section);
 	~ParameterPanel();
 
     virtual void commitNewValues();
@@ -67,7 +67,7 @@ class ParameterGroupsPanel : public wxNotebook, public IConfigurationPanel
     
 public:
 
-	ParameterGroupsPanel(wxWindow* parent, Mupen64PlusPlus* api, std::vector<ConfigSection> sections);
+	ParameterGroupsPanel(wxWindow* parent, Mupen64PlusPlus* api, std::vector<ConfigSection*> sections);
     ~ParameterGroupsPanel()
     {
         m_magic_number = 0xDEADBEEF;
