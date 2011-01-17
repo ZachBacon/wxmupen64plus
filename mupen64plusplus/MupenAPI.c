@@ -458,8 +458,8 @@ const char* getParameterHelp(m64p_handle* section, const char* ParamName)
 
 m64p_error ReadConfigSectionParameters(const char* SectionName,
                                         void (*ParameterListCallback)(void * sectionHandle,
-                                                                       const char *ParamName,
-                                                                       m64p_type ParamType))
+                                                                      const char *ParamName,
+                                                                      m64p_type ParamType))
 {
     m64p_handle section;
 
@@ -480,9 +480,10 @@ m64p_error ReadConfigSectionParameters(const char* SectionName,
 
 // -----------------------------------------------------------------------------------------------------------
 
-m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName))
+m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName),
+                              void* userdata)
 {
-    m64p_error result = (*PtrConfigListSections)(NULL /* user data */, SectionListCallback);
+    m64p_error result = (*PtrConfigListSections)(userdata, SectionListCallback);
     if (result != M64ERR_SUCCESS)
     {
         return result;

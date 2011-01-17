@@ -203,7 +203,7 @@ std::vector<ConfigSection> Mupen64PlusPlus::getConfigContents()
 {
     g_config_sections.clear();
 
-    m64p_error result = ReadConfigSections(&SectionListCallback);
+    m64p_error result = ReadConfigSections(&SectionListCallback, NULL /* user data */);
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "[Mupen64PlusPlus::getConfigContents] ReadConfigSectionParameters"

@@ -45,7 +45,8 @@ m64p_error InitCore(ptr_StateCallback stateCallback, void* context, const char* 
 extern m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
                                            const char* defaultVideoPlugin, const char* defaultAudioPlugin,
                                            const char* defaultInputPlugin, const char* defaultRspPlugin);
-m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName));
+m64p_error ReadConfigSections(void (*SectionListCallback)(void * context, const char * SectionName),
+                              void* userdata);
 m64p_error ReadConfigSectionParameters(const char* section, void (*ParameterListCallback)(void * sectionHandle,
                                                                        const char *ParamName,
                                                                        m64p_type ParamType));
