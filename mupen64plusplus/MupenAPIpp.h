@@ -27,6 +27,8 @@
 #include "m64p_types.h"
 #include <wx/variant.h>
 
+#include "ptr_vector.hpp"
+
 class wxProgressDialog;
 
 class ConfigParamChoice
@@ -171,10 +173,9 @@ public:
 class ConfigSection
 {
 public:
-    std::string               m_section_name;
+    std::string             m_section_name;
     
-    // TODO: free them on exit
-    std::vector<ConfigParam*> m_parameters;
+    ptr_vector<ConfigParam> m_parameters;
     m64p_handle m_handle;
 
     ConfigSection(std::string name, m64p_handle sectionHandle) : m_handle(sectionHandle)
@@ -248,7 +249,7 @@ public:
         }
     };
 
-    Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaultPluginPath,
+    Mupen64PlusPlus(const char* CoreLibFilepath, const char* defaultPluginPath,
                     const char* defaultVideoPlugin, const char* defaultAudioPlugin,
                     const char* defaultInputPlugin, const char* defaultRspPlugin,
                     const char* datapath);
@@ -267,7 +268,7 @@ public:
     int loadPlugins();
 
     /** Retrieve configuration through the config API */
-    std::vector<ConfigSection*> getConfigContents();
+    ptr_vector<ConfigSection, REF> getConfigContents();
 
     /** Write the config file with any modified values any parameter may have had since reading it */
     m64p_error saveConfig();

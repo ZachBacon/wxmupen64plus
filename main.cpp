@@ -115,7 +115,7 @@ class MupenFrontendApp : public wxApp
 public:
     virtual bool OnInit();
 
-    std::vector<ConfigSection*> getOptions();
+    ptr_vector<ConfigSection, REF> getOptions();
 
     void shutdown()
     {
@@ -346,7 +346,7 @@ bool MupenFrontendApp::OnInit()
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     
     // ---- Get config options
-    std::vector<ConfigSection*> config; // TODO: free before exiting
+    ptr_vector<ConfigSection, REF> config; // TODO: free before exiting
     try
     {
         config = getOptions();
@@ -550,13 +550,13 @@ bool MupenFrontendApp::OnInit()
 
 #define CHATTY 0
 
-std::vector<ConfigSection*> MupenFrontendApp::getOptions()
+ptr_vector<ConfigSection, REF> MupenFrontendApp::getOptions()
 {
     // FIXME: this entire function could be improved; at this point, the structure of the config is
     //        hardcoded. Ideally this would be loaded ffrom some config file (but even more ideally
     //        the mupen core would provide me with this information)
     
-    std::vector<ConfigSection*> config = m_api->getConfigContents();
+    ptr_vector<ConfigSection, REF> config = m_api->getConfigContents();
     
     // For now give an untranslated name to this section, this will allow us to identify it;
     // we'll translate the name later (FIXME: unclean)
@@ -571,7 +571,7 @@ std::vector<ConfigSection*> MupenFrontendApp::getOptions()
         printf("==== Section [%s] ====\n", section->m_section_name.c_str());
 #endif
 
-        for (unsigned int p=0; p<section->m_parameters.size(); p++)
+        for (int p=0; p<section->m_parameters.size(); p++)
         {
 #if CHATTY
             const char* type = "other";

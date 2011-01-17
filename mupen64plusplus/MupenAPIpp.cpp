@@ -159,7 +159,7 @@ int Mupen64PlusPlus::loadPlugins()
 // -----------------------------------------------------------------------------------------------------------
 
 // FIXME: avoid the use of globals if possible
-std::vector<ConfigSection*> g_config_sections;
+ptr_vector<ConfigSection, REF> g_config_sections;
 
 void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type ParamType)
 {
@@ -193,9 +193,9 @@ void SectionListCallback(void* context, const char* SectionName)
 
 // -----------------------------------------------------------------------------------------------------------
 
-std::vector<ConfigSection*> Mupen64PlusPlus::getConfigContents()
+ptr_vector<ConfigSection, REF> Mupen64PlusPlus::getConfigContents()
 {
-    g_config_sections.clear();
+    g_config_sections.clearWithoutDeleting();
 
     m64p_error result = ReadConfigSections(&SectionListCallback, NULL /* user data */);
     if (result != M64ERR_SUCCESS)
