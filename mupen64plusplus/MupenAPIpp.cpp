@@ -103,10 +103,10 @@ m64p_error Mupen64PlusPlus::saveConfig()
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::reloadPlugins()
+int Mupen64PlusPlus::reloadPlugins()
 {
     (*PluginUnload)();
-    loadPlugins();
+    return loadPlugins();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -128,7 +128,8 @@ int Mupen64PlusPlus::loadPlugins()
     {
         std::string errmsg = "[Mupen64PlusPlus::loadPlugins] GetConfigPlugins failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        fprintf(stderr, "%s\n", errmsg.c_str());
+        return 0;
     }
 
     g_PluginDir   = pluginsPath;

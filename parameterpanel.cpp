@@ -33,6 +33,7 @@
 #include <wx/log.h>
 #include <wx/filepicker.h>
 #include <wx/dir.h>
+#include <wx/statbmp.h>
 
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
@@ -41,6 +42,8 @@
 
 // TODO: atm there is no device type check, i.e. you will get no error if you configure select type to be keyboard
 //       then enter gamepad keys. This would be more user-friendly (and don't forget to handle device type changes)
+
+extern wxString datadir;
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -242,11 +245,13 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
                                               section.m_parameters[p], false);
+                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (section.m_parameters[p].m_special_type == BINDING_ANALOG_COUPLE_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
                                               section.m_parameters[p], true);
+                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (section.m_parameters[p].m_special_type == DIRECTORY)
                 {
@@ -255,16 +260,22 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     ctrl->Connect(ctrl->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                                   wxFileDirPickerEventHandler(ParameterPanel::onPathChanged),
                                   NULL, this);
+                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (section.m_parameters[p].m_special_type == PLUGIN_FILE)
                 {
+                    wxPanel* container = new wxPanel(this);
+                    
                     // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
                     // Functions that could be checked for in each plugin type :
                     //    video : void ChangeWindow?(void);
                     //    audio : void VolumeUp?(void);
                     //    input : void ControllerCommand?(int Control, BYTE * Command);
                     //    rsp   : DWORD DoRspCycles?(DWORD Cycles);
-                    wxComboBox* combo = new wxComboBox(this, wxID_ANY);
+                    wxComboBox* combo = new wxComboBox(container, wxID_ANY);
+                    
+                    wxBoxSizer* subsizer = new wxBoxSizer(wxHORIZONTAL);
+                    subsizer->Add(combo, 1, wxEXPAND);
                     
                     assert(section.m_parameters[p].m_dir != NULL);
                     wxString dir = section.m_parameters[p].m_dir->getStringValue();
@@ -272,15 +283,36 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     combo->Append(choices);
                     
                     combo->SetValue(currVal.c_str());
+                    
+                    container->SetMinSize( wxSize(350, -1) );                    
+                    combo->SetMinSize( wxSize(350, -1) );
+                    
+                    container->SetSizer(subsizer);
                     ctrl = combo;
-                    ctrl->SetMinSize( wxSize(350, -1) );
+                    
+                    if (not section.m_parameters[p].m_is_ok)
+                    {
+                        wxBitmap icon(datadir + "warning.png", wxBITMAP_TYPE_ANY);
+                        if (not icon.IsOk())
+                        {
+                            wxLogWarning("Failed to load icon 'warning.png', make sure your installation is OK");
+                        }
+                        else
+                        {
+                            wxStaticBitmap* icon_widget = new wxStaticBitmap(container, wxID_ANY, icon);
+                            icon_widget->SetToolTip( _("Plugin not found or failed to be loaded") );
+                            subsizer->Add(icon_widget);
+                        }
+                    }
+                    
+                    sizer->Add(container, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else
                 {
                     ctrl = new wxTextCtrl(this, wxID_ANY, currVal, wxDefaultPosition, wxSize(150, -1));
+                    sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 
-                sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 break;
             }
                 

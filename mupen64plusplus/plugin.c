@@ -140,6 +140,7 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
     for (i = 0; i < 4; i++)
     {
         m64p_plugin_type type = g_PluginMap[i].type;
+        
         const char      *curr_path     = NULL;
         //const char      *config_var = NULL;
         int              use_dummy = 0;
@@ -173,12 +174,22 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
                     curr = curr->next;
                 }
             }
-            /* exit with error if we couldn't find the specified plugin */
+            
             if (!use_dummy && g_PluginMap[i].handle == NULL)
             {
+                // we couldn't find the specified plugin
                 fprintf(stderr, "Error: Specified %s plugin not found: %s\n", g_PluginMap[i].name, curr_path);
-                osal_free_lib_list(lib_filelist);
-                return M64ERR_INPUT_NOT_FOUND;
+            }
+            else
+            {
+                switch (type)
+                {
+                    case M64PLUGIN_GFX:    output = output | 0x1; break;
+                    case M64PLUGIN_AUDIO:  output = output | 0x2; break;
+                    case M64PLUGIN_INPUT:  output = output | 0x4; break;
+                    case M64PLUGIN_RSP:    output = output | 0x8; break;
+                    default: break;
+                }
             }
         }
         else
@@ -187,6 +198,10 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
         }
         
         /* As a last resort, search for any appropriate plugin in search directory */
+        /*
+        // This is disabled because it was confusing with the config UI
+        // the core would then be using a different plugin than specified
+        // in the UI, just too weird. Let's ask the user to fix the config instead
         if (!use_dummy && g_PluginMap[i].handle == NULL)
         {
             osal_lib_search *curr = lib_filelist;
@@ -196,6 +211,7 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
                 curr = curr->next;
             }
         }
+        */
         
         /* print out the particular plugin used */
         if (g_PluginMap[i].handle == NULL)
@@ -208,15 +224,6 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
                    g_PluginMap[i].libname, VERSION_PRINTF_SPLIT(g_PluginMap[i].libversion));
             if (g_Verbose)
                 printf("wxMupen64Plus: %s plugin library: %s\n", g_PluginMap[i].name, g_PluginMap[i].filename);
-            
-            switch (type)
-            {
-                case M64PLUGIN_GFX:    output = output | 0x1; break;
-                case M64PLUGIN_AUDIO:  output = output | 0x2; break;
-                case M64PLUGIN_INPUT:  output = output | 0x4; break;
-                case M64PLUGIN_RSP:    output = output | 0x8; break;
-                default: break;
-            }
         }
     }
 

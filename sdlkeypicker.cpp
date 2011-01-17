@@ -431,7 +431,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigPara
 
     if (not param.m_icon_1.IsEmpty())
     {
-        wxBitmap icon(param.m_icon_1, wxBITMAP_TYPE_ANY );
+        wxBitmap icon(param.m_icon_1, wxBITMAP_TYPE_ANY);
         if (not icon.IsOk())
         {
             wxLogWarning("Failed to load icon '%s', make sure your installation is OK",

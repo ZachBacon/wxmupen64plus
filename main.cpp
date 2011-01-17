@@ -314,6 +314,7 @@ bool MupenFrontendApp::OnInit()
 
     printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
                                                                        (const char*)libs.utf8_str());
+    int plugins = 0;
     
     // ---- Init mupen core and plugins
     try
@@ -326,8 +327,8 @@ bool MupenFrontendApp::OnInit()
                                     "mupen64plus-input-sdl",
                                     "mupen64plus-rsp-hle",
                                     (const char*)datadir.utf8_str());
-                                    
-        int plugins = m_api->loadPlugins();
+        
+        plugins = m_api->loadPlugins();
         if (plugins != 15)
         {
             // TODO: if plugins are not found, offer fixing the paths        
@@ -408,44 +409,48 @@ bool MupenFrontendApp::OnInit()
             {
                 ptr_param->m_enabled = false;
                 m_gamesPathParam = *ptr_param;
-			}
-			
-			ConfigParam* pluginsDir = section.getParamWithName("PluginDir");
-            if (pluginsDir != NULL)
-			{
-				ConfigParam* plugin1 = section.getParamWithName("VideoPlugin");
-				if (plugin1 != NULL)
-				{
-					plugin1->m_special_type = PLUGIN_FILE;
-					plugin1->m_dir = new ConfigParam(*pluginsDir);
-				}
-				
-				ConfigParam* plugin2 = section.getParamWithName("AudioPlugin");
-				if (plugin2 != NULL)
-				{
-					plugin2->m_special_type = PLUGIN_FILE;
-					plugin2->m_dir = new ConfigParam(*pluginsDir);
-				}
-				
-				ConfigParam* plugin3 = section.getParamWithName("InputPlugin");
-				if (plugin3 != NULL)
-				{
-					plugin3->m_special_type = PLUGIN_FILE;
-					plugin3->m_dir = new ConfigParam(*pluginsDir);
-				}
-				
-				ConfigParam* plugin4 = section.getParamWithName("RspPlugin");
-				if (plugin4 != NULL)
-				{
-					plugin4->m_special_type = PLUGIN_FILE;
-					plugin4->m_dir = new ConfigParam(*pluginsDir);
-				}
             }
-			else
-			{
-				wxLogError("Cannot find the plugins path parameter!");
-			}
-			
+            
+            ConfigParam* pluginsDir = section.getParamWithName("PluginDir");
+            if (pluginsDir != NULL)
+            {
+                ConfigParam* plugin1 = section.getParamWithName("VideoPlugin");
+                if (plugin1 != NULL)
+                {
+                    plugin1->m_special_type = PLUGIN_FILE;
+                    plugin1->m_is_ok = (plugins & 0x1) != 0;
+                    plugin1->m_dir = new ConfigParam(*pluginsDir);
+                }
+                
+                ConfigParam* plugin2 = section.getParamWithName("AudioPlugin");
+                if (plugin2 != NULL)
+                {
+                    plugin2->m_special_type = PLUGIN_FILE;
+                    plugin2->m_is_ok = (plugins & 0x2) != 0;
+                    plugin2->m_dir = new ConfigParam(*pluginsDir);
+                }
+                
+                ConfigParam* plugin3 = section.getParamWithName("InputPlugin");
+                if (plugin3 != NULL)
+                {
+                    plugin3->m_special_type = PLUGIN_FILE;
+                    plugin3->m_is_ok = (plugins & 0x4) != 0;
+                    plugin3->m_dir = new ConfigParam(*pluginsDir);
+                }
+                
+                ConfigParam* plugin4 = section.getParamWithName("RspPlugin");
+                if (plugin4 != NULL)
+                {
+                    plugin4->m_special_type = PLUGIN_FILE;
+                    plugin4->m_is_ok = (plugins & 0x8) != 0;
+                    plugin4->m_dir = new ConfigParam(*pluginsDir);
+                }
+            }
+            else
+            {
+                wxLogError("Cannot find the plugins path parameter!");
+            }
+            
             // TODO: when a plugin is changed, load it, and get its config options
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
                                                       icon_plugins, icon_plugins), section) );

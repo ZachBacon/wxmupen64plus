@@ -91,6 +91,10 @@ public:
      *  directory to search */
     ConfigParam* m_dir;
 
+    /** Only set if m_special_type is PLUGIN_FILE. This contains whether the plugin
+      * was loaded fine*/
+    bool m_is_ok;
+
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     ConfigParam()
     {
@@ -99,6 +103,7 @@ public:
         m_special_type = NOTHING_SPECIAL;
         m_magic_number = 0xC001C001;
         m_dir = NULL;
+        m_is_ok = true;
     }
 
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
@@ -108,6 +113,7 @@ public:
         m_special_type = type;
         m_magic_number = 0xC001C001;
         m_dir = NULL;
+        m_is_ok = true;
     }
 
     ConfigParam(const ConfigParam& other)
@@ -122,6 +128,7 @@ public:
         m_help_string = other.m_help_string;
         m_icon_1 = other.m_icon_1;
         m_icon_2 = other.m_icon_2;
+        m_is_ok = other.m_is_ok;
         
         if (other.m_dir != NULL)
         {
@@ -247,6 +254,8 @@ public:
     ~Mupen64PlusPlus();
 
     /**
+      * Load plugins other than the core. Must be called before most other methods can
+      * be called.
       * @return A bitfield with the following bits (starting from least significant) :
       *         0: GFX plugin found and loaded
       *         1: Audio plugin found and loaded
@@ -343,8 +352,9 @@ public:
     
     /**
      * Call to reload plugins (for instance if the plugins in  the config have been changed)
+     * @return same as Mupen64PlusPlus::loadPlugins
      */
-    void reloadPlugins();
+    int reloadPlugins();
 };
 
 #endif
