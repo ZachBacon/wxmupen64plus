@@ -43,6 +43,8 @@
 // TODO: atm there is no device type check, i.e. you will get no error if you configure select type to be keyboard
 //       then enter gamepad keys. This would be more user-friendly (and don't forget to handle device type changes)
 
+// TODO: provide immediate feedback when a plugin is changed; was it loaded successfully?
+
 extern wxString datadir;
 
 // -----------------------------------------------------------------------------------------------------------

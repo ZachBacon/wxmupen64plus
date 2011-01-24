@@ -42,7 +42,6 @@
 
 #if USE_SDL_KEY_PICKER
 
-// TODO: support hats
 class PressAKey
 {
 public:
@@ -246,7 +245,7 @@ public:
 #endif
 
 #if USE_WX_KEY_PICKER
-// TODO: support hats
+
 class PressAKey : public wxDialog
 {
     
