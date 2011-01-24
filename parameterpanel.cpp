@@ -304,6 +304,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                    wxCommandEventHandler(ParameterPanel::onEnterPressed), NULL, this);
                     combo->Connect(combo->GetId(), wxEVT_KILL_FOCUS,
                                    wxFocusEventHandler(ParameterPanel::onFocusLost), NULL, this);
+                    combo->Connect(combo->GetId(), wxEVT_COMMAND_COMBOBOX_SELECTED,
+                                   wxCommandEventHandler(ParameterPanel::onEnterPressed), NULL, this);
                     wxBoxSizer* subsizer = new wxBoxSizer(wxHORIZONTAL);
                     subsizer->Add(combo, 1, wxEXPAND);
                     
