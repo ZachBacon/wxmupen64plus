@@ -58,6 +58,8 @@ public:
     }
     
     void onPathChanged(wxFileDirPickerEvent& event);
+    void onEnterPressed(wxCommandEvent& evt);
+    void onFocusLost(wxFocusEvent& evt);
 };
 
 class ParameterGroupsPanel : public wxNotebook, public IConfigurationPanel

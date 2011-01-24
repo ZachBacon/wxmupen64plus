@@ -34,6 +34,7 @@
 #include <wx/filepicker.h>
 #include <wx/dir.h>
 #include <wx/statbmp.h>
+#include <wx/artprov.h> 
 
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
@@ -42,8 +43,6 @@
 
 // TODO: atm there is no device type check, i.e. you will get no error if you configure select type to be keyboard
 //       then enter gamepad keys. This would be more user-friendly (and don't forget to handle device type changes)
-
-// TODO: provide immediate feedback when a plugin is changed; was it loaded successfully?
 
 extern wxString datadir;
 
@@ -102,6 +101,19 @@ namespace PluginsFinder
     }
 
 } // end namespace
+
+/** A combo that also has a pointer to an icon that is linked to it */
+class wxComboBoxWithIcon : public wxComboBox
+{
+public:
+
+    wxStaticBitmap* m_icon;
+
+    wxComboBoxWithIcon(wxWindow* parent, int id) : wxComboBox(parent ,id, "", wxDefaultPosition,
+                                                      wxDefaultSize, 0, NULL, wxTE_PROCESS_ENTER)
+   {
+   }
+};
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -286,8 +298,12 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     //    audio : void VolumeUp?(void);
                     //    input : void ControllerCommand?(int Control, BYTE * Command);
                     //    rsp   : DWORD DoRspCycles?(DWORD Cycles);
-                    wxComboBox* combo = new wxComboBox(container, wxID_ANY);
+                    wxComboBoxWithIcon* combo = new wxComboBoxWithIcon(container, wxID_ANY);
                     
+                    combo->Connect(combo->GetId(), wxEVT_COMMAND_TEXT_ENTER,
+                                   wxCommandEventHandler(ParameterPanel::onEnterPressed), NULL, this);
+                    combo->Connect(combo->GetId(), wxEVT_KILL_FOCUS,
+                                   wxFocusEventHandler(ParameterPanel::onFocusLost), NULL, this);
                     wxBoxSizer* subsizer = new wxBoxSizer(wxHORIZONTAL);
                     subsizer->Add(combo, 1, wxEXPAND);
                     
@@ -304,20 +320,24 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     container->SetSizer(subsizer);
                     ctrl = combo;
                     
-                    if (not curr->m_is_ok)
+                    wxBitmap icon(datadir + "warning.png", wxBITMAP_TYPE_ANY);
+                    wxStaticBitmap* icon_widget = NULL;
+                    
+                    if (not icon.IsOk())
                     {
-                        wxBitmap icon(datadir + "warning.png", wxBITMAP_TYPE_ANY);
-                        if (not icon.IsOk())
-                        {
-                            wxLogWarning("Failed to load icon 'warning.png', make sure your installation is OK");
-                        }
-                        else
-                        {
-                            wxStaticBitmap* icon_widget = new wxStaticBitmap(container, wxID_ANY, icon);
-                            icon_widget->SetToolTip( _("Plugin not found or failed to be loaded") );
-                            subsizer->Add(icon_widget);
-                        }
+                        wxLogWarning("Failed to load icon 'warning.png', make sure your installation is OK");
+                        icon_widget = new wxStaticBitmap(container, wxID_ANY,
+                                wxArtProvider::GetBitmap(wxART_ERROR));                        
                     }
+                    else
+                    {
+                        icon_widget = new wxStaticBitmap(container, wxID_ANY, icon);
+                    }
+                    
+                    icon_widget->SetToolTip( _("Plugin not found or failed to be loaded") );
+                    subsizer->Add(icon_widget);
+                    icon_widget->Show(not curr->m_is_ok);
+                    combo->m_icon = icon_widget;
                     
                     sizer->Add(container, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
@@ -548,8 +568,13 @@ void ParameterPanel::commitNewValues()
                 {
                     param->m_is_ok = (plugins & 0x8) != 0;
                 }
+                
+                wxComboBoxWithIcon* c = (wxComboBoxWithIcon*)m_parameter_widgets[n];
+                c->m_icon->Show(not param->m_is_ok);
             }
         }
+        
+        Layout();
         // TODO: after reloading plugins, reload config options too
     }
 }
@@ -598,6 +623,21 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             combo->Set(choices);
         }
     }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void ParameterPanel::onEnterPressed(wxCommandEvent& evt)
+{
+    // TODO: implement checks on enter pressed
+    commitNewValues();
+}
+
+void ParameterPanel::onFocusLost(wxFocusEvent& evt)
+{
+    // TODO: perform any needed checks when focus lost
+    evt.Skip();
+    commitNewValues();
 }
 
 // -----------------------------------------------------------------------------------------------------------
