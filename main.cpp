@@ -25,6 +25,7 @@
 #include <wx/filename.h>
 #include <wx/frame.h>
 #include <wx/event.h>
+#include <wx/filedlg.h> 
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -38,6 +39,11 @@
 #include "sdlhelper.h"
 
 const bool g_Verbose = false;
+
+const char* DEFAULT_VIDEO_PLUGIN = "mupen64plus-video-rice";
+const char* DEFAULT_AUDIO_PLUGIN = "mupen64plus-audio-sdl";
+const char* DEFAULT_INPUT_PLUGIN = "mupen64plus-input-sdl";
+const char* DEFAULT_RSP_PLUGIN   = "mupen64plus-rsp-hle";
 
 extern "C"
 {
@@ -292,6 +298,7 @@ bool MupenFrontendApp::OnInit()
     
     m_curr_panel = NULL;
     m_gamesPathParam = NULL;
+    m_api = NULL;
         
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
@@ -318,31 +325,50 @@ bool MupenFrontendApp::OnInit()
                                                                        (const char*)libs.utf8_str());
     int plugins = 0;
     
-    // ---- Init mupen core and plugins
-    try
+    wxString corepath = libs + "libmupen64plus" + OSAL_DLL_EXTENSION;
+    
+    while (m_api == NULL)
     {
-        // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
-        m_api = new Mupen64PlusPlus(libs + "libmupen64plus" + OSAL_DLL_EXTENSION,
-                                    libs.utf8_str(),
-                                    "mupen64plus-video-rice",
-                                    "mupen64plus-audio-sdl",
-                                    "mupen64plus-input-sdl",
-                                    "mupen64plus-rsp-hle",
-                                    (const char*)datadir.utf8_str());
-        
-        plugins = m_api->loadPlugins();
-        if (plugins != 15)
+        // ---- Init mupen core and plugins
+        try
         {
-            wxMessageBox( _("Warning, some plugins could not be loaded, please fix the paths before trying to use mupen64plus") );
+            // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
+            m_api = new Mupen64PlusPlus(corepath,
+                                        libs.utf8_str(),
+                                        DEFAULT_VIDEO_PLUGIN,
+                                        DEFAULT_AUDIO_PLUGIN,
+                                        DEFAULT_INPUT_PLUGIN,
+                                        DEFAULT_RSP_PLUGIN,
+                                        (const char*)datadir.utf8_str());
+            
+            plugins = m_api->loadPlugins();
+            if (plugins != 15)
+            {
+                wxMessageBox( _("Warning, some plugins could not be loaded, please fix the paths before trying to use mupen64plus") );
+            }
         }
-    }
-    catch (std::runtime_error& e)
-    {
-        // TODO: if the core is not found, offer fixing the paths instead of aborting
-        fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
-        wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
-        return false;
-    }
+        catch (CoreNotFoundException& e)
+        {
+            wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
+            
+            wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
+                                      ")|*" + OSAL_DLL_EXTENSION + "|" + _("All files") + "|*";
+            
+            corepath = wxFileSelector(_("Select the Mupen64Plus core library"),
+                                      libs, wxEmptyString, OSAL_DLL_EXTENSION, 
+                                      wildcard, wxFD_OPEN);
+                                      
+            // Quit if user cancelled
+            if (corepath.IsEmpty()) return false;
+            
+        }
+        catch (std::runtime_error& e)
+        {
+            fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
+            wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
+            return false;
+        }
+    } // end while
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     

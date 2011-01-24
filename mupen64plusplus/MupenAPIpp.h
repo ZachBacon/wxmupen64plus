@@ -26,10 +26,19 @@
 #include <string>
 #include "m64p_types.h"
 #include <wx/variant.h>
-
+#include <stdexcept>
 #include "ptr_vector.hpp"
 
 class wxProgressDialog;
+
+class CoreNotFoundException : public std::runtime_error
+{
+public:
+    CoreNotFoundException(std::string what) : std::runtime_error(what)
+    {
+        
+    }
+};
 
 class ConfigParamChoice
 {
