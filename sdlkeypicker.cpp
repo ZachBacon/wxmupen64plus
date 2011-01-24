@@ -419,7 +419,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, SDLKey key) : wxPanel(parent, w
 
 // -----------------------------------------------------------------------------------------------------------
 
-wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigParam& param,
+wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigParam* param,
                                bool isAnalogCouple) : wxPanel(parent, wxID_ANY)
 {
     m_format = (isAnalogCouple ? FORMAT_ANALOG_COUPLE : FORMAT_DIGITAL);
@@ -429,13 +429,13 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigPara
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
     m_btn = new wxButton(this, wxID_ANY, "");
 
-    if (not param.m_icon_1.IsEmpty())
+    if (not param->m_icon_1.IsEmpty())
     {
-        wxBitmap icon(param.m_icon_1, wxBITMAP_TYPE_ANY);
+        wxBitmap icon(param->m_icon_1, wxBITMAP_TYPE_ANY);
         if (not icon.IsOk())
         {
             wxLogWarning("Failed to load icon '%s', make sure your installation is OK",
-                         (const char*)param.m_icon_1.mb_str());
+                         (const char*)param->m_icon_1.mb_str());
         }
         else
         {
@@ -456,13 +456,13 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigPara
     {
         m_btn2 = new wxButton(this, wxID_ANY, "");
         
-        if (not param.m_icon_2.IsEmpty())
+        if (not param->m_icon_2.IsEmpty())
         {
-            wxBitmap icon(param.m_icon_2, wxBITMAP_TYPE_ANY );
+            wxBitmap icon(param->m_icon_2, wxBITMAP_TYPE_ANY );
             if (not icon.IsOk())
             {
                 wxLogWarning("Failed to load icon '%s', make sure your installation is OK",
-                             (const char*)param.m_icon_2.mb_str());
+                             (const char*)param->m_icon_2.mb_str());
             }
             else
             {

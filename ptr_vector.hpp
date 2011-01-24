@@ -35,17 +35,24 @@ enum VECTOR_TYPE
 template<typename TYPE, VECTOR_TYPE type=HOLD>
 class ptr_vector
 {
-
+    bool m_give_up_ownership;
+    
+    ptr_vector(const ptr_vector& o)
+    {
+        
+    }
+    
 public:
     std::vector<TYPE*> contentsVector;
 
 ptr_vector()
 {
+    m_give_up_ownership = false;
 }
 
 ~ptr_vector()
 {
-    if(type == HOLD) clearAndDeleteAll();
+    if (type == HOLD and not m_give_up_ownership) clearAndDeleteAll();
 }
 
 void push_back(TYPE* t)

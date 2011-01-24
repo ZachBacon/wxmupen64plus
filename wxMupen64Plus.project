@@ -17,6 +17,7 @@
     <File Name="gamespanel.h"/>
     <File Name="sdlhelper.cpp"/>
     <File Name="sdlhelper.h"/>
+    <File Name="ptr_vector.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="osx">
     <File Name="Info.plist"/>

@@ -118,9 +118,8 @@ public:
         m_is_ok = true;
     }
 
-    ConfigParam(const ConfigParam& other)
+    void copyFrom(const ConfigParam& other)
     {
-        m_magic_number = 0xC001C001;
         m_enabled = other.m_enabled;
         m_parent_section = other.m_parent_section;
         m_special_type = other.m_special_type;
@@ -132,6 +131,11 @@ public:
         m_icon_2 = other.m_icon_2;
         m_is_ok = other.m_is_ok;
         
+        assert(m_param_type == M64TYPE_INT   or
+               m_param_type == M64TYPE_FLOAT or
+               m_param_type == M64TYPE_BOOL  or
+               m_param_type == M64TYPE_STRING);
+        
         if (other.m_dir != NULL)
         {
             m_dir = new ConfigParam(*other.m_dir);
@@ -142,13 +146,39 @@ public:
         }
     }
 
-    ~ConfigParam()
+    ConfigParam(const ConfigParam& other)
     {
+        m_magic_number = 0xC001C001;
+        copyFrom(other);
+    }
+
+    ConfigParam(const ConfigParam* other)
+    {
+        m_magic_number = 0xC001C001;
+        copyFrom(*other);
+    }
+    
+    ~ConfigParam()
+    {        
+        if (not ok())
+        {
+            fprintf(stderr, "Failed invariant for ConfigParam '%s'!\n", m_param_name.c_str());
+            assert(false);
+        }
         m_magic_number = 0xDEADBEEF;
         delete m_dir;
     }
 
-    bool ok() const { return (m_magic_number == 0xC001C001); }
+    /** Check invariants */
+    bool ok() const
+    {
+        return (m_magic_number == 0xC001C001) and
+               not m_param_name.empty() and
+               (m_param_type == M64TYPE_INT   or
+                m_param_type == M64TYPE_FLOAT or
+                m_param_type == M64TYPE_BOOL  or
+                m_param_type == M64TYPE_STRING);
+    }
 
     /** @return whether the current parameter and the one given as parameter appear to be the same.
      *  This is not an absolute test */
@@ -172,7 +202,10 @@ public:
 
 class ConfigSection
 {
+    unsigned int m_magic_number;
+    
 public:
+
     std::string             m_section_name;
     
     ptr_vector<ConfigParam> m_parameters;
@@ -181,6 +214,13 @@ public:
     ConfigSection(std::string name, m64p_handle sectionHandle) : m_handle(sectionHandle)
     {
         m_section_name = name;
+        m_magic_number = 0x86878687;
+    }
+    
+    ~ConfigSection()
+    {
+        assert (m_magic_number == 0x86878687);
+        m_magic_number = 0xDEADBEEF;
     }
 
     bool hasChildNamed(const char* name) const;
@@ -268,7 +308,7 @@ public:
     int loadPlugins();
 
     /** Retrieve configuration through the config API */
-    ptr_vector<ConfigSection, REF> getConfigContents();
+    void getConfigContents(ptr_vector<ConfigSection>* out);
 
     /** Write the config file with any modified values any parameter may have had since reading it */
     m64p_error saveConfig();

@@ -88,7 +88,7 @@ public:
      * @param curr The current binding
      * @param isAnalogCouple whether this parameter's string contains two values (which also means analog input)
      */
-    wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigParam& param, bool isAnalogCouple);
+    wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigParam* param, bool isAnalogCouple);
     
     /**
      * Get the selected key binding, or SDLK_UNKNOWN if nothing was selected

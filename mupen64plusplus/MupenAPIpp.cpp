@@ -159,7 +159,7 @@ int Mupen64PlusPlus::loadPlugins()
 // -----------------------------------------------------------------------------------------------------------
 
 // FIXME: avoid the use of globals if possible
-ptr_vector<ConfigSection, REF> g_config_sections;
+ptr_vector<ConfigSection>* g_config_sections = NULL;
 
 void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type ParamType)
 {
@@ -172,7 +172,7 @@ void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type
     const char* help = getParameterHelp(section, ParamName);
     if (help != NULL) param->m_help_string = help;
 
-    g_config_sections[g_config_sections.size() - 1]->m_parameters.push_back(param);
+    (*g_config_sections)[g_config_sections->size() - 1]->m_parameters.push_back(param);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type
 void SectionListCallback(void* context, const char* SectionName)
 {
     m64p_handle handle = getSectionHandle(SectionName);
-    g_config_sections.push_back(new ConfigSection(SectionName, handle));
+    g_config_sections->push_back(new ConfigSection(SectionName, handle));
 
     m64p_error result = ReadConfigSectionParameters(SectionName, &ParameterListCallback);
     if (result != M64ERR_SUCCESS)
@@ -193,9 +193,10 @@ void SectionListCallback(void* context, const char* SectionName)
 
 // -----------------------------------------------------------------------------------------------------------
 
-ptr_vector<ConfigSection, REF> Mupen64PlusPlus::getConfigContents()
+void Mupen64PlusPlus::getConfigContents(ptr_vector<ConfigSection>* out)
 {
-    g_config_sections.clearWithoutDeleting();
+    g_config_sections = out;
+    g_config_sections->clearWithoutDeleting();
 
     m64p_error result = ReadConfigSections(&SectionListCallback, NULL /* user data */);
     if (result != M64ERR_SUCCESS)
@@ -206,7 +207,7 @@ ptr_vector<ConfigSection, REF> Mupen64PlusPlus::getConfigContents()
         throw std::runtime_error(errmsg);
     }
 
-    return g_config_sections;
+    g_config_sections = NULL;
 }
 
 // -----------------------------------------------------------------------------------------------------------

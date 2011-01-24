@@ -119,6 +119,13 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
     for (int p=0; p<count; p++)
     {
         ConfigParam* curr = section->m_parameters[p];
+        if (not curr->ok())
+        {
+            fprintf(stderr, "[ParameterPanel] WARNING: parameter '%s' is not OK\n",
+                    curr->m_param_name.c_str());
+            continue;
+        }
+        
         //printf("Parameter %i : %s (enabled = %i)\n", p, section.m_parameters[p].m_param_name.c_str(),
         //                                             section.m_parameters[p].m_enabled);
         if (not curr->m_enabled) continue;
@@ -320,9 +327,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 
                 break;
             }
-                
+            
             default:
             {
+                fprintf(stderr, "[ParameterPanel] Invalid parameter type for '%s' : %i\n",
+                        curr->m_param_name.c_str(), curr->m_param_type);
                 assert(false);
                 ctrl = new wxStaticText(this, wxID_ANY, "[???]");
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);

@@ -81,6 +81,8 @@ class MupenFrontendApp : public wxApp
 
     ConfigParam* m_gamesPathParam;
     
+    ptr_vector<ConfigSection> m_config;
+    
     /**
      * Associates a configuration section with its toolbar icon
      * (FIXME: rename this class, what it does is not obvious)
@@ -88,7 +90,7 @@ class MupenFrontendApp : public wxApp
     struct GraphicalSection
     {
         /** The associated toolbar button */
-        wxToolBarToolBase*         m_tool;
+        wxToolBarToolBase* m_tool;
         
         /** 
          * The mupen API config section associated with this button (some buttons may contain more than
@@ -115,7 +117,7 @@ class MupenFrontendApp : public wxApp
 public:
     virtual bool OnInit();
 
-    ptr_vector<ConfigSection, REF> getOptions();
+    void getOptions(ptr_vector<ConfigSection>* out);
 
     void shutdown()
     {
@@ -346,10 +348,9 @@ bool MupenFrontendApp::OnInit()
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     
     // ---- Get config options
-    ptr_vector<ConfigSection, REF> config; // TODO: free before exiting
     try
     {
-        config = getOptions();
+        getOptions( &m_config );
     }
     catch (std::runtime_error& e)
     {
@@ -391,10 +392,10 @@ bool MupenFrontendApp::OnInit()
     std::vector<ConfigSection*> inputSections;
     std::vector<ConfigSection*> videoSections;
     
-    const unsigned count = config.size();
+    const unsigned count = m_config.size();
     for (unsigned int n=0; n<count; n++)
     {
-        ConfigSection* section = config[n];
+        ConfigSection* section = m_config[n];
                 
         // FIXME: find better way than hardcoding sections?
         if (section->m_section_name == "Core")
@@ -550,22 +551,22 @@ bool MupenFrontendApp::OnInit()
 
 #define CHATTY 0
 
-ptr_vector<ConfigSection, REF> MupenFrontendApp::getOptions()
+void MupenFrontendApp::getOptions(ptr_vector<ConfigSection>* out)
 {
     // FIXME: this entire function could be improved; at this point, the structure of the config is
     //        hardcoded. Ideally this would be loaded ffrom some config file (but even more ideally
     //        the mupen core would provide me with this information)
     
-    ptr_vector<ConfigSection, REF> config = m_api->getConfigContents();
+    m_api->getConfigContents(out);
     
     // For now give an untranslated name to this section, this will allow us to identify it;
     // we'll translate the name later (FIXME: unclean)
     ConfigSection* inputSection = new ConfigSection( "Input", getSectionHandle("Core") ); 
     
-    const int configSize = config.size();
+    const int configSize = out->size();
     for (int n=0; n<configSize; n++)
     {
-        ConfigSection* section = config[n];
+        ConfigSection* section = out->get(n);
         
 #if CHATTY
         printf("==== Section [%s] ====\n", section->m_section_name.c_str());
@@ -610,13 +611,19 @@ ptr_vector<ConfigSection, REF> MupenFrontendApp::getOptions()
             if (param_wxname.StartsWith("Kbd Mapping"))
             {
                 section->m_parameters[p]->m_special_type = KEYBOARD_KEY_INT;
-                inputSection->m_parameters.push_back(section->m_parameters[p]);
+                assert(section->m_parameters[p]->ok());
+                ConfigParam* newp = new ConfigParam(section->m_parameters[p]);
+                assert(newp->ok());
+                inputSection->m_parameters.push_back(newp);
                 section->m_parameters[p]->m_enabled = false;
             }
             else if (param_wxname.StartsWith("Joy Mapping"))
             {
                 section->m_parameters[p]->m_special_type = BINDING_DIGITAL_STRING;
-                inputSection->m_parameters.push_back(section->m_parameters[p]);
+                assert(section->m_parameters[p]->ok());
+                ConfigParam* newp = new ConfigParam(section->m_parameters[p]);
+                assert(newp->ok());
+                inputSection->m_parameters.push_back(newp);
                 section->m_parameters[p]->m_enabled = false;
             }
             else if (param_wxname == "PluginDir" || param_wxname == "ScreenshotPath" ||
@@ -846,8 +853,7 @@ ptr_vector<ConfigSection, REF> MupenFrontendApp::getOptions()
         
     } // end for each section
     
-    config.push_back(inputSection);
-    return config;
+    out->push_back(inputSection);
 }
 
 // -----------------------------------------------------------------------------------------------------------
