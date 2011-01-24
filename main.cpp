@@ -333,13 +333,12 @@ bool MupenFrontendApp::OnInit()
         plugins = m_api->loadPlugins();
         if (plugins != 15)
         {
-            // TODO: if plugins are not found, offer fixing the paths        
             wxMessageBox( _("Warning, some plugins could not be loaded, please fix the paths before trying to use mupen64plus") );
         }
     }
     catch (std::runtime_error& e)
     {
-        // TODO: if plugins are not found, offer fixing the paths instead of aborting
+        // TODO: if the core is not found, offer fixing the paths instead of aborting
         fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
         wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
         return false;
