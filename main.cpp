@@ -357,10 +357,9 @@ bool MupenFrontendApp::OnInit()
             corepath = wxFileSelector(_("Select the Mupen64Plus core library"),
                                       libs, wxEmptyString, OSAL_DLL_EXTENSION, 
                                       wildcard, wxFD_OPEN);
-                                      
+            
             // Quit if user cancelled
             if (corepath.IsEmpty()) return false;
-            
         }
         catch (std::runtime_error& e)
         {
