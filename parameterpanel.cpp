@@ -631,13 +631,13 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
 
 void ParameterPanel::onEnterPressed(wxCommandEvent& evt)
 {
-    // TODO: implement checks on enter pressed
     commitNewValues();
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 void ParameterPanel::onFocusLost(wxFocusEvent& evt)
 {
-    // TODO: perform any needed checks when focus lost
     evt.Skip();
     commitNewValues();
 }
