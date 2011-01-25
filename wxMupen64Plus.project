@@ -18,6 +18,8 @@
     <File Name="sdlhelper.cpp"/>
     <File Name="sdlhelper.h"/>
     <File Name="ptr_vector.hpp"/>
+    <File Name="config.cpp"/>
+    <File Name="config.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="osx">
     <File Name="Info.plist"/>

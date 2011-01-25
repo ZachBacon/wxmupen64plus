@@ -49,8 +49,8 @@ LibPath                := "$(LibraryPathSwitch)."
 ## User defined environment variables
 ##
 CodeLiteDir:=/Users/mmg/My Applications/Applications Dev/CodeLite.app/Contents/SharedSupport/
-Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/sdlhelper$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) \
-	
+Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/sdlhelper$(ObjectSuffix) $(IntermediateDirectory)/config$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) \
+	$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 
 ##
 ## Main Build Targets 
@@ -117,6 +117,14 @@ $(IntermediateDirectory)/sdlhelper$(DependSuffix): sdlhelper.cpp
 $(IntermediateDirectory)/sdlhelper$(PreprocessSuffix): sdlhelper.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdlhelper$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/sdlhelper.cpp"
 
+$(IntermediateDirectory)/config$(ObjectSuffix): config.cpp $(IntermediateDirectory)/config$(DependSuffix)
+	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/config.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/config$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/config$(DependSuffix): config.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/config$(ObjectSuffix) -MF$(IntermediateDirectory)/config$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/config.cpp"
+
+$(IntermediateDirectory)/config$(PreprocessSuffix): config.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/config$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/config.cpp"
+
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix): mupen64plusplus/MupenAPI.c $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix): mupen64plusplus/MupenAPI.c
@@ -178,6 +186,9 @@ clean:
 	$(RM) $(IntermediateDirectory)/sdlhelper$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/sdlhelper$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/sdlhelper$(PreprocessSuffix)
+	$(RM) $(IntermediateDirectory)/config$(ObjectSuffix)
+	$(RM) $(IntermediateDirectory)/config$(DependSuffix)
+	$(RM) $(IntermediateDirectory)/config$(PreprocessSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix)
