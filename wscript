@@ -114,7 +114,7 @@ def build(bld):
                 linkflags=link_flags,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
-                        'mupen64plusplus/osal_dynamiclib_unix.c', 'sdlhelper.cpp',
+                        'mupen64plusplus/osal_dynamiclib_unix.c', 'sdlhelper.cpp', 'config.cpp',
                         'mupen64plusplus/osal_files_unix.c', 'mupen64plusplus/plugin.c'],
                 target='wxmupen64plus',
                 uselib = 'SDL wxWidgets',
