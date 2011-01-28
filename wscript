@@ -23,10 +23,17 @@ out = 'build'
 # --------------------------------------------------------------------------------------------
 
 def options(opt):
+    import os
+    
     opt.add_option('--mupenapi',  action='store', help='Where to find Mupen64Plus API headers (optional)', default='/usr/include')
     opt.add_option('--wxconfig',  action='store', help='Which wx-config utility to use (optional)', default='wx-config', dest="wxconfig")
     opt.add_option('--sdlconfig', action='store', help='Which sdl-config utility to use (optional)', default='sdl-config', dest="sdlconfig")
     opt.add_option('--debug',     action='store', help='Whether to make a debug build (may be \'true\' or \'false\')', default='false', dest="debugmode")
+    opt.add_option('--wxconfig_args', action='store', help='Additional arguments passed to wx-config', default='',  dest='wxconfig_args')
+    
+    if os.name == 'nt':
+        opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
+
     opt.load('compiler_cxx')
     opt.load('compiler_c')
 
@@ -47,11 +54,17 @@ def configure(ctx):
     import Options
     import subprocess
     import waflib
+    import os
     
     api_path   = Options.options.mupenapi
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
+    wxhome     = ':'.join(Options.options.wxhome)
+    wxconfig_args = Options.options.wxconfig_args
     
+    wxhome = ''
+    if os.name == 'nt':
+        wxhome = Options.options.wxhome
     
     if Options.options.debugmode != 'true' and Options.options.debugmode != 'false':
         waflib.Logs.warn("Warning, the --debug option may only be 'true' or 'false'. Defaulting to 'false'.")
@@ -63,6 +76,7 @@ def configure(ctx):
     
     ctx.env['api_path'] = api_path
     ctx.env['is_debug'] = is_debug
+    ctx.env['wxhome'] = wxhome
     
     ctx.find_program('gcc', var='GCC', mandatory=True)
     ctx.find_program('g++', var='GPP', mandatory=True)
@@ -73,7 +87,13 @@ def configure(ctx):
     ctx.check_cc(header_name="m64p_types.h",    includes=[api_path])
     
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
-    ctx.check_cfg(path=wx_config,  args='--cxxflags --libs', package='', uselib_store='wxWidgets')
+    
+    if os.name == 'nt':
+        if wxhome == None :
+            ctx.fatal("On Windows, the --wxhome argument is mandatory")
+        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs --prefix=' + wxhome + ' ' + wxconfig_args, package='', uselib_store='wxWidgets')
+    else:
+        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs ' + wxconfig_args, package='', uselib_store='wxWidgets')
 
 # --------------------------------------------------------------------------------------------
 #                                            BUILD
@@ -81,9 +101,11 @@ def configure(ctx):
 
 def build(bld):
     import os
-    
+
     api_path = bld.env['api_path']
 
+    wxhome = bld.env['wxhome']
+    
     link_flags = []
     build_flags = []
     
@@ -102,7 +124,8 @@ def build(bld):
     if os.name == 'nt':
         # command = ["windres", "--include-dir="+wxHomePath+"\include", "--input", "win32\Aria.rc", "--output", "msvcr.o"]
         # FIXME: don't hardcode path
-        bld(rule='windres --include-dir=C:\wxWidgets-2.9.1\include ${SRC} --output ${TGT}', source="wxmupen64plus.rc", target='manifest.o')
+        cmd = "windres --include-dir=" + wxhome + "\include ${SRC} --output ${TGT}"
+        bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
         
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
         additional_links += ['manifest.o']
