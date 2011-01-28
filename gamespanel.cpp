@@ -19,11 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef __WXMSW__
+#include <wx/wx.h>
+#endif
+
 #include "gamespanel.h"
 #include "mupen64plusplus/MupenAPIpp.h"
-#ifdef WIN32
-#include <wx/msw/winundef.h>
-#endif
+
 
 #include "sdlkeypicker.h"
 #include <wx/sizer.h>
