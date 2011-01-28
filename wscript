@@ -31,6 +31,15 @@ def options(opt):
     opt.load('compiler_c')
 
 # --------------------------------------------------------------------------------------------
+#                                   WINDOWS RC FILES BUILDER
+# --------------------------------------------------------------------------------------------
+
+#from waflib.Context import Context
+#class one(Context):
+#        cmd = 'windres'
+#    command = ["windres", "--include-dir="+wxHomePath+"\include", "--input", "win32\Aria.rc", "--output", "msvcr.o"]
+    
+# --------------------------------------------------------------------------------------------
 #                                          CONFIGURE
 # --------------------------------------------------------------------------------------------
 
@@ -87,11 +96,17 @@ def build(bld):
     bin_install_path = "${PREFIX}/bin"
 
     osal_src = []
+    additional_links = []
     
     # Windows
     if os.name == 'nt':
+        # command = ["windres", "--include-dir="+wxHomePath+"\include", "--input", "win32\Aria.rc", "--output", "msvcr.o"]
+        # FIXME: don't hardcode path
+        bld(rule='windres --include-dir=C:\wxWidgets-2.9.1\include ${SRC} --output ${TGT}', source="wxmupen64plus.rc", target='manifest.o')
+        
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
-       
+        additional_links += ['manifest.o']
+        
     # A few OSX-specific flags
     elif os.uname()[0] == 'Darwin':
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
@@ -119,7 +134,7 @@ def build(bld):
     bld.program(features='c cxx cxxprogram',
                 cxxflags=build_flags,
                 cflags=build_flags,
-                linkflags=link_flags,
+                linkflags=link_flags + additional_links,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
                         'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c'] + osal_src,
