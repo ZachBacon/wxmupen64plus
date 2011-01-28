@@ -22,6 +22,9 @@
 #include "sdlkeypicker.h"
 #include "main.h"
 #include "mupen64plusplus/MupenAPIpp.h"
+#ifdef WIN32
+#include <wx/msw/winundef.h>
+#endif
 
 #include <SDL.h>
 #include <SDL_keyboard.h>

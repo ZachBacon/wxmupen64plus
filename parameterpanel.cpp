@@ -35,6 +35,7 @@
 #include <wx/dir.h>
 #include <wx/statbmp.h>
 #include <wx/artprov.h> 
+#include <wx/combobox.h>
 
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
