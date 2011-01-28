@@ -19,6 +19,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef __WXMSW__
+#include <wx/wx.h>
+#endif
+
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/plugin.h"

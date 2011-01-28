@@ -19,6 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
  
+#ifdef __WXMSW__
+// Because of Windows.h issues if include order is not correct
+#include <wx/wx.h>
+#endif
+ 
 #include "config.h"
 #include "mupen64plusplus/MupenAPI.h"
 #include <wx/intl.h>

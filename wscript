@@ -86,8 +86,15 @@ def build(bld):
 
     bin_install_path = "${PREFIX}/bin"
 
+    osal_src = []
+    
+    # Windows
+    if os.name == 'nt':
+        osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
+       
     # A few OSX-specific flags
-    if os.uname()[0] == 'Darwin':
+    elif os.uname()[0] == 'Darwin':
+        osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         link_flags += ['-Wl,-framework,IOKit', '-Wl,-framework,Carbon',
                        '-Wl,-framework,Cocoa', '-Wl,-framework,AudioToolbox',
                        '-Wl,-framework,System', '-Wl,-framework,OpenGL',
@@ -101,6 +108,7 @@ def build(bld):
         
     else:
         # For other unices
+        osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         
         # install target
         data_dir = bld.path.find_dir('data')
@@ -114,8 +122,7 @@ def build(bld):
                 linkflags=link_flags,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
-                        'mupen64plusplus/osal_dynamiclib_unix.c', 'sdlhelper.cpp', 'config.cpp',
-                        'mupen64plusplus/osal_files_unix.c', 'mupen64plusplus/plugin.c'],
+                        'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c'] + osal_src,
                 target='wxmupen64plus',
                 uselib = 'SDL wxWidgets',
                 install_path = bin_install_path,
