@@ -291,7 +291,6 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
     
     wxArrayString children;
     // wxDIR_FILES is used to avoid very long processing (e.g. searching the entire disk if path is set to /...)
-    // TODO: allow limited recursion into directories?
     const int count = wxDir::GetAllFiles(dirpath, &children, wxEmptyString, wxDIR_FILES);
     
     assert(count == (int)children.Count());

@@ -105,16 +105,27 @@ class MupenFrontendApp : public wxApp
          */
         std::vector<ConfigSection*> m_config;
         
+        bool m_is_game_section;
+        
         GraphicalSection(wxToolBarToolBase* tool, ConfigSection* config)
         {
             m_tool = tool;
-            m_config.push_back(config);
+            if (config != NULL) m_config.push_back(config);
+            m_is_game_section = false;
         }
         
         GraphicalSection(wxToolBarToolBase* tool, const std::vector<ConfigSection*>& configs) :
             m_config(configs)
         {
             m_tool = tool;
+            m_is_game_section = false;
+        }
+        
+        static GraphicalSection createGamesSection(wxToolBarToolBase* tool)
+        {
+            GraphicalSection g(tool, NULL);
+            g.m_is_game_section = true;
+            return g;
         }
     };
     
@@ -176,12 +187,18 @@ public:
             if (m_toolbar_items[n].m_tool->GetId() == id)
             {
                 GraphicalSection& curr = m_toolbar_items[n];
-                if (curr.m_config.size() == 1)
+                if (curr.m_is_game_section)
+                {
+                    section = _("Games");
+                }
+                else if (curr.m_config.size() == 1)
                 {
                     section = curr.m_config[0]->m_section_name;
                 }
                 else
                 {
+                    assert(curr.m_config.size() > 1);
+                    
                     // Make a dummy name for the grouped section; not too important since at this
                     // point we will most likely not read the name except for debugging purposes
                     section = curr.m_config[0]->m_section_name + "-group";
@@ -204,11 +221,9 @@ public:
             m_curr_panel = NULL;
         }
         
-        assert(m_toolbar_items[sectionId].m_config.size() > 0);
-        
         try
         {
-            if (sectionId == 0) // FIXME: don't rely that the "games" section is first?
+            if (m_toolbar_items[sectionId].m_is_game_section)
             {
                 // games section
                 GamesPanel* newPanel = new GamesPanel(m_frame, m_api, m_gamesPathParam);
@@ -348,6 +363,7 @@ bool MupenFrontendApp::OnInit()
         }
         catch (CoreNotFoundException& e)
         {
+            fprintf(stderr, "The core was not found : %s\n", e.what());
             wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
             
             wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
@@ -402,15 +418,9 @@ bool MupenFrontendApp::OnInit()
     assert(icon_plugins.IsOk());
     assert(icon_video.IsOk());
     assert(icon_other.IsOk());
+    wxToolBarToolBase* t = m_toolbar->AddRadioTool(wxID_ANY, _("Games"), icon_mupen, icon_mupen);
     
-    m_toolbar_items.push_back(
-                              GraphicalSection(
-                                               m_toolbar->AddRadioTool(wxID_ANY, _("Games"),
-                                                                       icon_mupen, icon_mupen),
-                                                // create a dummy ConfigSection (unused)
-                                               new ConfigSection("Games", (m64p_handle)NULL)
-                                               )
-                             );
+    m_toolbar_items.push_back(GraphicalSection::createGamesSection(t));
     
     std::vector<ConfigSection*> inputSections;
     std::vector<ConfigSection*> videoSections;
