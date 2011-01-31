@@ -226,6 +226,12 @@ public:
         m_magic_number = 0x86878687;
     }
     
+    ConfigSection(const ConfigSection* other) : m_parameters(other->m_parameters)
+    {
+        m_section_name = other->m_section_name;
+        m_handle       = other->m_handle;
+    }
+    
     ~ConfigSection()
     {
         assert (m_magic_number == 0x86878687);

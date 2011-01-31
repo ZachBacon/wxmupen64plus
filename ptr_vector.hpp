@@ -37,17 +37,21 @@ class ptr_vector
 {
     bool m_give_up_ownership;
     
-    ptr_vector(const ptr_vector& o)
-    {
-        
-    }
-    
 public:
     std::vector<TYPE*> contentsVector;
 
 ptr_vector()
 {
     m_give_up_ownership = false;
+}
+
+ptr_vector(const ptr_vector<TYPE>& other)
+{
+    const int count = other.size();
+    for (int n=0; n<count; n++)
+    {
+        contentsVector.push_back( new TYPE(*other[n]) );
+    }
 }
 
 ~ptr_vector()
