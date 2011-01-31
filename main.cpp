@@ -557,7 +557,6 @@ bool MupenFrontendApp::OnInit()
     //wxApp::s_macExitMenuItemId = wxID_EXIT;
     file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
     file->Append(wxID_ABOUT, _("&About"));
-    file->Append(wxNewId(), _("Blah blah blah"));
     
     bar->Append(file, _("File"));
     m_frame->SetMenuBar(bar);
