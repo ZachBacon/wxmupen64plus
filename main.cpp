@@ -431,6 +431,9 @@ bool MupenFrontendApp::OnInit()
 
 bool MupenFrontendApp::makeToolbar(int plugins)
 {
+    wxToolBar* tb = m_frame->GetToolBar();
+    m_frame->SetToolBar(NULL);
+    if (tb != NULL) delete tb;
     m_toolbar_items.clear();
     
     // ---- Get config options
