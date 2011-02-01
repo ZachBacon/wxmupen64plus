@@ -170,6 +170,8 @@ public:
         shutdown();
     }
     
+    bool makeToolbar(int plugins);
+    
     /**
      * Callback invoked when a toolbar item is clicked.
      * The general action to perform when this happens is to change the currently displayed pane
@@ -386,6 +388,51 @@ bool MupenFrontendApp::OnInit()
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     
+    wxInitAllImageHandlers();
+    if (not makeToolbar(plugins)) return false;
+    
+    m_status_bar = m_frame->CreateStatusBar();
+    
+    m_sizer = new wxBoxSizer(wxHORIZONTAL);
+    
+    GamesPanel* games = new GamesPanel(m_frame, m_api, m_gamesPathParam);
+    m_sizer->Add(games, 1, wxEXPAND);
+    m_curr_panel = games;
+    
+    wxMenuBar* bar = new wxMenuBar();
+    
+    wxMenu* file = new wxMenu();
+    //wxApp::s_macExitMenuItemId = wxID_EXIT;
+    file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
+    file->Append(wxID_ABOUT, _("&About"));
+    
+    bar->Append(file, _("File"));
+    m_frame->SetMenuBar(bar);
+    
+    m_frame->SetSizer(m_sizer);
+    
+    m_frame->Centre();
+    m_frame->Show();
+    
+    m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
+    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+            wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+                     wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    
+    SetTopWindow( m_frame );
+    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
+    
+    // enter the application's main loop
+    return true;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+bool MupenFrontendApp::makeToolbar(int plugins)
+{
+    m_toolbar_items.clear();
+    
     // ---- Get config options
     try
     {
@@ -402,7 +449,6 @@ bool MupenFrontendApp::OnInit()
     m_toolbar = m_frame->CreateToolBar(wxTB_HORIZONTAL | wxTB_TEXT, wxID_ANY);
     m_toolbar->SetToolBitmapSize(wxSize(32,32));
     
-    wxInitAllImageHandlers();
     wxBitmap icon_mupen  (datadir + "mupenicon.png", wxBITMAP_TYPE_PNG);    
     wxBitmap icon_input  (datadir + "input.png",     wxBITMAP_TYPE_PNG);
     wxBitmap icon_cpu    (datadir + "emulation.png", wxBITMAP_TYPE_PNG);
@@ -543,40 +589,5 @@ bool MupenFrontendApp::OnInit()
     m_toolbar->Realize();
     m_toolbar->ToggleTool( m_toolbar_items[0].m_tool->GetId(), true );
     
-    m_status_bar = m_frame->CreateStatusBar();
-    
-    m_sizer = new wxBoxSizer(wxHORIZONTAL);
-    
-    GamesPanel* games = new GamesPanel(m_frame, m_api, m_gamesPathParam);
-    m_sizer->Add(games, 1, wxEXPAND);
-    m_curr_panel = games;
-    
-    wxMenuBar* bar = new wxMenuBar();
-        
-    wxMenu* file = new wxMenu();
-    //wxApp::s_macExitMenuItemId = wxID_EXIT;
-    file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
-    file->Append(wxID_ABOUT, _("&About"));
-    
-    bar->Append(file, _("File"));
-    m_frame->SetMenuBar(bar);
-    
-    m_frame->SetSizer(m_sizer);
-    
-    m_frame->Centre();
-    m_frame->Show();
-    
-    m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
-    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
-            wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
-    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
-                     wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
-    
-    SetTopWindow( m_frame );
-    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
-    
-    // enter the application's main loop
     return true;
 }
-
-// -----------------------------------------------------------------------------------------------------------
