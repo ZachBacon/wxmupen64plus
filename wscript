@@ -59,12 +59,12 @@ def configure(ctx):
     api_path   = Options.options.mupenapi
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
-    wxhome     = ':'.join(Options.options.wxhome)
+    
     wxconfig_args = Options.options.wxconfig_args
     
     wxhome = ''
     if os.name == 'nt':
-        wxhome = Options.options.wxhome
+        wxhome = ':'.join(Options.options.wxhome)
     
     if Options.options.debugmode != 'true' and Options.options.debugmode != 'false':
         waflib.Logs.warn("Warning, the --debug option may only be 'true' or 'false'. Defaulting to 'false'.")
