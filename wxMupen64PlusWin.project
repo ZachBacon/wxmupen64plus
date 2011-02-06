@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeLite_Project Name="wxMupen64PlusWin" InternalType="GUI">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="src">
+    <File Name="main.cpp"/>
+    <File Name="parameterpanel.h"/>
+    <File Name="parameterpanel.cpp"/>
+    <File Name="sdlkeypicker.cpp"/>
+    <File Name="sdlkeypicker.h"/>
+    <File Name="gamespanel.cpp"/>
+    <File Name="gamespanel.h"/>
+    <File Name="sdlhelper.cpp"/>
+    <File Name="sdlhelper.h"/>
+    <File Name="ptr_vector.hpp"/>
+    <File Name="config.cpp"/>
+    <File Name="config.h"/>
+    <File Name="main.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="Mupen64PlusPlus">
+    <File Name="mupen64plusplus/MupenAPI.c"/>
+    <File Name="mupen64plusplus/MupenAPI.h"/>
+    <File Name="mupen64plusplus/osal_dynamiclib.h"/>
+    <File Name="mupen64plusplus/osal_files.h"/>
+    <File Name="mupen64plusplus/osal_files_unix.c"/>
+    <File Name="mupen64plusplus/osal_preproc.h"/>
+    <File Name="mupen64plusplus/plugin.c"/>
+    <File Name="mupen64plusplus/plugin.h"/>
+    <File Name="mupen64plusplus/version.h"/>
+    <File Name="mupen64plusplus/osal_dynamiclib_unix.c"/>
+    <File Name="mupen64plusplus/MupenAPIpp.cpp"/>
+    <File Name="mupen64plusplus/MupenAPIpp.h"/>
+  </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
+  <Settings Type="Executable">
+    <GlobalSettings>
+      <Compiler Options="-Wall" C_Options="-Wall">
+        <IncludePath Value="."/>
+        <IncludePath Value="/Developer/hg/mupen64plus/mupen64plus-core/src/api"/>
+        <IncludePath Value="/Developer/hg/mupen64plus/mupen64plus-core/src"/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="">
+        <Preprocessor Value="__WX__"/>
+      </Compiler>
+      <Linker Options="-mwindows;$(shell /usr/local/bin/wx-config-2.9 --debug=yes --libs --unicode=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --libs)" Required="yes"/>
+      <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="C:\Documents and Settings\mmg\Desktop\wxmupen64plus\build\wxmupen64plus.exe" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="C:/Documents and Settings/mmg/Desktop/wxmupen64plus/build" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand/>
+        <CleanCommand>python C:\waf-1.6.2 clean</CleanCommand>
+        <BuildCommand>python C:\waf-1.6.2</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>C:\Documents and Settings\mmg\Desktop\wxmupen64plus</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild>$(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns
+## rule to copy the Info.plist file into the bundle
+$(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist: Info.plist
+	mkdir -p '$(IntermediateDirectory)/$(ProjectName).app/Contents' &amp;&amp; cp -f Info.plist '$(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist'
+## rule to copy the icon file into the bundle
+$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns: wxMupen64Plus.icns
+	mkdir -p '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/' &amp;&amp; cp -f wxMupen64Plus.icns '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns'
+</CustomPreBuild>
+      </AdditionalRules>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="">
+        <Preprocessor Value="__WX__"/>
+      </Compiler>
+      <Linker Options="-mwindows;-s;$(shell /usr/local/bin/wx-config-2.9 --debug=no --libs --unicode=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --libs)" Required="yes"/>
+      <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName).app/Contents/MacOS/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand/>
+        <CleanCommand>python C:\waf-1.6.2 clean</CleanCommand>
+        <BuildCommand>python C:\waf-1.6.2</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>C:\Documents and Settings\mmg\Desktop\wxmupen64plus</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild>$(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns
+## rule to copy the Info.plist file into the bundle
+$(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist: Info.plist
+	mkdir -p '$(IntermediateDirectory)/$(ProjectName).app/Contents' &amp;&amp; cp -f Info.plist '$(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist'
+## rule to copy the icon file into the bundle
+$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns: wxMupen64Plus.icns
+	mkdir -p '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/' &amp;&amp; cp -f wxMupen64Plus.icns '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns'</CustomPreBuild>
+      </AdditionalRules>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>
