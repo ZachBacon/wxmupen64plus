@@ -189,6 +189,7 @@ void MupenFrontendApp::setCurrentPanel(int sectionId)
 
 void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
 {
+    m_frame->Freeze();
     const int id = evt.GetId();
     //std::string section = "[unknown]";
     
@@ -225,6 +226,7 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
     
     if (sectionId == -1)
     {
+        m_frame->Thaw();
         assert(false);
         return;
     }
@@ -239,6 +241,7 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
     setCurrentPanel(sectionId);
 
     m_frame->Layout();
+    m_frame->Thaw();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -578,12 +581,17 @@ void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
 {
     // On wxOSX, changing the toolbar has the ugly disadvantage of resizing the frame...
     m_frame->Freeze();
+#ifdef __WXMAC__
     wxSize size = m_frame->GetSize();
-    
+#endif
+
     manualRemoveCurrentPanel();
     makeToolbar(evt.GetInt(), m_current_panel);
     manualReshowCurrentPanel();
     
+#ifdef __WXMAC__
     m_frame->SetSize(size);
+#endif
+
     m_frame->Thaw();
 }
