@@ -61,13 +61,20 @@ std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 // -----------------------------------------------------------------------------------------------------------
 // The main part where the game list is shown
 
- 
+// FIXME: wxListCtrl is awful, the native OSX list ordering when clicking on columns is not controllable
+// (nor portable I think)
 int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPtr sortData)
 {
     GamesPanel* self = (GamesPanel*)sortData;
+    
+#ifdef __WXMAC__
     RomInfo& rom1 = self->m_roms[item1];
     RomInfo& rom2 = self->m_roms[item2];
-    
+#else
+    RomInfo& rom1 = self->m_roms[item2];
+    RomInfo& rom2 = self->m_roms[item1];
+#endif
+
     //printf("Comparing <%s> and <%s>\n", (const char*)rom1.m_file_name.mb_str(),
     //    (const char*)rom2.m_file_name.mb_str());
     
@@ -274,8 +281,6 @@ void GamesPanel::populateList()
 
 void GamesPanel::onColClick(wxListEvent& evt)
 {
-    // FIXME: wxListCtrl is awful, the native OSX list ordering when clicking on columns is not controllable
-    // (not portable I think)
     if (m_curr_col != evt.GetColumn())
     {
         m_curr_col = evt.GetColumn();
