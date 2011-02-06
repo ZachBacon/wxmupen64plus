@@ -38,7 +38,7 @@ class wxToolBarToolBase;
 #include "ptr_vector.hpp"
 #include "mupen64plusplus/MupenAPIpp.h"
 
-DECLARE_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS, -1);
+DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS, -1);
 
 // application class
 class MupenFrontendApp : public wxApp

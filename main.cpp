@@ -77,7 +77,7 @@ wxString datadir;
 wxString libs;
 
 wxIMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
-DEFINE_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
 
 int main(int argc, char** argv)
 {
