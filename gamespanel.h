@@ -86,7 +86,7 @@ public:
 	GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* gamesPathParam);
 	~GamesPanel();
 
-    virtual void commitNewValues() {}
+    virtual void commitNewValues(bool onLeave) {}
     virtual void removeMyselfFrom(wxSizer* parentSizer)
     {
         parentSizer->Detach(this);

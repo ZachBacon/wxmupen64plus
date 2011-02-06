@@ -36,6 +36,7 @@
 #include <wx/statbmp.h>
 #include <wx/artprov.h> 
 #include <wx/combobox.h>
+#include "main.h"
 
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
@@ -392,11 +393,12 @@ ParameterPanel::~ParameterPanel()
 
 #define CHATTY 0
 
-void ParameterPanel::commitNewValues()
+void ParameterPanel::commitNewValues(bool onLeaving)
 {
     assert(m_magic_number == 0xCAFECAFE);
     
     bool havePlugins = false;
+    bool haveModifiedPlugins = false;
     
     const int count = m_parameter_widgets.size();
     for (int n=0; n<count; n++)
@@ -526,9 +528,13 @@ void ParameterPanel::commitNewValues()
                 }
                 
                 wxString newValue = param->getStringValue();
-                if (param->m_special_type == PLUGIN_FILE and previousValue != newValue)
+                if (param->m_special_type == PLUGIN_FILE)
                 {
                     havePlugins = true;
+                    if (previousValue != newValue)
+                    {
+                        haveModifiedPlugins = true;
+                    }
                 }
                 
                 break;
@@ -545,40 +551,59 @@ void ParameterPanel::commitNewValues()
     
     if (havePlugins)
     {
-        int plugins = m_api->reloadPlugins();
-                
-        for (int n=0; n<count; n++)
+        if (haveModifiedPlugins)
         {
-            ConfigParam* param = (ConfigParam*)m_parameter_widgets[n]->GetClientData();
-            assert(param != NULL);
-            assert(param->ok());
+            printf("\n==== Reloading plugins ====\n");
+            int plugins = m_api->reloadPlugins();
+            printf("===========================\n");
             
-            if (param->m_special_type == PLUGIN_FILE)
+            /*
+            for (int n=0; n<count; n++)
             {
-                if (param->m_param_name == "VideoPlugin")
-                {
-                    param->m_is_ok = (plugins & 0x1) != 0;
-                }
-                else if (param->m_param_name == "AudioPlugin")
-                {
-                    param->m_is_ok = (plugins & 0x2) != 0;
-                }
-                else if (param->m_param_name == "InputPlugin")
-                {
-                    param->m_is_ok = (plugins & 0x4) != 0;
-                }
-                else if (param->m_param_name == "RspPlugin")
-                {
-                    param->m_is_ok = (plugins & 0x8) != 0;
-                }
+                ConfigParam* param = (ConfigParam*)m_parameter_widgets[n]->GetClientData();
+                assert(param != NULL);
+                assert(param->ok());
                 
-                wxComboBoxWithIcon* c = (wxComboBoxWithIcon*)m_parameter_widgets[n];
-                c->m_icon->Show(not param->m_is_ok);
+                if (param->m_special_type == PLUGIN_FILE)
+                {
+                    if (param->m_param_name == "VideoPlugin")
+                    {
+                        param->m_is_ok = (plugins & 0x1) != 0;
+                    }
+                    else if (param->m_param_name == "AudioPlugin")
+                    {
+                        param->m_is_ok = (plugins & 0x2) != 0;
+                    }
+                    else if (param->m_param_name == "InputPlugin")
+                    {
+                        param->m_is_ok = (plugins & 0x4) != 0;
+                    }
+                    else if (param->m_param_name == "RspPlugin")
+                    {
+                        param->m_is_ok = (plugins & 0x8) != 0;
+                    }
+                    
+                    wxComboBoxWithIcon* c = (wxComboBoxWithIcon*)m_parameter_widgets[n];
+                    c->m_icon->Show(not param->m_is_ok);
+                } // end if
+
+            } // end for
+            */
+            
+            Layout();
+            
+            if (not onLeaving)
+            {
+                printf("[ParameterPanel] Commanding a reload of all config options\n");
+                
+                // It would be dangerous to delete the toolbar/panel here, because we are likely
+                // in a callback from either the toolbar or panel. So queue the change to be
+                // performed asynchronously
+                wxCommandEvent evt(wxMUPEN_RELOAD_OPTIONS, wxID_ANY);
+                evt.SetInt(plugins);
+                wxGetApp().AddPendingEvent(evt);
             }
         }
-        
-        Layout();
-        // TODO: after reloading plugins, reload config options too
     }
 }
 
@@ -632,7 +657,7 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
 
 void ParameterPanel::onEnterPressed(wxCommandEvent& evt)
 {
-    commitNewValues();
+    commitNewValues(false);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -640,7 +665,7 @@ void ParameterPanel::onEnterPressed(wxCommandEvent& evt)
 void ParameterPanel::onFocusLost(wxFocusEvent& evt)
 {
     evt.Skip();
-    commitNewValues();
+    commitNewValues(false);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -663,14 +688,14 @@ ParameterGroupsPanel::ParameterGroupsPanel(wxWindow* parent, Mupen64PlusPlus* ap
 
 // -----------------------------------------------------------------------------------------------------------
 
-void ParameterGroupsPanel::commitNewValues()
+void ParameterGroupsPanel::commitNewValues(bool onLeave)
 {
     assert(m_magic_number == 0x12345678);
     
     const int count = m_panels.size();
     for (int n=0; n<count; n++)
     {
-        m_panels[n]->commitNewValues();
+        m_panels[n]->commitNewValues(onLeave);
     }
 }
 

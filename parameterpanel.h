@@ -34,7 +34,7 @@ class wxFileDirPickerEvent;
 class IConfigurationPanel
 {
 public:
-    virtual void commitNewValues() = 0;
+    virtual void commitNewValues(bool onLeaving) = 0;
     virtual void removeMyselfFrom(wxSizer* parentSizer) = 0;
 };
 
@@ -50,7 +50,7 @@ public:
 	ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection* section);
 	~ParameterPanel();
 
-    virtual void commitNewValues();
+    virtual void commitNewValues(bool onLeaving);
     virtual void removeMyselfFrom(wxSizer* parentSizer)
     {
         parentSizer->Detach(this);
@@ -75,7 +75,7 @@ public:
         m_magic_number = 0xDEADBEEF;
     }
     
-    virtual void commitNewValues();
+    virtual void commitNewValues(bool onLeaving);
     virtual void removeMyselfFrom(wxSizer* parentSizer)
     {
         parentSizer->Detach(this);

@@ -20,6 +20,7 @@
     <File Name="ptr_vector.hpp"/>
     <File Name="config.cpp"/>
     <File Name="config.h"/>
+    <File Name="main.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="osx">
     <File Name="Info.plist"/>
@@ -121,4 +122,6 @@ $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icn
       </AdditionalRules>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

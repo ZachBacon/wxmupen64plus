@@ -34,6 +34,7 @@
 #include "gamespanel.h"
 #include "sdlkeypicker.h" // to get the USE_WX_KEY_PICKER define
 #include "config.h"
+#include "main.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -72,228 +73,11 @@ extern "C"
     }
 }
 
-// -----------------------------------------------------------------------------------------------------------
-// -----------------------------------------------------------------------------------------------------------
-
-// application class
-class MupenFrontendApp : public wxApp
-{
-    Mupen64PlusPlus* m_api;
-    wxFrame* m_frame;
-    wxToolBar* m_toolbar;
-    wxStatusBar* m_status_bar;
-   
-    IConfigurationPanel* m_curr_panel;
-    wxBoxSizer* m_sizer;
-
-    ConfigParam* m_gamesPathParam;
-    
-    ptr_vector<ConfigSection> m_config;
-    
-    /**
-     * Associates a configuration section with its toolbar icon
-     * (FIXME: rename this class, what it does is not obvious)
-     */
-    struct GraphicalSection
-    {
-        /** The associated toolbar button */
-        wxToolBarToolBase* m_tool;
-        
-        /** 
-         * The mupen API config section associated with this button (some buttons may contain more than
-         * one config section)
-         */
-        std::vector<ConfigSection*> m_config;
-        
-        bool m_is_game_section;
-        
-        GraphicalSection(wxToolBarToolBase* tool, ConfigSection* config)
-        {
-            m_tool = tool;
-            if (config != NULL) m_config.push_back(config);
-            m_is_game_section = false;
-        }
-        
-        GraphicalSection(wxToolBarToolBase* tool, const std::vector<ConfigSection*>& configs) :
-            m_config(configs)
-        {
-            m_tool = tool;
-            m_is_game_section = false;
-        }
-        
-        static GraphicalSection createGamesSection(wxToolBarToolBase* tool)
-        {
-            GraphicalSection g(tool, NULL);
-            g.m_is_game_section = true;
-            return g;
-        }
-    };
-    
-    /** List of configuration sections */
-    std::vector<GraphicalSection> m_toolbar_items;
-
-public:
-    virtual bool OnInit();
-
-    void shutdown()
-    {
-        if (m_curr_panel != NULL)
-        {
-            m_curr_panel->commitNewValues();
-        }
-        
-        if (m_frame != NULL)
-        {
-            m_frame->Destroy();
-            m_frame = NULL;
-            m_curr_panel = NULL;
-        }
-
-        if (m_api != NULL)
-        {
-            if (m_api->saveConfig() != M64ERR_SUCCESS)
-            {
-                wxLogWarning("Failed to save config file");
-            }
-            delete m_api;
-            m_api = NULL;
-        }
-    }
-
-    void onClose(wxCloseEvent& evt)
-    {
-        shutdown();
-    }
-    
-    void onQuitMenu(wxCommandEvent& evt)
-    {
-        shutdown();
-    }
-    
-    bool makeToolbar(int plugins);
-    
-    /**
-     * Callback invoked when a toolbar item is clicked.
-     * The general action to perform when this happens is to change the currently displayed pane
-     */
-    void onToolbarItem(wxCommandEvent& evt)
-    {
-        const int id = evt.GetId();
-        std::string section = "[unknown]";
-        
-        int sectionId = -1;
-        
-        const int count = m_toolbar_items.size();
-        for (int n=0; n<count; n++)
-        {
-            if (m_toolbar_items[n].m_tool->GetId() == id)
-            {
-                GraphicalSection& curr = m_toolbar_items[n];
-                if (curr.m_is_game_section)
-                {
-                    section = _("Games");
-                }
-                else if (curr.m_config.size() == 1)
-                {
-                    section = curr.m_config[0]->m_section_name;
-                }
-                else
-                {
-                    assert(curr.m_config.size() > 1);
-                    
-                    // Make a dummy name for the grouped section; not too important since at this
-                    // point we will most likely not read the name except for debugging purposes
-                    section = curr.m_config[0]->m_section_name + "-group";
-                }
-                sectionId = n;
-                break;
-            }
-        }
-        
-        if (sectionId == -1)
-        {
-            assert(false);
-            return;
-        }
-        
-        if (m_curr_panel != NULL)
-        {
-            m_curr_panel->commitNewValues();
-            m_curr_panel->removeMyselfFrom(m_sizer);
-            m_curr_panel = NULL;
-        }
-        
-        try
-        {
-            if (m_toolbar_items[sectionId].m_is_game_section)
-            {
-                // games section
-                GamesPanel* newPanel = new GamesPanel(m_frame, m_api, m_gamesPathParam);
-                newPanel->Layout();
-                m_sizer->Add(newPanel, 1, wxEXPAND);
-                m_curr_panel = newPanel;
-            }
-            else if (m_toolbar_items[sectionId].m_config.size() == 1)
-            {
-                ParameterPanel* newPanel = new ParameterPanel(m_frame, m_api,
-                                                              m_toolbar_items[sectionId].m_config[0]);
-                newPanel->Layout();
-                m_sizer->Add(newPanel, 1, wxEXPAND);
-                m_curr_panel = newPanel;
-            }
-            else
-            {
-                ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame, m_api,
-                                                                          m_toolbar_items[sectionId].m_config);
-                newPanel->Layout();
-                m_sizer->Add(newPanel, 1, wxEXPAND);
-                m_curr_panel = newPanel;
-            }
-        }
-        catch (std::runtime_error& e)
-        {
-            wxMessageBox( wxString("Sorry, an error occurred : ") + e.what() );
-            m_curr_panel = NULL;
-        }
-
-        m_frame->Layout();
-        
-    }
-    
-    void onActivate(wxActivateEvent& evt)
-    {
-    #ifdef __WXMAC__
-        if (evt.GetActive())
-        {
-            m_frame->Raise();
-        }
-    #endif
-    }
-    
-    virtual bool OnExceptionInMainLoop()
-    {
-        wxString what = "Unknown error";
-        
-        try
-        {
-            throw;
-        }
-        catch (std::exception& e)
-        {
-            what = e.what();
-        }
-        
-        std::cerr << "/!\\ An internal error occurred : an exception was caught unhandled\n" << what.mb_str()
-                  << std::endl;
-        wxMessageBox(_("Sorry an internal error occurred : an exception was caught unhandled : ") + what);
-        return true;
-    }
-};
-
 wxString datadir;
 wxString libs;
 
-IMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
+wxIMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
+DEFINE_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
 
 int main(int argc, char** argv)
 {
@@ -304,18 +88,205 @@ int main(int argc, char** argv)
 
 
 // -----------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::shutdown()
+{
+    if (m_curr_panel != NULL)
+    {
+        m_curr_panel->commitNewValues(true);
+    }
+    
+    if (m_frame != NULL)
+    {
+        m_frame->Destroy();
+        m_frame = NULL;
+        m_curr_panel = NULL;
+    }
+
+    if (m_api != NULL)
+    {
+        if (m_api->saveConfig() != M64ERR_SUCCESS)
+        {
+            wxLogWarning("Failed to save config file");
+        }
+        delete m_api;
+        m_api = NULL;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onClose(wxCloseEvent& evt)
+{
+    shutdown();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
+{
+    shutdown();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::manualRemoveCurrentPanel()
+{
+    m_curr_panel->removeMyselfFrom(m_sizer);
+    m_curr_panel = NULL;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::manualReshowCurrentPanel()
+{
+    setCurrentPanel(m_current_panel);
+    m_frame->Layout();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::setCurrentPanel(int sectionId)
+{
+    m_current_panel = sectionId;
+    
+    try
+    {
+        if (m_toolbar_items[sectionId].m_is_game_section)
+        {
+            // games section
+            GamesPanel* newPanel = new GamesPanel(m_frame, m_api, m_gamesPathParam);
+            newPanel->Layout();
+            m_sizer->Add(newPanel, 1, wxEXPAND);
+            m_curr_panel = newPanel;
+        }
+        else if (m_toolbar_items[sectionId].m_config.size() == 1)
+        {
+            ParameterPanel* newPanel = new ParameterPanel(m_frame, m_api,
+                                                          m_toolbar_items[sectionId].m_config[0]);
+            newPanel->Layout();
+            m_sizer->Add(newPanel, 1, wxEXPAND);
+            m_curr_panel = newPanel;
+        }
+        else
+        {
+            ParameterGroupsPanel* newPanel = new ParameterGroupsPanel(m_frame, m_api,
+                                                                      m_toolbar_items[sectionId].m_config);
+            newPanel->Layout();
+            m_sizer->Add(newPanel, 1, wxEXPAND);
+            m_curr_panel = newPanel;
+        }
+    }
+    catch (std::runtime_error& e)
+    {
+        wxMessageBox( wxString("Sorry, an error occurred : ") + e.what() );
+        m_curr_panel = NULL;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
+{
+    const int id = evt.GetId();
+    //std::string section = "[unknown]";
+    
+    // Find which section was clicked
+    int sectionId = -1;
+    const int count = m_toolbar_items.size();
+    for (int n=0; n<count; n++)
+    {
+        if (m_toolbar_items[n].m_tool->GetId() == id)
+        {
+            /**
+            GraphicalSection& curr = m_toolbar_items[n];
+            if (curr.m_is_game_section)
+            {
+                section = _("Games");
+            }
+            else if (curr.m_config.size() == 1)
+            {
+                section = curr.m_config[0]->m_section_name;
+            }
+            else
+            {
+                assert(curr.m_config.size() > 1);
+                
+                // Make a dummy name for the grouped section; not too important since at this
+                // point we will most likely not read the name except for debugging purposes
+                section = curr.m_config[0]->m_section_name + "-group";
+            }
+            */
+            sectionId = n;
+            break;
+        }
+    }
+    
+    if (sectionId == -1)
+    {
+        assert(false);
+        return;
+    }
+    
+    if (m_curr_panel != NULL)
+    {
+        m_curr_panel->commitNewValues(true);
+        m_curr_panel->removeMyselfFrom(m_sizer);
+        m_curr_panel = NULL;
+    }
+    
+    setCurrentPanel(sectionId);
+
+    m_frame->Layout();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onActivate(wxActivateEvent& evt)
+{
+#ifdef __WXMAC__
+    if (evt.GetActive())
+    {
+        m_frame->Raise();
+    }
+#endif
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+bool MupenFrontendApp::OnExceptionInMainLoop()
+{
+    wxString what = "Unknown error";
+    
+    try
+    {
+        throw;
+    }
+    catch (std::exception& e)
+    {
+        what = e.what();
+    }
+    
+    std::cerr << "/!\\ An internal error occurred : an exception was caught unhandled\n" << what.mb_str()
+              << std::endl;
+    wxMessageBox(_("Sorry an internal error occurred : an exception was caught unhandled : ") + what);
+    return true;
+}
+
+// -----------------------------------------------------------------------------------------------------------
 
 bool MupenFrontendApp::OnInit()
 {
-    // FIXME: the first time a video plugin is selected, it does not appear in options =(
-    // (at least with Glide, I needed to first launch a game with it, then restart the frontend)
+    // FIXME: the Glide plugin does not create the config options upon being loaded
     
     // FIXME: the first time mupen opens, a warning that the config file was not found is sent...
     
-    m_curr_panel = NULL;
+    m_current_panel  = 0;
+    m_curr_panel     = NULL;
     m_gamesPathParam = NULL;
-    m_api = NULL;
-        
+    m_api            = NULL;
+    
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
     printf("| |\\/| | | | | '_ \\ / _ \\ '_ \\| '_ \\| || |_| |_) | | | | / __|  \n");
@@ -389,7 +360,7 @@ bool MupenFrontendApp::OnInit()
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     
     wxInitAllImageHandlers();
-    if (not makeToolbar(plugins)) return false;
+    if (not makeToolbar(plugins, 0)) return false;
     
     m_status_bar = m_frame->CreateStatusBar();
     
@@ -423,18 +394,22 @@ bool MupenFrontendApp::OnInit()
     SetTopWindow( m_frame );
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
     
+    Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
+    
     // enter the application's main loop
     return true;
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool MupenFrontendApp::makeToolbar(int plugins)
+bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
 {
     wxToolBar* tb = m_frame->GetToolBar();
     m_frame->SetToolBar(NULL);
     if (tb != NULL) delete tb;
     m_toolbar_items.clear();
+    
+    m_config.clearAndDeleteAll();
     
     // ---- Get config options
     try
@@ -534,7 +509,6 @@ bool MupenFrontendApp::makeToolbar(int plugins)
                 wxLogError("Cannot find the plugins path parameter!");
             }
             
-            // TODO: when a plugin is changed, load it, and get its config options
             m_toolbar_items.push_back(GraphicalSection(m_toolbar->AddRadioTool(wxID_ANY, _("Plugins"),
                                                       icon_plugins, icon_plugins), section) );
         }
@@ -590,7 +564,26 @@ bool MupenFrontendApp::makeToolbar(int plugins)
                        NULL, this);
     
     m_toolbar->Realize();
-    m_toolbar->ToggleTool( m_toolbar_items[0].m_tool->GetId(), true );
+    
+    const int amount = m_toolbar_items.size();
+    if (selectedSection >= amount or selectedSection < 0) selectedSection = 0;
+    
+    m_toolbar->ToggleTool( m_toolbar_items[selectedSection].m_tool->GetId(), true );
     
     return true;
+}
+
+
+void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
+{
+    // On wxOSX, changing the toolbar has the ugly disadvantage of resizing the frame...
+    m_frame->Freeze();
+    wxSize size = m_frame->GetSize();
+    
+    manualRemoveCurrentPanel();
+    makeToolbar(evt.GetInt(), m_current_panel);
+    manualReshowCurrentPanel();
+    
+    m_frame->SetSize(size);
+    m_frame->Thaw();
 }
