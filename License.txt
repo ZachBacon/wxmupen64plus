@@ -9,3 +9,8 @@ From the Oxygen icon set, released under GNU LGPL 3 or later :
 
 From the Tango icon set, released under public domain :
     up.png         down.png       left.png       right.png      warning.png
+
+Copyright: The Mupen64plus Team / Copyright (C) 2008 Tillin9
+Released under the Creative Common Attribution-ShareAlike 3.0 license (http://creativecommons.org/licenses/by-sa/3.0/)
+    mupenicon.png  wxMupen64Plus.icns mupen64cart.png mupenicon_large.png
+

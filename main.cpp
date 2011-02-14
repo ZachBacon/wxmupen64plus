@@ -26,6 +26,7 @@
 #include <wx/frame.h>
 #include <wx/event.h>
 #include <wx/filedlg.h> 
+#include <wx/html/htmlwin.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -46,6 +47,9 @@ const char* DEFAULT_VIDEO_PLUGIN = "mupen64plus-video-rice";
 const char* DEFAULT_AUDIO_PLUGIN = "mupen64plus-audio-sdl";
 const char* DEFAULT_INPUT_PLUGIN = "mupen64plus-input-sdl";
 const char* DEFAULT_RSP_PLUGIN   = "mupen64plus-rsp-hle";
+
+const int VERSION_MAJOR = 0;
+const int VERSION_MINOR = 1;
 
 extern "C"
 {
@@ -127,6 +131,42 @@ void MupenFrontendApp::onClose(wxCloseEvent& evt)
 void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
 {
     shutdown();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
+{
+    wxBitmap icon_mupen(datadir + "mupenicon_large.png", wxBITMAP_TYPE_PNG);    
+    wxDialog* about = new wxDialog(m_frame, wxID_ANY, _("About wxMupen64Plus"),
+                                   wxDefaultPosition, wxSize(500, 400));
+    
+    wxStaticBitmap* icon = new wxStaticBitmap(about, wxID_ANY, icon_mupen);
+        
+    wxStaticText* label = new wxStaticText(about, wxID_ANY,
+            wxString::Format("wxMupen64Plus %i.%i", VERSION_MAJOR, VERSION_MINOR) );
+    label->SetFont( label->GetFont().MakeBold().Scaled(2.0f) );
+    
+    wxString about_text = wxString("<html<body><p align=\"center\">") +
+                          _("A wxWidgets-based frontend for the <b>Mupen64Plus</b> v2 emulator") +
+                          "<br><br>" + _("by Marianne Gagnon") +
+                          "<br><br><a href=\"https://bitbucket.org/auria/wxmupen64plus/wiki\">" +
+                          "https://bitbucket.org/auria/wxmupen64plus/wiki</a></p></body></html>";
+                          
+    wxHtmlWindow* text_area = new wxHtmlWindow(about, wxID_ANY);
+    text_area->SetPage(about_text);
+    
+    wxBoxSizer* s = new wxBoxSizer(wxVERTICAL);
+    s->AddSpacer(20);
+    s->Add(icon, 0, wxALIGN_CENTER | wxALL, 5);
+    s->Add(label, 0, wxALIGN_CENTER | wxALL, 5);
+    s->AddSpacer(30);
+    s->Add(text_area, 1, wxEXPAND);
+    about->SetSizer(s);
+    
+    about->CenterOnParent();
+    about->ShowModal();
+    about->Destroy();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -393,6 +433,9 @@ bool MupenFrontendApp::OnInit()
             wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
     m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
                      wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    
+    m_frame->Connect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED,
+                     wxCommandEventHandler(MupenFrontendApp::onAboutMenu), NULL, this);
     
     SetTopWindow( m_frame );
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
