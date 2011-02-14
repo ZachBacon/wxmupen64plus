@@ -137,6 +137,21 @@ void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
 
 void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
 {
+    class wxHtmlWindowHelper : public wxHtmlWindow
+    {
+    public:
+        wxHtmlWindowHelper(wxWindow* parent) : wxHtmlWindow(parent, wxID_ANY)
+        {
+            Connect(wxEVT_COMMAND_HTML_LINK_CLICKED,
+                    wxHtmlLinkEventHandler(wxHtmlWindowHelper::onLinkClicked), NULL, this);
+        }
+        
+        void onLinkClicked(wxHtmlLinkEvent& evt)
+        {
+            wxLaunchDefaultBrowser( evt.GetLinkInfo().GetHref() );
+        }
+    };
+    
     wxBitmap icon_mupen(datadir + "mupenicon_large.png", wxBITMAP_TYPE_PNG);    
     wxDialog* about = new wxDialog(m_frame, wxID_ANY, _("About wxMupen64Plus"),
                                    wxDefaultPosition, wxSize(500, 400));
@@ -153,10 +168,8 @@ void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
                           "<br><br><a href=\"https://bitbucket.org/auria/wxmupen64plus/wiki\">" +
                           "https://bitbucket.org/auria/wxmupen64plus/wiki</a></p></body></html>";
                           
-    wxHtmlWindow* text_area = new wxHtmlWindow(about, wxID_ANY);
+    wxHtmlWindowHelper* text_area = new wxHtmlWindowHelper(about);
     text_area->SetPage(about_text);
-    text_area->Connect(wxEVT_COMMAND_HTML_LINK_CLICKED,
-                       wxHtmlLinkEventHandler(MupenFrontendApp::onLinkClicked), this, NULL);
     
     wxBoxSizer* s = new wxBoxSizer(wxVERTICAL);
     s->AddSpacer(20);
@@ -167,16 +180,15 @@ void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
     about->SetSizer(s);
     
     about->CenterOnParent();
+    about->Layout();
     about->ShowModal();
+    
+    //text_area->Disconnect(wxEVT_COMMAND_HTML_LINK_CLICKED,
+    //                      wxHtmlLinkEventHandler(MupenFrontendApp::onLinkClicked), this, NULL);
+    //s->Detach(text_area);
+    //text_area->Destroy();
+    
     about->Destroy();
-}
-
-// -----------------------------------------------------------------------------------------------------------
-
-/** For the about dialog */
-void MupenFrontendApp::onLinkClicked(wxHtmlLinkEvent& evt)
-{
-    wxLaunchDefaultBrowser( evt.GetLinkInfo().GetHref() );
 }
 
 // -----------------------------------------------------------------------------------------------------------

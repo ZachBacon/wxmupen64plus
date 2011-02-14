@@ -34,7 +34,6 @@ class wxStatusBar;
 class IConfigurationPanel;
 class wxBoxSizer;
 class wxToolBarToolBase;
-class wxHtmlLinkEvent;
 
 #include "ptr_vector.hpp"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -121,7 +120,6 @@ public:
     void onActivate(wxActivateEvent& evt);
     virtual bool OnExceptionInMainLoop();
     void onReloadOptionsRequest(wxCommandEvent& evt);
-    void onLinkClicked(wxHtmlLinkEvent& evt);
     
     void manualRemoveCurrentPanel();
     void manualReshowCurrentPanel();
