@@ -155,6 +155,8 @@ void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
                           
     wxHtmlWindow* text_area = new wxHtmlWindow(about, wxID_ANY);
     text_area->SetPage(about_text);
+    text_area->Connect(wxEVT_COMMAND_HTML_LINK_CLICKED,
+                       wxHtmlLinkEventHandler(MupenFrontendApp::onLinkClicked), this, NULL);
     
     wxBoxSizer* s = new wxBoxSizer(wxVERTICAL);
     s->AddSpacer(20);
@@ -167,6 +169,14 @@ void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
     about->CenterOnParent();
     about->ShowModal();
     about->Destroy();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+/** For the about dialog */
+void MupenFrontendApp::onLinkClicked(wxHtmlLinkEvent& evt)
+{
+    wxLaunchDefaultBrowser( evt.GetLinkInfo().GetHref() );
 }
 
 // -----------------------------------------------------------------------------------------------------------
