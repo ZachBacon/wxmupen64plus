@@ -1,0 +1,11 @@
+== wxMupen64Plus code ==
+Released under GNU GPL 2 or later
+Copyright (C) 2011 Marianne Gagnon, based on work by Richard Goedeken
+
+== wxMupen64Plus Data files ==
+From the Oxygen icon set, released under GNU LGPL 3 or later :
+    audio.png      emulation.png  input.png      other.png      pause.png
+    play.png       plugins.png    stop.png       video.png
+
+From the Tango icon set, released under public domain :
+    up.png         down.png       left.png       right.png      warning.png
