@@ -212,7 +212,16 @@ void MupenFrontendApp::manualReshowCurrentPanel()
 
 void MupenFrontendApp::MacOpenFile(const wxString &filename)
 {
-    // TODO: open the file
+    // TODO: does not work if wxMupen is opened by double-clicking a ROM
+    if (dynamic_cast<GamesPanel*>(m_curr_panel) != NULL)
+    {
+        GamesPanel* gp = dynamic_cast<GamesPanel*>(m_curr_panel);
+        gp->loadRom(wxFileName::FileName(filename).GetName(), filename);
+    }
+    else
+    {
+        // TODO: file associations don't work when you're not on the games panel
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------

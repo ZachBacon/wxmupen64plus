@@ -362,16 +362,23 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         return;
     }
     
+    wxString file = path + wxFileName::GetPathSeparator() + m_item_list->GetItemText(item);
+    loadRom(m_item_list->GetItemText(item), file);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::loadRom(wxString name, wxString file)
+{
     wxProgressDialog dialog( _("Loading..."), _("Your game is loading") );
     dialog.Show();
     
-    wxString file = path + wxFileName::GetPathSeparator() + m_item_list->GetItemText(item);
     printf("\n==== Running file '%s' ====\n\n", (const char*)file.utf8_str());
 
     try
     {
         m_api->loadRom(file, true, &dialog);
-        m_currently_loaded_rom = m_item_list->GetItemText(item);
+        m_currently_loaded_rom = name;
         dialog.Hide();
         m_api->runEmulation();
     }

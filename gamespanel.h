@@ -99,6 +99,8 @@ public:
     void onStop(wxCommandEvent& evt);
     void onColClick(wxListEvent& evt);
     
+    void loadRom(wxString name, wxString pathAndFile);
+    
     /** Callback from IEmuStateListener */
     virtual void onStateChanged(m64p_emu_state newState);
     
