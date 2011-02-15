@@ -254,7 +254,7 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
             
             total += size;
             t++;
-            if (t > 200)
+            if (t > 100)
             {
                 t = 0;
                 //printf("Read %i, total %i (%i MB)\n", (int)size, total, total/(1024*1024));
