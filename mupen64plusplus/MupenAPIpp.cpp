@@ -243,28 +243,27 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
         char buffer[BUFFER_SIZE];
         size_t size;
         
-        //int total = 0;
-        //int t = 0;
+        int total = 0;
+        int t = 0;
         
         //printf("Will read ROM\n");
         do
         {
             size = input.Read(buffer, BUFFER_SIZE).LastRead();
             
-            /*
+            
             total += size;
             t++;
-            if (t > 50)
+            if (t > 200)
             {
                 t = 0;
-                printf("Read %i, total %i (%i MB)\n", (int)size, total, total/(1024*1024));
+                //printf("Read %i, total %i (%i MB)\n", (int)size, total, total/(1024*1024));
                 if (dialog != NULL)
                 {
-                    dialog->Update(int(std::max(1.0f, total/float(rom_size))*50.0f));
-                    wxYield();
+                    dialog->Update(int(std::min(1.0f, total/float(rom_size))*80.0f));
                 }
             }
-            */
+            
             memoryImage.Write(buffer, size);
             
             if (memoryImage.LastWrite() != size)
@@ -279,7 +278,7 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
 //    input.Read(memoryImage);
 //#endif
     
-    if (dialog != NULL) dialog->Update(50);
+//    if (dialog != NULL) dialog->Update(50);
     
     wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
     
@@ -288,7 +287,7 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
     
     delete[] rom_buf;
     
-    if (dialog != NULL) dialog->Update(75);
+    if (dialog != NULL) dialog->Update(90);
     
     if (result != M64ERR_SUCCESS)
     {
