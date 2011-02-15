@@ -2,7 +2,7 @@
 <CodeLite_Project Name="wxMupen64PlusWin" InternalType="GUI">
   <Plugins>
     <Plugin Name="qmake">
-      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
+      <![CDATA[00030001N00000000000000000001N0005Debug0000000000000001N0007Release000000000000]]>
     </Plugin>
   </Plugins>
   <Description/>
@@ -67,7 +67,7 @@
       <CustomBuild Enabled="yes">
         <RebuildCommand/>
         <CleanCommand>python C:\waf-1.6.2 clean</CleanCommand>
-        <BuildCommand>python C:\waf-1.6.2</BuildCommand>
+        <BuildCommand>python C:\waf-1.6.2 --verbose</BuildCommand>
         <PreprocessFileCommand/>
         <SingleFileCommand/>
         <MakefileGenerationCommand/>

@@ -64,7 +64,7 @@ def configure(ctx):
     
     wxhome = ''
     if os.name == 'nt':
-        wxhome = ':'.join(Options.options.wxhome)
+        wxhome = ''.join(Options.options.wxhome)
     
     if Options.options.debugmode != 'true' and Options.options.debugmode != 'false':
         waflib.Logs.warn("Warning, the --debug option may only be 'true' or 'false'. Defaulting to 'false'.")

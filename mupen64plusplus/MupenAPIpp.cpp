@@ -34,6 +34,7 @@
 #include <wx/wfstream.h>
 #include <wx/intl.h>
 #include <wx/progdlg.h>
+#include <wx/thread.h>
 #include <SDL.h>
 
 void Mupen64PlusPlus::StateCallback(void *Context, m64p_core_param param_type, int new_value)
@@ -219,15 +220,64 @@ void Mupen64PlusPlus::getConfigContents(ptr_vector<ConfigSection>* out)
 void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressDialog* dialog)
 {
     // SDL_Quit();
+    printf("==== load rom ====\n");
     
-    wxFileInputStream input(filename);
-    if (!input.IsOk())
+    wxFFileInputStream input(filename);
+    if (not input.IsOk() or not input.CanRead())
     {
         throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" +
                                   filename + "'").ToStdString());
     }
-    wxMemoryOutputStream memoryImage;
-    input.Read(memoryImage);
+    
+    wxFile thefile;
+    if (not thefile.Open(filename))
+    {
+        throw std::runtime_error((const char*)wxString::Format(_("Cannot open file %s"), filename.c_str()).utf8_str());
+    }
+    const int rom_size = thefile.Length() + 1024*2 /* in case the OS reports the size inaccurately */;
+    char* rom_buf = new char[rom_size];
+    wxMemoryOutputStream memoryImage(rom_buf, rom_size);
+//#ifdef __WXMSW__
+    {
+        const int BUFFER_SIZE = 1024*20;
+        char buffer[BUFFER_SIZE];
+        size_t size;
+        
+        //int total = 0;
+        //int t = 0;
+        
+        //printf("Will read ROM\n");
+        do
+        {
+            size = input.Read(buffer, BUFFER_SIZE).LastRead();
+            
+            /*
+            total += size;
+            t++;
+            if (t > 50)
+            {
+                t = 0;
+                printf("Read %i, total %i (%i MB)\n", (int)size, total, total/(1024*1024));
+                if (dialog != NULL)
+                {
+                    dialog->Update(int(std::max(1.0f, total/float(rom_size))*50.0f));
+                    wxYield();
+                }
+            }
+            */
+            memoryImage.Write(buffer, size);
+            
+            if (memoryImage.LastWrite() != size)
+            {
+                delete[] rom_buf;
+                throw std::runtime_error("Memory stream full");
+            }
+        }
+        while (size > 0 and not input.Eof() and input.IsOk() and input.CanRead());
+    }
+//#else
+//    input.Read(memoryImage);
+//#endif
     
     if (dialog != NULL) dialog->Update(50);
     
@@ -235,6 +285,8 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
     
     m_curr_rom_size = buffer->GetBufferSize();
     m64p_error result = ::openRom(buffer->GetBufferSize(), buffer->GetBufferStart());
+    
+    delete[] rom_buf;
     
     if (dialog != NULL) dialog->Update(75);
     
@@ -394,6 +446,39 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
 
 void Mupen64PlusPlus::runEmulation()
 {
+#ifndef __WXMAC__
+    class EmuThread : public wxThread
+    {
+    public:
+        virtual ExitCode Entry()
+        {
+            SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+    
+            m64p_error result = ::runEmulation();
+            if (result != M64ERR_SUCCESS)
+            {
+                std::string errmsg = "Running emulation failed with error : ";
+                errmsg = errmsg + getErrorMessage(result);
+                wxLogError(errmsg.c_str());
+            }
+            return 0;
+        }
+    };
+    EmuThread* t = new EmuThread();
+    if (t->Create() != wxTHREAD_NO_ERROR)
+    {
+        delete t;
+        throw std::runtime_error("Can't create the emulation thread");        
+    }
+    else
+    {
+        if (t->Run() != wxTHREAD_NO_ERROR)
+        {
+            delete t;
+            throw std::runtime_error("Can't start the emulation thread");
+        }
+    }
+#else
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
     
     m64p_error result = ::runEmulation();
@@ -403,6 +488,7 @@ void Mupen64PlusPlus::runEmulation()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------------------
