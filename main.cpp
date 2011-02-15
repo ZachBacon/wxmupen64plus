@@ -27,6 +27,7 @@
 #include <wx/event.h>
 #include <wx/filedlg.h> 
 #include <wx/html/htmlwin.h>
+#include <wx/progdlg.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -205,6 +206,13 @@ void MupenFrontendApp::manualReshowCurrentPanel()
 {
     setCurrentPanel(m_current_panel);
     m_frame->Layout();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::MacOpenFile(const wxString &filename)
+{
+    // TODO: open the file
 }
 
 // -----------------------------------------------------------------------------------------------------------

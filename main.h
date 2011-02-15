@@ -123,6 +123,8 @@ public:
     
     void manualRemoveCurrentPanel();
     void manualReshowCurrentPanel();
+    
+    virtual void MacOpenFile(const wxString &fileName);
 };
 
 wxDECLARE_APP(MupenFrontendApp);

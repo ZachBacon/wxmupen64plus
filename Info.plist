@@ -6,9 +6,6 @@
     <key>CFBundleExecutable</key>
     <string>wxMupen64Plus</string>
 
-    <key>CFBundleGetInfoString</key>
-    <string>wxMupen64Plus 0.1</string>
-
     <key>CFBundleIconFile</key>
     <string>wxMupen64Plus.icns</string>
 
@@ -21,8 +18,11 @@
     <key>CFBundleVersion</key>
     <string>0.1</string>
 
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1</string>
+
+    <key>CFBundleGetInfoString</key>
+    <string>wxMupen64Plus 0.1</string>
 
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
@@ -30,8 +30,24 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
 
-    <key>CFBundleShortVersionString</key>
-    <string>0.1</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
 
+    <key>CFBundleDocumentTypes</key> <array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>n64</string>    <string>N64</string>
+				<string>z64</string>    <string>Z64</string>
+				<string>v64</string>    <string>V64</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>      <string>mupen64cart.icns</string>
+			<key>CFBundleTypeName</key>          <string>N64 Rom</string>
+			<key>CFBundleTypeRole</key>          <string>Editor</string>
+			<key>LSIsAppleDefaultForType</key>   <true/>
+			<key>LSTypeIsPackage</key>           <false/>
+		</dict>
+		
+	</array>
 </dict>
 </plist>
