@@ -272,6 +272,8 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
     const int id = evt.GetId();
     //std::string section = "[unknown]";
     
+    printf("%i is checked : %i\n", id, evt.IsChecked());
+    
     // Find which section was clicked
     int sectionId = -1;
     const int count = m_toolbar_items.size();
@@ -279,25 +281,18 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
     {
         if (m_toolbar_items[n].m_tool->GetId() == id)
         {
-            /**
-            GraphicalSection& curr = m_toolbar_items[n];
-            if (curr.m_is_game_section)
+            if (not evt.IsChecked())
             {
-                section = _("Games");
+                m_toolbar->ToggleTool(id, true);
             }
-            else if (curr.m_config.size() == 1)
+            
+            if (sectionId == n)
             {
-                section = curr.m_config[0]->m_section_name;
+                // This section is already selected
+                m_frame->Thaw();
+                return;
             }
-            else
-            {
-                assert(curr.m_config.size() > 1);
-                
-                // Make a dummy name for the grouped section; not too important since at this
-                // point we will most likely not read the name except for debugging purposes
-                section = curr.m_config[0]->m_section_name + "-group";
-            }
-            */
+    
             sectionId = n;
             break;
         }
