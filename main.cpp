@@ -95,6 +95,151 @@ int main(int argc, char** argv)
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
 
+bool MupenFrontendApp::OnInit()
+{
+    m_inited = false;
+    
+    // FIXME: the Glide plugin does not create the config options upon being loaded
+    
+    // FIXME: the first time mupen opens, a warning that the config file was not found is sent...
+    
+    m_current_panel  = 0;
+    m_curr_panel     = NULL;
+    m_gamesPathParam = NULL;
+    m_api            = NULL;
+    
+    printf(" __  __                         __   _  _   ____  _             \n");
+    printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
+    printf("| |\\/| | | | | '_ \\ / _ \\ '_ \\| '_ \\| || |_| |_) | | | | / __|  \n");
+    printf("| |  | | |_| | |_) |  __/ | | | (_) |__   _|  __/| | |_| \\__ \\  \n");
+    printf("|_|  |_|\\__,_| .__/ \\___|_| |_|\\___/   |_| |_|   |_|\\__,_|___/  \n");
+    printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
+    
+    SDL_Helper_Start();
+    
+#ifdef DATADIR
+    datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
+#else
+    datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
+#endif
+
+#ifdef LIBDIR
+    libs = wxString(LIBDIR) + wxFileName::GetPathSeparator();
+#else
+    libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
+#endif
+
+    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
+                                                                       (const char*)libs.utf8_str());
+    int plugins = 0;
+    
+    wxString corepath = libs + "libmupen64plus" + OSAL_DLL_EXTENSION;
+    
+    while (m_api == NULL)
+    {
+        // ---- Init mupen core and plugins
+        try
+        {
+            // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
+            m_api = new Mupen64PlusPlus(corepath,
+                                        libs.utf8_str(),
+                                        DEFAULT_VIDEO_PLUGIN,
+                                        DEFAULT_AUDIO_PLUGIN,
+                                        DEFAULT_INPUT_PLUGIN,
+                                        DEFAULT_RSP_PLUGIN,
+                                        (const char*)datadir.utf8_str());
+            
+            plugins = m_api->loadPlugins();
+            if (plugins != 15)
+            {
+                wxMessageBox( _("Warning, some plugins could not be loaded, please fix the paths before trying to use mupen64plus") );
+            }
+        }
+        catch (CoreNotFoundException& e)
+        {
+            fprintf(stderr, "The core was not found : %s\n", e.what());
+            wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
+            
+            wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
+                                      ")|*" + OSAL_DLL_EXTENSION + "|" + _("All files") + "|*";
+            
+            corepath = wxFileSelector(_("Select the Mupen64Plus core library"),
+                                      libs, wxEmptyString, OSAL_DLL_EXTENSION, 
+                                      wildcard, wxFD_OPEN);
+            
+            // Quit if user cancelled
+            if (corepath.IsEmpty()) return false;
+        }
+        catch (std::runtime_error& e)
+        {
+            fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
+            wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
+            return false;
+        }
+    } // end while
+    
+    m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
+    
+    wxInitAllImageHandlers();
+    if (not makeToolbar(plugins, 0)) return false;
+    
+    m_status_bar = m_frame->CreateStatusBar();
+    
+    m_sizer = new wxBoxSizer(wxHORIZONTAL);
+    
+    GamesPanel* games = new GamesPanel(m_frame, m_api, m_gamesPathParam);
+    m_sizer->Add(games, 1, wxEXPAND);
+    m_curr_panel = games;
+    
+    wxMenuBar* bar = new wxMenuBar();
+    
+    wxMenu* file = new wxMenu();
+    //wxApp::s_macExitMenuItemId = wxID_EXIT;
+    file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
+    file->Append(wxID_ABOUT, _("&About"));
+    
+    bar->Append(file, _("File"));
+    m_frame->SetMenuBar(bar);
+    
+    m_frame->SetSizer(m_sizer);
+    
+    m_frame->Centre();
+    m_frame->Show();
+    
+    m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
+    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+            wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
+                     wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
+    
+    m_frame->Connect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED,
+                     wxCommandEventHandler(MupenFrontendApp::onAboutMenu), NULL, this);
+    
+    SetTopWindow( m_frame );
+    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
+    
+    Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
+    
+    m_inited = true;
+    
+#ifdef __WXMAC__
+    if (m_pending_file_opens.size() > 0)
+    {
+        if (m_pending_file_opens.size() > 1)
+        {
+            wxMessageBox( _("You passed several ROMs to be opened; I can only open one at a time!") );
+        }
+        MacOpenFile(m_pending_file_opens[0]);
+        m_pending_file_opens.clear();
+    }
+#endif
+    
+    // enter the application's main loop
+    return true;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 void MupenFrontendApp::shutdown()
 {
     if (m_curr_panel != NULL)
@@ -210,9 +355,16 @@ void MupenFrontendApp::manualReshowCurrentPanel()
 
 // -----------------------------------------------------------------------------------------------------------
 
+#ifdef __WXMAC__
+
 void MupenFrontendApp::MacOpenFile(const wxString &filename)
 {
-    // TODO: does not work if wxMupen is opened by double-clicking a ROM
+    if (not m_inited)
+    {
+        m_pending_file_opens.push_back(filename);
+        return;
+    }
+    
     if (dynamic_cast<GamesPanel*>(m_curr_panel) != NULL)
     {
         GamesPanel* gp = dynamic_cast<GamesPanel*>(m_curr_panel);
@@ -223,6 +375,8 @@ void MupenFrontendApp::MacOpenFile(const wxString &filename)
         // TODO: file associations don't work when you're not on the games panel
     }
 }
+
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -348,135 +502,6 @@ bool MupenFrontendApp::OnExceptionInMainLoop()
     std::cerr << "/!\\ An internal error occurred : an exception was caught unhandled\n" << what.mb_str()
               << std::endl;
     wxMessageBox(_("Sorry an internal error occurred : an exception was caught unhandled : ") + what);
-    return true;
-}
-
-// -----------------------------------------------------------------------------------------------------------
-
-bool MupenFrontendApp::OnInit()
-{
-    // FIXME: the Glide plugin does not create the config options upon being loaded
-    
-    // FIXME: the first time mupen opens, a warning that the config file was not found is sent...
-    
-    m_current_panel  = 0;
-    m_curr_panel     = NULL;
-    m_gamesPathParam = NULL;
-    m_api            = NULL;
-    
-    printf(" __  __                         __   _  _   ____  _             \n");
-    printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
-    printf("| |\\/| | | | | '_ \\ / _ \\ '_ \\| '_ \\| || |_| |_) | | | | / __|  \n");
-    printf("| |  | | |_| | |_) |  __/ | | | (_) |__   _|  __/| | |_| \\__ \\  \n");
-    printf("|_|  |_|\\__,_| .__/ \\___|_| |_|\\___/   |_| |_|   |_|\\__,_|___/  \n");
-    printf("             |_|         http://code.google.com/p/mupen64plus/  \n\n");
-    
-    SDL_Helper_Start();
-    
-#ifdef DATADIR
-    datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
-#else
-    datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
-#endif
-
-#ifdef LIBDIR
-    libs = wxString(LIBDIR) + wxFileName::GetPathSeparator();
-#else
-    libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
-#endif
-
-    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
-                                                                       (const char*)libs.utf8_str());
-    int plugins = 0;
-    
-    wxString corepath = libs + "libmupen64plus" + OSAL_DLL_EXTENSION;
-    
-    while (m_api == NULL)
-    {
-        // ---- Init mupen core and plugins
-        try
-        {
-            // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
-            m_api = new Mupen64PlusPlus(corepath,
-                                        libs.utf8_str(),
-                                        DEFAULT_VIDEO_PLUGIN,
-                                        DEFAULT_AUDIO_PLUGIN,
-                                        DEFAULT_INPUT_PLUGIN,
-                                        DEFAULT_RSP_PLUGIN,
-                                        (const char*)datadir.utf8_str());
-            
-            plugins = m_api->loadPlugins();
-            if (plugins != 15)
-            {
-                wxMessageBox( _("Warning, some plugins could not be loaded, please fix the paths before trying to use mupen64plus") );
-            }
-        }
-        catch (CoreNotFoundException& e)
-        {
-            fprintf(stderr, "The core was not found : %s\n", e.what());
-            wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
-            
-            wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
-                                      ")|*" + OSAL_DLL_EXTENSION + "|" + _("All files") + "|*";
-            
-            corepath = wxFileSelector(_("Select the Mupen64Plus core library"),
-                                      libs, wxEmptyString, OSAL_DLL_EXTENSION, 
-                                      wildcard, wxFD_OPEN);
-            
-            // Quit if user cancelled
-            if (corepath.IsEmpty()) return false;
-        }
-        catch (std::runtime_error& e)
-        {
-            fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
-            wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
-            return false;
-        }
-    } // end while
-    
-    m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
-    
-    wxInitAllImageHandlers();
-    if (not makeToolbar(plugins, 0)) return false;
-    
-    m_status_bar = m_frame->CreateStatusBar();
-    
-    m_sizer = new wxBoxSizer(wxHORIZONTAL);
-    
-    GamesPanel* games = new GamesPanel(m_frame, m_api, m_gamesPathParam);
-    m_sizer->Add(games, 1, wxEXPAND);
-    m_curr_panel = games;
-    
-    wxMenuBar* bar = new wxMenuBar();
-    
-    wxMenu* file = new wxMenu();
-    //wxApp::s_macExitMenuItemId = wxID_EXIT;
-    file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
-    file->Append(wxID_ABOUT, _("&About"));
-    
-    bar->Append(file, _("File"));
-    m_frame->SetMenuBar(bar);
-    
-    m_frame->SetSizer(m_sizer);
-    
-    m_frame->Centre();
-    m_frame->Show();
-    
-    m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
-    Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
-            wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
-    m_frame->Connect(wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED,
-                     wxCommandEventHandler(MupenFrontendApp::onQuitMenu), NULL, this);
-    
-    m_frame->Connect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED,
-                     wxCommandEventHandler(MupenFrontendApp::onAboutMenu), NULL, this);
-    
-    SetTopWindow( m_frame );
-    Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
-    
-    Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
-    
-    // enter the application's main loop
     return true;
 }
 
@@ -653,6 +678,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
     return true;
 }
 
+// -----------------------------------------------------------------------------------------------------------
 
 void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
 {
@@ -672,3 +698,5 @@ void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
 
     m_frame->Thaw();
 }
+
+// -----------------------------------------------------------------------------------------------------------

@@ -53,6 +53,8 @@ class MupenFrontendApp : public wxApp
     
     int m_current_panel;
 
+    bool m_inited;
+
     ConfigParam* m_gamesPathParam;
     
     ptr_vector<ConfigSection> m_config;
@@ -124,7 +126,12 @@ public:
     void manualRemoveCurrentPanel();
     void manualReshowCurrentPanel();
     
+#ifdef __WXMAC__
+    /** Used if file open commands are received too early */
+    std::vector<wxString> m_pending_file_opens;
+    
     virtual void MacOpenFile(const wxString &fileName);
+#endif
 };
 
 wxDECLARE_APP(MupenFrontendApp);
