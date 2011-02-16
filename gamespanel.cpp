@@ -370,6 +370,12 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
 
 void GamesPanel::loadRom(wxString name, wxString file)
 {
+    if (m_api->getEmulationState() != M64EMU_STOPPED)
+    {
+        wxMessageBox( _("A game is already running") );
+        return;
+    }
+    
     wxProgressDialog dialog( _("Loading..."), _("Your game is loading") );
     dialog.Show();
     
