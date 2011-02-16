@@ -286,7 +286,7 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
                 m_toolbar->ToggleTool(id, true);
             }
             
-            if (sectionId == n)
+            if (m_current_panel == n)
             {
                 // This section is already selected
                 m_frame->Thaw();
