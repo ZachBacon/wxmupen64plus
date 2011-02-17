@@ -697,9 +697,9 @@ m64p_error getRomHeader(const char* path, m64p_rom_header* out)
     
     if (!f) return M64ERR_FILES;
     
-    fread(out, sizeof(m64p_rom_header), 1, f);
+    int count = fread(out, sizeof(m64p_rom_header), 1, f);
     
-    int error = ferror(f);
+    int error = (count != 1) || ferror(f);
     
     fclose(f);
     
