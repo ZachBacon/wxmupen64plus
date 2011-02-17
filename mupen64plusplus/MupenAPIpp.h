@@ -261,7 +261,14 @@ public:
 class IEmuStateListener
 {
 public:
+    /** Called when emulation state has changed, if you registered a listener
+     *  @note This may be called from a thread
+     */
     virtual void onStateChanged(m64p_emu_state newState) = 0;
+    
+    /** Called when save slot has changed, if you registered a listener
+     *  @note This may be called from a thread
+     */
     virtual void onSaveSlotChanged(int saveSlot) = 0;
 };
 

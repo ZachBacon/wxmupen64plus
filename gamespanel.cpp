@@ -44,6 +44,9 @@
 #include <stdexcept>
 #include <map>
 
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_STATE_CHANGE);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_SAVE_SLOT_CHANGE);
+
 enum
 {
 	COLUMN_FILE = 0,
@@ -183,6 +186,11 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     
     m_item_list->Connect(m_item_list->GetId(), wxEVT_COMMAND_LIST_COL_CLICK,
                          wxListEventHandler(GamesPanel::onColClick), NULL, this);
+    
+    Connect(wxID_ANY, wxMUPEN_STATE_CHANGE,
+            wxCommandEventHandler(GamesPanel::onMupenStateChangeEvt), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_SAVE_SLOT_CHANGE,
+            wxCommandEventHandler(GamesPanel::onMupenSaveSlotChangeEvt), NULL, this);                         
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -426,8 +434,10 @@ void GamesPanel::onStop(wxCommandEvent& evt)
 
 // -----------------------------------------------------------------------------------------------------------
 
-void GamesPanel::onStateChanged(m64p_emu_state newState)
+void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
 {
+    m64p_emu_state newState = (m64p_emu_state)evt.GetInt();
+    
     switch (newState)
     {
         case M64EMU_STOPPED:
@@ -458,3 +468,29 @@ void GamesPanel::onStateChanged(m64p_emu_state newState)
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onMupenSaveSlotChangeEvt(wxCommandEvent& evt)
+{
+    //const int slot = evt.GetInt();
+    // For now we don't do anything
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onStateChanged(m64p_emu_state newState)
+{
+    // This may be invoked from a thread, so send an event asynchronously to the main (GUI) thread
+    wxCommandEvent evt(wxMUPEN_STATE_CHANGE, wxID_ANY);
+    evt.SetInt(newState);
+    GetEventHandler()->AddPendingEvent(evt);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::onSaveSlotChanged(int saveSlot)
+{
+    // This may be invoked from a thread, so send an event asynchronously to the main (GUI) thread
+    wxCommandEvent evt(wxMUPEN_SAVE_SLOT_CHANGE, wxID_ANY);
+    evt.SetInt(saveSlot);
+    GetEventHandler()->AddPendingEvent(evt);
+}

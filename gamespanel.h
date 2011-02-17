@@ -35,6 +35,9 @@ class wxBitmapButton;
 class wxStaticText;
 class wxListEvent;
 
+DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_STATE_CHANGE, -1);
+DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_SAVE_SLOT_CHANGE, -1);
+
 class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateListener
 {
     wxListCtrl* m_item_list;
@@ -105,8 +108,10 @@ public:
     virtual void onStateChanged(m64p_emu_state newState);
     
     /** Callback from IEmuStateListener */
-    virtual void onSaveSlotChanged(int saveSlot){}
+    virtual void onSaveSlotChanged(int saveSlot);
 
+    void onMupenStateChangeEvt(wxCommandEvent& evt);
+    void onMupenSaveSlotChangeEvt(wxCommandEvent& evt);
 };
 
 #endif // GAMES_PANEL_H
