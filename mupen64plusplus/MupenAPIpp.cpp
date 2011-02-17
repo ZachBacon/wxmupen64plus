@@ -35,6 +35,7 @@
 #include <wx/intl.h>
 #include <wx/progdlg.h>
 #include <wx/thread.h>
+#include <wx/log.h>
 #include <SDL.h>
 
 void Mupen64PlusPlus::StateCallback(void *Context, m64p_core_param param_type, int new_value)
