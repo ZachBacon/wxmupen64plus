@@ -428,8 +428,6 @@ void GamesPanel::onStop(wxCommandEvent& evt)
     try
     {
         m_api->stopEmulation();
-        m_api->closeRom();
-        m_currently_loaded_rom = "";
     }
     catch (std::runtime_error& ex)
     {
@@ -447,6 +445,7 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
     {
         case M64EMU_STOPPED:
             if (m_api->isARomOpen()) m_api->closeRom();
+            m_currently_loaded_rom = "";
             m_play_button->Enable();
             m_stop_button->Disable();
             m_pause_button->Disable();
