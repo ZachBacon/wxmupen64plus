@@ -394,7 +394,12 @@ void GamesPanel::loadRom(wxString name, wxString file)
         m_api->loadRom(file, true, &dialog);
         m_currently_loaded_rom = name;
         dialog.Hide();
-        m_api->runEmulation();
+        #ifdef __WXMAC__
+        const bool asynchronous = false;
+        #else
+        const bool asynchronous = true;
+        #endif
+        m_api->runEmulation(asynchronous);
     }
     catch (std::runtime_error& ex)
     {

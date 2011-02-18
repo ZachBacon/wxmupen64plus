@@ -43,6 +43,18 @@ void Mupen64PlusPlus::StateCallback(void *Context, m64p_core_param param_type, i
     ((Mupen64PlusPlus*)Context)->onStateChanged(param_type, new_value);
 }
 
+wxString getStringForState(m64p_emu_state state)
+{
+    switch (state)
+    {
+        case M64EMU_STOPPED: return "stopped";
+        case M64EMU_RUNNING: return "running";
+        case M64EMU_PAUSED:  return "paused";
+        default:             return wxString::Format("State %i", state);
+    }
+}
+
+
 // -----------------------------------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------
 
@@ -444,9 +456,9 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::runEmulation()
+void Mupen64PlusPlus::runEmulation(bool asynchronous)
 {
-#ifndef __WXMAC__
+
     class EmuThread : public wxThread
     {
     public:
@@ -464,31 +476,36 @@ void Mupen64PlusPlus::runEmulation()
             return 0;
         }
     };
-    EmuThread* t = new EmuThread();
-    if (t->Create() != wxTHREAD_NO_ERROR)
+    
+    if (asynchronous)
     {
-        delete t;
-        throw std::runtime_error("Can't create the emulation thread");        
+        EmuThread* t = new EmuThread();
+        if (t->Create() != wxTHREAD_NO_ERROR)
+        {
+            delete t;
+            throw std::runtime_error("Can't create the emulation thread");        
+        }
+        else
+        {
+            if (t->Run() != wxTHREAD_NO_ERROR)
+            {
+                delete t;
+                throw std::runtime_error("Can't start the emulation thread");
+            }
+        }
     }
     else
     {
-        if (t->Run() != wxTHREAD_NO_ERROR)
+        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        
+        m64p_error result = ::runEmulation();
+        if (result != M64ERR_SUCCESS)
         {
-            delete t;
-            throw std::runtime_error("Can't start the emulation thread");
+            std::string errmsg = "Running emulation failed with error : ";
+            errmsg = errmsg + getErrorMessage(result);
+            throw std::runtime_error(errmsg);
         }
     }
-#else
-    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-    
-    m64p_error result = ::runEmulation();
-    if (result != M64ERR_SUCCESS)
-    {
-        std::string errmsg = "Running emulation failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
-    }
-#endif
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -498,12 +515,9 @@ void Mupen64PlusPlus::stopEmulation()
     m64p_error result = ::stopEmulation();
     if (result != M64ERR_SUCCESS)
     {
-        std::string errmsg = "Stopping emulation failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        wxString errmsg = _("Stopping emulation failed with error :") + wxString(" ") + getErrorMessage(result);
+        throw std::runtime_error((const char*)errmsg.utf8_str());
     }
-    
-    assert(getEmulationState() == M64EMU_STOPPED);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -513,12 +527,9 @@ void Mupen64PlusPlus::pauseEmulation()
     m64p_error result = ::pauseEmulation();
     if (result != M64ERR_SUCCESS)
     {
-        std::string errmsg = "Pausing emulation failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        wxString errmsg = _("Pausing emulation failed with error :") + wxString(" ") + getErrorMessage(result);
+        throw std::runtime_error((const char*)errmsg.utf8_str());
     }
-    
-    assert(getEmulationState() == M64EMU_PAUSED);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -528,12 +539,9 @@ void Mupen64PlusPlus::resumeEmulation()
     m64p_error result = ::resumeEmulation();
     if (result != M64ERR_SUCCESS)
     {
-        std::string errmsg = "Resuming emulation failed with error : ";
-        errmsg = errmsg + getErrorMessage(result);
-        throw std::runtime_error(errmsg);
+        wxString errmsg = _("Resuming emulation failed with error :") + wxString(" ") + getErrorMessage(result);
+        throw std::runtime_error((const char*)errmsg.utf8_str());
     }
-    
-    assert(getEmulationState() == M64EMU_RUNNING);
 }
 
 // -----------------------------------------------------------------------------------------------------------

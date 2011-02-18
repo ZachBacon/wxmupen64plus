@@ -352,9 +352,10 @@ public:
     
     /**
      * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
-     * @note This function call will not return until the game has been stopped. 
+     * @note In synchronous mode, this function call will not return until the game has been stopped. 
+     * @note In asynchronous mode, this function returns immediately and the core runs in a thread
      */
-    void runEmulation();
+    void runEmulation(bool asynchronous);
     
     /**
      * Get info about the currently loaded ROM
@@ -370,7 +371,7 @@ public:
     
     /**
      * This will stop the emulator, if it is currently running.
-     * @note This command will execute asynchronously. 
+     * @note This command may execute asynchronously. 
      */
     void stopEmulation();
     
