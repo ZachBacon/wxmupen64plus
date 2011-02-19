@@ -414,7 +414,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
     }
     
     RomInfo out;
-    
+        
     unsigned short countrycode = header.Country_code;
     out.manufacturer = header.Manufacturer_ID;
     out.name = header.Name;
@@ -443,13 +443,77 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
 
     RomInfo out;
     
-    unsigned short countrycode = header.Country_code;
-    out.manufacturer = header.Manufacturer_ID;
-    out.name = header.Name;
-    out.CRC1 = header.CRC1;
-    out.CRC2 = header.CRC2;
-    out.size = m_curr_rom_size;
-    out.country = getCountryName(countrycode);
+    // TODO: add support for reading compressed ROMs
+    if (header.init_PI_BSB_DOM1_LAT_REG == 31 and
+        header.init_PI_BSB_DOM1_PGS_REG == 139)
+    {
+        out.format = FORMAT_GZ;
+        out.name = _("(GZipped)");
+    }
+    else if (header.init_PI_BSB_DOM1_LAT_REG == 4 and
+             header.init_PI_BSB_DOM1_PGS_REG == 3 and
+             header.init_PI_BSB_DOM1_PWD_REG == 75 and
+             header.init_PI_BSB_DOM1_PGS_REG2 == 80)
+    {
+        out.format = FORMAT_ZIP;
+        out.name = _("(Zipped)");
+    }
+    else 
+    {
+        unsigned short countrycode = header.Country_code;
+        out.manufacturer = header.Manufacturer_ID;
+        out.CRC1 = header.CRC1;
+        out.CRC2 = header.CRC2;
+        out.size = m_curr_rom_size;
+        out.country = getCountryName(countrycode);
+        
+        if (header.init_PI_BSB_DOM1_LAT_REG == 128 and
+             header.init_PI_BSB_DOM1_PGS_REG == 55 and
+             header.init_PI_BSB_DOM1_PWD_REG == 18 and
+             header.init_PI_BSB_DOM1_PGS_REG2 == 64)
+        {
+             out.name = header.Name;
+        }
+        else if (header.init_PI_BSB_DOM1_LAT_REG == 55 and
+                 header.init_PI_BSB_DOM1_PGS_REG == 128 and
+                 header.init_PI_BSB_DOM1_PWD_REG == 64 and
+                 header.init_PI_BSB_DOM1_PGS_REG2 == 18)
+        {
+            for (int n=0; n<20; n+=2)
+            {
+                char a = header.Name[n];
+                header.Name[n] = header.Name[n + 1];
+                header.Name[n + 1] = a;
+            }
+            out.name = header.Name; // TODO: flip name bytes here
+        }
+        else
+        {
+            out.name = header.Name;
+            out.name[19] = '\0';
+            wxLogWarning(_("ROM '%s' does not appear to be in a readable format"),
+                         (const char*)path.utf8_str() );
+        }
+    }
+    
+    /*
+    printf("==== Header of '%s' ====\n", (const char*)path.utf8_str());
+    printf("init_PI_BSB_DOM1_LAT_REG : %i\n", (int)header.init_PI_BSB_DOM1_LAT_REG);
+    printf("init_PI_BSB_DOM1_PGS_REG : %i\n", (int)header.init_PI_BSB_DOM1_PGS_REG);
+    printf("init_PI_BSB_DOM1_PWD_REG : %i\n", (int)header.init_PI_BSB_DOM1_PWD_REG);
+    printf("init_PI_BSB_DOM1_PGS_REG2 : %i\n", (int)header.init_PI_BSB_DOM1_PGS_REG2);
+    printf("ClockRate : %u\n", header.ClockRate);
+    printf("PC : %u\n", header.PC);
+    printf("Release : %u\n", header.Release);
+    printf("CRC1 : %u\n", header.CRC1);
+    printf("CRC2 : %u\n", header.CRC2);
+    printf("UNKNOWN : %u %u\n", header.Unknown[0], header.Unknown[1]);
+    printf("Name : %s\n", header.Name);
+    printf("UNKNOWN : %u \n", header.unknown);
+    printf("Manufacturer_ID : %u \n", header.Manufacturer_ID);
+    printf("Cartridge_ID : %u \n", header.Cartridge_ID);
+    printf("Country_code : %u \n", header.Country_code);
+    */
     
     return out;
 }

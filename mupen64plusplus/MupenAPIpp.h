@@ -292,6 +292,13 @@ class Mupen64PlusPlus
  
 public:
 
+    enum ROM_FORMAT
+    {
+        FORMAT_PLAIN,
+        FORMAT_ZIP,
+        FORMAT_GZ
+    };
+
     struct RomInfo
     {
         wxString name;
@@ -301,6 +308,7 @@ public:
         int CRC2;
         int size;
         unsigned int manufacturer;
+        ROM_FORMAT format;
         
         RomInfo()
         {
@@ -308,6 +316,7 @@ public:
             CRC2 = 0;
             size = -1;
             manufacturer = 0;
+            format = FORMAT_PLAIN;
         }
     };
 
