@@ -479,13 +479,14 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
                  header.init_PI_BSB_DOM1_PWD_REG == 64 and
                  header.init_PI_BSB_DOM1_PGS_REG2 == 18)
         {
+            // Perform byte-swapping
             for (int n=0; n<20; n+=2)
             {
                 char a = header.Name[n];
                 header.Name[n] = header.Name[n + 1];
                 header.Name[n + 1] = a;
             }
-            out.name = header.Name; // TODO: flip name bytes here
+            out.name = header.Name;
         }
         else
         {
