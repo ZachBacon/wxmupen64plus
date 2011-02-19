@@ -424,10 +424,7 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
 {
     m_frame->Freeze();
     const int id = evt.GetId();
-    //std::string section = "[unknown]";
-    
-    printf("%i is checked : %i\n", id, evt.IsChecked());
-    
+
     // Find which section was clicked
     int sectionId = -1;
     const int count = m_toolbar_items.size();
