@@ -258,3 +258,20 @@ m64p_error PluginUnload(void)
     return M64ERR_SUCCESS;
 }
 
+m64p_error PluginTryGetInfo(const char *Path, m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginName, int *Capabilities)
+{
+    m64p_dynlib_handle handle;
+    m64p_error err = osal_dynlib_open(&handle, Path);
+    if (err != M64ERR_SUCCESS)
+        return err;
+
+    ptr_PluginGetVersion getVersion = osal_dynlib_getproc(handle, "PluginGetVersion");
+    if (getVersion == NULL)
+    {
+        osal_dynlib_close(handle);
+        return M64ERR_WRONG_TYPE;
+    }
+	
+    getVersion(PluginType, PluginVersion, APIVersion, PluginName, Capabilities);
+    return M64ERR_SUCCESS;
+}

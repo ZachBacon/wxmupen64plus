@@ -43,6 +43,9 @@
 #include <SDL_events.h>
 #include <stdexcept>
 
+//Circumventing some API layers, refactor as necessary
+#include "mupen64plusplus/plugin.h"
+
 // TODO: atm there is no device type check, i.e. you will get no error if you configure select type to be keyboard
 //       then enter gamepad keys. This would be more user-friendly (and don't forget to handle device type changes)
 
@@ -52,14 +55,24 @@ extern wxString datadir;
 
 namespace PluginsFinder
 {
+    struct PluginInfo
+    {
+        wxString path;
+        wxString name;
+        int version;
+        int api_version;
+        m64p_plugin_type type;
+        int capabilities;
+    };
+
     struct GetPluginsInCache
     {
-        wxArrayString choices;
+		wxVector<PluginInfo> choices;
         wxString path;
     };
     GetPluginsInCache* g_cache = NULL;
 
-    wxArrayString getPluginsIn(wxString dir)
+    wxVector<PluginInfo> getPluginsIn(wxString dir)
     {
         if (g_cache != NULL and g_cache->path == dir)
         {
@@ -68,7 +81,7 @@ namespace PluginsFinder
         
         if (dir.IsEmpty())
         {
-            wxArrayString empty;
+            wxVector<PluginInfo> empty;
             return empty;
         }
         else
@@ -76,7 +89,7 @@ namespace PluginsFinder
             if (g_cache == NULL) g_cache = new GetPluginsInCache();
             
             g_cache->path = dir;
-            g_cache->choices.Clear();
+            g_cache->choices.clear();
             
             wxArrayString temp_list;
             // wxDIR_FILES is used to avoid very long processing (e.g. searching the entire disk if path is set to /...)
@@ -87,7 +100,15 @@ namespace PluginsFinder
             for (int n=0; n<count; n++)
             {
                 wxFileName f(temp_list[n]);
-                g_cache->choices.Add(f.GetFullName());
+                PluginInfo info;
+                const char *plugin_name;
+                info.path = f.GetFullName();
+                if (PluginTryGetInfo(f.GetFullPath().c_str(), &info.type, &info.version, &info.api_version,
+                                     &plugin_name, &info.capabilities) == M64ERR_SUCCESS)
+                {
+                    info.name = wxString(plugin_name);
+                    g_cache->choices.push_back(info);
+                }
             }
             
             return g_cache->choices;
@@ -296,11 +317,6 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     wxPanel* container = new wxPanel(this);
                     
                     // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
-                    // Functions that could be checked for in each plugin type :
-                    //    video : void ChangeWindow?(void);
-                    //    audio : void VolumeUp?(void);
-                    //    input : void ControllerCommand?(int Control, BYTE * Command);
-                    //    rsp   : DWORD DoRspCycles?(DWORD Cycles);
                     wxComboBoxWithIcon* combo = new wxComboBoxWithIcon(container, wxID_ANY);
                     
                     combo->Connect(combo->GetId(), wxEVT_COMMAND_TEXT_ENTER,
@@ -314,8 +330,14 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     
                     assert(curr->m_dir != NULL);
                     wxString dir = curr->m_dir->getStringValue();
-                    wxArrayString choices = PluginsFinder::getPluginsIn(dir);
-                    combo->Append(choices);
+                    wxVector<PluginsFinder::PluginInfo> choices = PluginsFinder::getPluginsIn(dir);
+                    for (wxVector<PluginsFinder::PluginInfo>::iterator i = choices.begin(); i != choices.end(); ++i)
+                    {
+                        // TODO: display pretty name
+                        // combo->AppendString(i->name);
+                        
+                        combo->AppendString(i->path);
+                    }
                     
                     combo->SetValue(currVal.c_str());
                     
@@ -648,8 +670,12 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             // Let's update the plugin choices
             wxString dir = event.GetPath();
             
-            wxArrayString choices = PluginsFinder::getPluginsIn(dir);
-            combo->Set(choices);
+            wxVector<PluginsFinder::PluginInfo> choices = PluginsFinder::getPluginsIn(dir);
+            combo->Clear();
+            for (wxVector<PluginsFinder::PluginInfo>::iterator i = choices.begin(); i != choices.end(); ++i)
+            {
+                combo->AppendString(i->name);
+            }
         }
     }
 }

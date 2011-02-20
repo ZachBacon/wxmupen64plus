@@ -40,6 +40,8 @@ extern int PluginSearchLoad(m64p_handle ConfigUI);
 
 extern m64p_error PluginUnload(void);
 
+extern m64p_error PluginTryGetInfo(const char *Path, m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginName, int *Capabilities);
+
 extern const char *g_PluginDir;        // directory to search for plugins
 extern const char *g_GfxPlugin;        // graphics plugin specified at commandline (if any)
 extern const char *g_AudioPlugin;      // audio plugin specified at commandline (if any)
