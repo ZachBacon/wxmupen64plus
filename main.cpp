@@ -529,7 +529,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
     m_toolbar = m_frame->CreateToolBar(wxTB_HORIZONTAL | wxTB_TEXT, wxID_ANY);
     m_toolbar->SetToolBitmapSize(wxSize(32,32));
     
-    wxBitmap icon_mupen  (datadir + "mupenicon.png", wxBITMAP_TYPE_PNG);    
+    wxIcon   icon_mupen  (datadir + "mupenicon.png", wxBITMAP_TYPE_PNG);
     wxBitmap icon_input  (datadir + "input.png",     wxBITMAP_TYPE_PNG);
     wxBitmap icon_cpu    (datadir + "emulation.png", wxBITMAP_TYPE_PNG);
     wxBitmap icon_audio  (datadir + "audio.png",     wxBITMAP_TYPE_PNG);
@@ -537,6 +537,12 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
     wxBitmap icon_video  (datadir + "video.png",     wxBITMAP_TYPE_PNG);
     wxBitmap icon_other  (datadir + "other.png",     wxBITMAP_TYPE_PNG);
     
+#ifndef __WXMAC__
+    // while we have the icpon let's use it... (except on OSX where an application-wide icon is
+    // already configured into the app bundle, so no need for this call there)
+    m_frame->SetIcon( icon_mupen );
+#endif
+
     assert(icon_mupen.IsOk());    
     assert(icon_input.IsOk());
     assert(icon_cpu.IsOk());
