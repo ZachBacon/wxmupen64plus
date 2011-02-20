@@ -79,7 +79,8 @@ namespace PluginsFinder
             g_cache->choices.Clear();
             
             wxArrayString temp_list;
-            wxDir::GetAllFiles(dir, &temp_list, wxString("*") + OSAL_DLL_EXTENSION);
+            // wxDIR_FILES is used to avoid very long processing (e.g. searching the entire disk if path is set to /...)
+            wxDir::GetAllFiles(dir, &temp_list, wxString("*") + OSAL_DLL_EXTENSION, wxDIR_FILES);
             
             // trim path, keep only filenames
             const int count = temp_list.size();
