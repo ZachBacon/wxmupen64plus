@@ -422,7 +422,11 @@ void MupenFrontendApp::setCurrentPanel(int sectionId)
 
 void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
 {
+#ifndef __WXGTK__
+    // FIXME: for some reason, Freeze and Thaw cause some random hanging on wxGTK. For now I'll just disable
+    //        them in this case, anyway freeze and thaw don't appear to be needed on this platform
     m_frame->Freeze();
+#endif
     const int id = evt.GetId();
 
     // Find which section was clicked
@@ -440,7 +444,9 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
             if (m_current_panel == n)
             {
                 // This section is already selected
+#ifndef __WXGTK__
                 m_frame->Thaw();
+#endif
                 return;
             }
     
@@ -448,10 +454,12 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
             break;
         }
     }
-    
+
     if (sectionId == -1)
     {
+#ifndef __WXGTK__
         m_frame->Thaw();
+#endif
         assert(false);
         return;
     }
@@ -466,7 +474,10 @@ void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
     setCurrentPanel(sectionId);
 
     m_frame->Layout();
+
+#ifndef __WXGTK__
     m_frame->Thaw();
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------------------
