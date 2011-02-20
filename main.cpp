@@ -100,9 +100,7 @@ bool MupenFrontendApp::OnInit()
     m_inited = false;
     
     // FIXME: the Glide plugin does not create the config options upon being loaded
-    
-    // FIXME: the first time mupen opens, a warning that the config file was not found is sent...
-    
+        
     m_current_panel  = 0;
     m_curr_panel     = NULL;
     m_gamesPathParam = NULL;
