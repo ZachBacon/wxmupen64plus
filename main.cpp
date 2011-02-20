@@ -98,9 +98,7 @@ int main(int argc, char** argv)
 bool MupenFrontendApp::OnInit()
 {
     m_inited = false;
-    
-    // FIXME: the Glide plugin does not create the config options upon being loaded
-        
+            
     m_current_panel  = 0;
     m_curr_panel     = NULL;
     m_gamesPathParam = NULL;
