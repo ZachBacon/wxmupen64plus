@@ -162,6 +162,14 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     
     buttons->AddStretchSpacer();
     
+#ifdef __WXMSW__
+    // On Windows, the default disabled look is indisinguishible from the enabled look, not sure
+    // why... maybe it converts the image to greyscale but this is already a greyscale image
+    m_play_button->SetBitmapDisabled( wxBitmap( icon_play.ConvertToImage().ConvertToDisabled(100) ) );
+    m_pause_button->SetBitmapDisabled( wxBitmap( icon_pause.ConvertToImage().ConvertToDisabled(100) ) );
+    m_stop_button->SetBitmapDisabled( wxBitmap( icon_stop.ConvertToImage().ConvertToDisabled(100) ) );    
+#endif
+
     m_status = new wxStaticText(this, wxID_ANY, _("Emulation is stopped"));
     buttons->Add(m_status, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
     
