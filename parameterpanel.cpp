@@ -316,7 +316,6 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 {
                     wxPanel* container = new wxPanel(this);
                     
-                    // TODO: under the "video" parameter, only display DLLs that are video plugins, etc.
                     wxComboBoxWithIcon* combo = new wxComboBoxWithIcon(container, wxID_ANY);
                     
                     combo->Connect(combo->GetId(), wxEVT_COMMAND_TEXT_ENTER,
@@ -335,8 +334,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     {
                         // TODO: display pretty name
                         // combo->AppendString(i->name);
-                        
-                        combo->AppendString(i->path);
+          
+                        if (curr->m_plugin_type == M64PLUGIN_NULL or i->type == curr->m_plugin_type)
+                        {
+                            combo->AppendString(i->path);
+                        }
                     }
                     
                     combo->SetValue(currVal.c_str());

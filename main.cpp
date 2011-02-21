@@ -591,6 +591,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
                 if (plugin1 != NULL)
                 {
                     plugin1->m_special_type = PLUGIN_FILE;
+                    plugin1->m_plugin_type = M64PLUGIN_GFX;
                     plugin1->m_is_ok = (plugins & 0x1) != 0;
                     plugin1->m_dir = new ConfigParam(*pluginsDir);
                 }
@@ -601,6 +602,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
                     plugin2->m_special_type = PLUGIN_FILE;
                     plugin2->m_is_ok = (plugins & 0x2) != 0;
                     plugin2->m_dir = new ConfigParam(*pluginsDir);
+                    plugin2->m_plugin_type = M64PLUGIN_AUDIO;
                 }
                 
                 ConfigParam* plugin3 = section->getParamWithName("InputPlugin");
@@ -609,6 +611,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
                     plugin3->m_special_type = PLUGIN_FILE;
                     plugin3->m_is_ok = (plugins & 0x4) != 0;
                     plugin3->m_dir = new ConfigParam(*pluginsDir);
+                    plugin3->m_plugin_type = M64PLUGIN_INPUT;
                 }
                 
                 ConfigParam* plugin4 = section->getParamWithName("RspPlugin");
@@ -617,6 +620,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
                     plugin4->m_special_type = PLUGIN_FILE;
                     plugin4->m_is_ok = (plugins & 0x8) != 0;
                     plugin4->m_dir = new ConfigParam(*pluginsDir);
+                    plugin4->m_plugin_type = M64PLUGIN_RSP;
                 }
             }
             else

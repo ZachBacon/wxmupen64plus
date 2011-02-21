@@ -105,6 +105,9 @@ public:
     /** Only set if m_special_type is PLUGIN_FILE. This contains whether the plugin
       * was loaded fine*/
     bool m_is_ok;
+    
+    /** Only set if m_special_type is PLUGIN_FILE. */
+    m64p_plugin_type m_plugin_type; 
 
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     ConfigParam()
@@ -112,6 +115,7 @@ public:
         m_enabled = false;
         m_parent_section = 0;
         m_special_type = NOTHING_SPECIAL;
+        m_plugin_type = M64PLUGIN_NULL;
         m_magic_number = 0xC001C001;
         m_dir = NULL;
         m_is_ok = true;
@@ -123,6 +127,7 @@ public:
         m_parent_section = section;
         m_special_type = type;
         m_magic_number = 0xC001C001;
+        m_plugin_type = M64PLUGIN_NULL;
         m_dir = NULL;
         m_is_ok = true;
     }
@@ -136,6 +141,7 @@ public:
         m_param_name = other.m_param_name;
         m_param_type = other.m_param_type;
         m_help_string = other.m_help_string;
+        m_plugin_type = other.m_plugin_type;
         m_icon_1 = other.m_icon_1;
         m_icon_2 = other.m_icon_2;
         m_is_ok = other.m_is_ok;
