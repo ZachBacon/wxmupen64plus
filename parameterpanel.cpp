@@ -337,7 +337,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
           
                         if (curr->m_plugin_type == M64PLUGIN_NULL or i->type == curr->m_plugin_type)
                         {
-                            combo->AppendString(i->path);
+                            combo->Append(i->path);
                         }
                     }
                     
@@ -676,7 +676,7 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             combo->Clear();
             for (wxVector<PluginsFinder::PluginInfo>::iterator i = choices.begin(); i != choices.end(); ++i)
             {
-                combo->AppendString(i->name);
+                combo->Append(i->path);
             }
         }
     }
