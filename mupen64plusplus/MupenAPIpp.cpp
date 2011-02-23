@@ -189,6 +189,11 @@ int Mupen64PlusPlus::loadPlugins()
             m64p_handle uisection = getConfigUI();
             setStringConfigParam(uisection, "PluginDir", g_PluginDir);
         }
+        else
+        {
+            printf("This didn't help, I'll stick to the value in the config.\n");
+            plugins = PluginSearchLoad(getConfigUI());
+        }
     }
     
     return plugins;
