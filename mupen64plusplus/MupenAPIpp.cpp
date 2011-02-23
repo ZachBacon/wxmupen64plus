@@ -157,12 +157,30 @@ int Mupen64PlusPlus::loadPlugins()
     g_RspPlugin   = rspPlugin;
     
     int plugins = PluginSearchLoad(getConfigUI());
+    
+    printf("\nLoading plugins from %s\n", g_PluginDir);
+    printf("    GFX <%s> : %s\n",   g_GfxPlugin,   (plugins & 0x1 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    Audio <%s> : %s\n", g_AudioPlugin, (plugins & 0x2 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    Input <%s> : %s\n", g_InputPlugin, (plugins & 0x4 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("\n");
+    
     if (plugins != 15)
     {
         // if loading plugins failed, try if default path works any better (this is especially needed on OS X
         // where the application can be moved around, and thus break the path stored in the config)
         g_PluginDir = m_defaultPluginPath.c_str();
+        
+        printf("Since some plugins failed to load, I'm checking whether '%s' would be any better\n",
+               m_defaultPluginPath.c_str());
+        
         plugins = PluginSearchLoad(getConfigUI());
+        printf("    GFX <%s> : %s\n",   g_GfxPlugin,   (plugins & 0x1 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    Audio <%s> : %s\n", g_AudioPlugin, (plugins & 0x2 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    Input <%s> : %s\n", g_InputPlugin, (plugins & 0x4 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("\n");
+        
         if (plugins == 15)
         {
             // store updated path in config

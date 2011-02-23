@@ -37,9 +37,10 @@ void SDL_Helper_Start()
 // ====================
     // Init Gamepad Support
     printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
-    printf("The names of the joysticks are:\n");
+    
     SDL_JoystickEventState(SDL_ENABLE);
     
+    if (SDL_NumJoysticks() > 0) printf("The names of the joysticks are:\n");    
     for (int i=0; i<SDL_NumJoysticks(); i++) 
     {
         printf("    %s\n", SDL_JoystickName(i));
