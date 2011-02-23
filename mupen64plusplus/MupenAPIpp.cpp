@@ -183,6 +183,8 @@ int Mupen64PlusPlus::loadPlugins()
         
         if (plugins == 15)
         {
+            printf("<%s> indeed seems better, I'm remembering it in the config.\n\n", g_PluginDir);
+            
             // store updated path in config
             m64p_handle uisection = getConfigUI();
             setStringConfigParam(uisection, "PluginDir", g_PluginDir);
