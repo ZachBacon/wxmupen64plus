@@ -165,7 +165,7 @@ int Mupen64PlusPlus::loadPlugins()
     printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
     printf("\n");
     
-    if (plugins != 15)
+    if (plugins != 15 and m_defaultPluginPath != g_PluginDir)
     {
         // if loading plugins failed, try if default path works any better (this is especially needed on OS X
         // where the application can be moved around, and thus break the path stored in the config)
