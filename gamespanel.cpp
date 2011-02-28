@@ -125,7 +125,8 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
         }
     }
     
-    m_dir_picker = new wxDirPickerCtrl(this, wxID_ANY, path);
+    m_dir_picker = new wxDirPickerCtrl(this, wxID_ANY, path, _("Directory Picker"), wxDefaultPosition, wxDefaultSize,
+                                       wxDIRP_DEFAULT_STYLE | wxDIRP_USE_TEXTCTRL);
     sizer->Add(m_dir_picker, 0, wxALL | wxEXPAND, 5);
 
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
