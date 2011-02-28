@@ -305,7 +305,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 }
                 else if (curr->m_special_type == DIRECTORY)
                 {
-                    ctrl = new wxDirPickerCtrl(this, wxID_ANY, wxString(currVal.c_str()));
+                    ctrl = new wxDirPickerCtrl(this, wxID_ANY, wxString(currVal.c_str()), _("Directory picker"), wxDefaultPosition, wxDefaultSize,
+                                               wxDIRP_USE_TEXTCTRL|wxDIRP_DEFAULT_STYLE);
                     ctrl->SetMinSize( wxSize(350, -1) );
                     ctrl->Connect(ctrl->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                                   wxFileDirPickerEventHandler(ParameterPanel::onPathChanged),
