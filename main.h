@@ -130,10 +130,10 @@ public:
     
     void onDropFile(wxDropFilesEvent& evt);
     
-#ifdef __WXMAC__
     /** Used if file open commands are received too early */
     std::vector<wxString> m_pending_file_opens;
     
+#ifdef __WXMAC__    
     virtual void MacOpenFile(const wxString &fileName);
 #endif
 };

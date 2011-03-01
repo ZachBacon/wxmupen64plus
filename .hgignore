@@ -10,4 +10,4 @@ build
 icons
 Xcode
 *.patch
-wxMupen64Plus.app
+WinRuntime

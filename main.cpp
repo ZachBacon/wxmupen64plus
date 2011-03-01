@@ -217,7 +217,6 @@ bool MupenFrontendApp::OnInit()
     
     m_inited = true;
     
-#ifdef __WXMAC__
     if (m_pending_file_opens.size() > 0)
     {
         if (m_pending_file_opens.size() > 1)
@@ -227,7 +226,7 @@ bool MupenFrontendApp::OnInit()
         openFile(m_pending_file_opens[0]);
         m_pending_file_opens.clear();
     }
-#endif
+
     // check if filenames to open were given on the command-line
     for (int n=0; n<argc; n++)
     {

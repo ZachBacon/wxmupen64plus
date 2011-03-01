@@ -20,13 +20,9 @@ WindowVisible=no
 AppCopyright=Copyright Auria
 OutputBaseFilename=wxMupen64PlusSetup
 UninstallDisplayIcon={app}\wxmupen64plus.exe
-LicenseFile=Legal\wxMupen64PlusLicense.txt
+LicenseFile=WinRuntime\Legal\wxMupen64PlusLicense.txt
 DisableStartupPrompt=yes
 ChangesAssociations=yes
-
-
-
-
 
 
 [Tasks]
@@ -34,7 +30,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "*"; DestDir: "{app}"; Flags: ignoreversion
+Source: "WinRuntime\*"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\wxMupen64Plus"; Filename: "{app}\wxmupen64plus.exe"
