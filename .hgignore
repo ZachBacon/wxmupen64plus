@@ -1,13 +1,12 @@
 syntax: glob
 
-
 Debug
 Release
 *.DS_Store
 .lock-wafbuild
-test.log
 build
-icons
-Xcode
 *.patch
 WinRuntime
+manifest.o
+wxMupen64PlusSetup.exe
+*Thumbs.db
