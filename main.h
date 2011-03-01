@@ -126,6 +126,10 @@ public:
     void manualRemoveCurrentPanel();
     void manualReshowCurrentPanel();
     
+    void openFile(const wxString &fileName);
+    
+    void onDropFile(wxDropFilesEvent& evt);
+    
 #ifdef __WXMAC__
     /** Used if file open commands are received too early */
     std::vector<wxString> m_pending_file_opens;

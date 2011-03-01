@@ -224,11 +224,28 @@ bool MupenFrontendApp::OnInit()
         {
             wxMessageBox( _("You passed several ROMs to be opened; I can only open one at a time!") );
         }
-        MacOpenFile(m_pending_file_opens[0]);
+        openFile(m_pending_file_opens[0]);
         m_pending_file_opens.clear();
     }
 #endif
-    
+    // check if filenames to open were given on the command-line
+    for (int n=0; n<argc; n++)
+    {
+        wxString fileName = wxString(argv[n]);
+        if (fileName.EndsWith(wxT("V64")) or fileName.EndsWith(wxT("v64")) or
+            fileName.EndsWith(wxT("Z64")) or fileName.EndsWith(wxT("z64")))
+        {
+            openFile( fileName );
+            break;
+        }
+    }
+
+#ifdef __WXMSW__
+    // Drag files
+    m_frame->Connect(wxID_ANY, wxEVT_DROP_FILES, wxDropFilesEventHandler(MupenFrontendApp::onDropFile),
+                     NULL, this);
+#endif
+
     // enter the application's main loop
     return true;
 }
@@ -350,9 +367,7 @@ void MupenFrontendApp::manualReshowCurrentPanel()
 
 // -----------------------------------------------------------------------------------------------------------
 
-#ifdef __WXMAC__
-
-void MupenFrontendApp::MacOpenFile(const wxString &filename)
+void MupenFrontendApp::openFile(const wxString &filename)
 {
     if (not m_inited)
     {
@@ -371,7 +386,45 @@ void MupenFrontendApp::MacOpenFile(const wxString &filename)
     }
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
+#ifdef __WXMAC__
+
+void MupenFrontendApp::MacOpenFile(const wxString &filename)
+{
+    openFile(filename);
+}
+
 #endif
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onDropFile(wxDropFilesEvent& evt)
+{
+    int i;
+    wxString fileName;
+    bool firstFound = false;
+    for (i=0 ; i<evt.GetNumberOfFiles() ;i++)
+    {
+        fileName = evt.m_files[i];
+        
+        if (firstFound)
+        {
+            wxLogWarning(_("Can only open one file at a time, ignoring : '%s'"),
+                         (const char*)fileName.mb_str());        
+        }
+        else if (fileName.EndsWith("z64") or fileName.EndsWith("Z64") or
+                 fileName.EndsWith("v64") or fileName.EndsWith("V64"))
+        {
+            firstFound = true;
+            openFile(fileName);
+        }
+        else
+        {
+            wxLogWarning(_("Cannot open file of unknown type : '%s'"), (const char*)fileName.mb_str());
+        }
+    }
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
