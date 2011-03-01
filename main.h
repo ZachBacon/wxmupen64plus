@@ -133,6 +133,8 @@ public:
     /** Used if file open commands are received too early */
     std::vector<wxString> m_pending_file_opens;
     
+    void onReadOpenFileQueue(wxCommandEvent& evt);
+    
 #ifdef __WXMAC__    
     virtual void MacOpenFile(const wxString &fileName);
 #endif

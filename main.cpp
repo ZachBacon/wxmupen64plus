@@ -83,6 +83,7 @@ wxString libs;
 
 wxIMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_READ_OPEN_FILE_QUEUE);
 
 int main(int argc, char** argv)
 {
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
 
 bool MupenFrontendApp::OnInit()
 {
+    printf("OnInit()\n");
     m_inited = false;
     
     m_current_panel  = 0;
@@ -214,18 +216,6 @@ bool MupenFrontendApp::OnInit()
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
     
     Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
-    
-    m_inited = true;
-    
-    if (m_pending_file_opens.size() > 0)
-    {
-        if (m_pending_file_opens.size() > 1)
-        {
-            wxMessageBox( _("You passed several ROMs to be opened; I can only open one at a time!") );
-        }
-        openFile(m_pending_file_opens[0]);
-        m_pending_file_opens.clear();
-    }
 
     // check if filenames to open were given on the command-line
     for (int n=0; n<argc; n++)
@@ -239,14 +229,36 @@ bool MupenFrontendApp::OnInit()
         }
     }
 
+    Connect(wxID_ANY, wxMUPEN_READ_OPEN_FILE_QUEUE, wxCommandEventHandler(MupenFrontendApp::onReadOpenFileQueue), NULL, this);
+    
 #ifdef __WXMSW__
     // Drag files
     m_frame->Connect(wxID_ANY, wxEVT_DROP_FILES, wxDropFilesEventHandler(MupenFrontendApp::onDropFile),
                      NULL, this);
 #endif
 
+    wxCommandEvent evt(wxMUPEN_READ_OPEN_FILE_QUEUE);
+    AddPendingEvent(evt);
+    
     // enter the application's main loop
     return true;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onReadOpenFileQueue(wxCommandEvent& evt)
+{
+    m_inited = true;
+    
+    if (m_pending_file_opens.size() > 0)
+    {
+        if (m_pending_file_opens.size() > 1)
+        {
+            wxMessageBox( _("You passed several ROMs to be opened; I can only open one at a time!") );
+        }
+        openFile(m_pending_file_opens[0]);
+        m_pending_file_opens.clear();
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -368,6 +380,7 @@ void MupenFrontendApp::manualReshowCurrentPanel()
 
 void MupenFrontendApp::openFile(const wxString &filename)
 {
+    printf("Openfile, m_inited=%i\n", m_inited);
     if (not m_inited)
     {
         m_pending_file_opens.push_back(filename);
