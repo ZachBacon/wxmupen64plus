@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=mmg
-Date                   :=02/23/11
+Date                   :=02/28/11
 CodeLitePath           :="/Users/mmg/Library/Application Support/codelite"
 LinkerName             :=g++
 ArchiveTool            :=ar rcus
@@ -36,9 +36,9 @@ ObjectSwitch           :=-o
 ArchiveOutputSwitch    := 
 PreprocessOnlySwitch   :=-E 
 MakeDirCommand         :=mkdir -p
-CmpOptions             :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) $(Preprocessors)
-C_CmpOptions           :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) $(Preprocessors)
-LinkOptions            :=  -mwindows $(shell /usr/local/bin/wx-config-2.9 --debug=yes --libs --unicode=yes) -arch i386 $(shell /usr/local/bin/sdl-config --libs)
+CmpOptions             :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk $(Preprocessors)
+C_CmpOptions           :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk $(Preprocessors)
+LinkOptions            :=  -mwindows $(shell /usr/local/bin/wx-config-2.9 --debug=yes --libs --unicode=yes) -arch i386 $(shell /usr/local/bin/sdl-config --libs) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk
 IncludePath            :=  "$(IncludeSwitch)." "$(IncludeSwitch)/Developer/hg/mupen64plus/mupen64plus-core/src/api" "$(IncludeSwitch)/Developer/hg/mupen64plus/mupen64plus-core/src" 
 RcIncludePath          :=
 Libs                   :=
