@@ -111,9 +111,9 @@ def build(bld):
     
     # Set up debug or release build options
     if bld.env['is_debug']:
-        build_flags += ['-g']
+        build_flags += ['-g','-DDEBUG=1']
     else:
-        build_flags += ['-O2']
+        build_flags += ['-O2','-DNEBUG=1']
 
     bin_install_path = "${PREFIX}/bin"
 
