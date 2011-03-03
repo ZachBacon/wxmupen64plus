@@ -10,3 +10,4 @@ WinRuntime
 manifest.o
 wxMupen64PlusSetup.exe
 *Thumbs.db
+.waf-*
