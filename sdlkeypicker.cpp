@@ -73,9 +73,19 @@ public:
 
     PressAKey()
     {
+		printf("[KeyPicker] Will init SDL\n");
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         SDL_JoystickEventState(SDL_ENABLE);
         
+		SDL_JoystickEventState(SDL_ENABLE);
+	
+	    std::vector<SDL_Joystick*> joysticks;
+		for (int i=0; i<SDL_NumJoysticks(); i++) 
+		{
+			 joysticks.push_back(SDL_JoystickOpen(i)); // TODO: also close them on shutdown?
+		}
+	
+		printf("[KeyPicker] Will open the SDL frame\n");
         screen = SDL_SetVideoMode( 550, 200, 32, SDL_SWSURFACE ); 
         
         message = SDL_LoadBMP( datadir + "/presskey.bmp" ); 
@@ -104,6 +114,8 @@ public:
         
         bool done = false;
         
+		printf("[KeyPicker] Frame open.\n");
+		
         SDL_Rect dst_msg;
         dst_msg.x = 15;
         dst_msg.y = 25;
@@ -124,6 +136,10 @@ public:
         
         Uint32 white = SDL_MapRGB(screen->format, 255, 255, 255);
         
+		// Purge the event queue before starting
+		SDL_Event event;
+		while(SDL_PollEvent(&event)) { }
+		
         while (not done)
         {
             SDL_FillRect(screen, &rect, white);
@@ -139,12 +155,14 @@ public:
             {
                 if (event.type == SDL_KEYDOWN && event.key.state == SDL_PRESSED)
                 {
+					printf("[KeyInput]     Key pressed : %i\n", event.key.keysym.sym);
                     m_type = KEY;
                     m_result = event.key.keysym.sym;
                     done = true;
                 }
                 else if (event.type == SDL_JOYAXISMOTION)
                 {
+					printf("[KeyPicker]     Axis Motion : (%i) %i \n", event.jaxis.axis, event.jaxis.value);
                     if (abs(event.jaxis.value) > 32767*2/3)
                     {
                         m_type = GAMEPAD_AXIS;
@@ -157,10 +175,15 @@ public:
                 {
                     if (event.jbutton.state == SDL_PRESSED)
                     {
+						printf("[KeyPicker]     Gamepad button pressed : %i\n", m_button = event.jbutton.button);
                         m_type = GAMEPAD_BUTTON;
                         m_button = event.jbutton.button;
                         done = true;
                     }
+					else
+					{
+						printf("[KeyPicker]     Gamepad button released : %i\n", m_button = event.jbutton.button);
+					}
                 }
                 else if (event.type == SDL_MOUSEBUTTONUP)
                 {
@@ -172,6 +195,7 @@ public:
                         x < dst_cancel.x + cancel->w and
                         y < dst_cancel.y + cancel->h)
                     {
+						printf("[KeyInput] Cancelled\n");
                         m_type = CANCELLED;
                         done = true;
                     }
@@ -180,24 +204,31 @@ public:
                              x < dst_erase.x + erase->w and
                              y < dst_erase.y + erase->h)
                     {
+						printf("[KeyInput] Binding Delete Clicked\n");
                         m_type = DELETE_BINDING;
                         done = true;
                     }
                 }
                 else if (event.type == SDL_QUIT)
                 {
+					printf("[KeyInput] Cancelled\n");
                     m_type = CANCELLED;
                     done = true;
                 }
                 
             } // end while SDL_PollEvent
         } // end while not done
-        
+		
         SDL_FreeSurface( screen );
         SDL_FreeSurface( message );
         SDL_FreeSurface( cancel );
         SDL_FreeSurface( erase );
         
+		for (int i=0; i<joysticks.size(); i++) 
+		{
+			 SDL_JoystickClose(joysticks[i]);
+		}
+		
         // Close the frame
         SDL_Quit();
     }
