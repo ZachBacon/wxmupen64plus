@@ -30,7 +30,7 @@ void SDL_Helper_Start()
 {
 #ifdef __WXMAC__
     // (this is needed on OSX for gamepad input configuration to work [SDL_INIT_VIDEO is necessary to init
-    // keyboard support],and is needed on Linux for retrieving the name of each key to work)
+    // keyboard support]
     // FIXME: SDL_init is also called when starting a game, and also when using the SDL key picker; thus
     //        SDL_init will be called at times where SDL is already inited. I hvae no idea if this is bad
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);

@@ -42,6 +42,158 @@
 
 // -----------------------------------------------------------------------------------------------------------
 
+/** Needed because SDL_GetKeyName requires SDL to be initialised, and SDL is not initialised here. */
+const char* GetSDLKeyName(SDLKey key)
+{
+	switch (key)
+	{
+		case SDLK_BACKSPACE: return "Backspace";
+		case SDLK_TAB: return "Tab";
+		case SDLK_CLEAR: return "Clear";
+		case SDLK_RETURN: return "Return";
+		case SDLK_PAUSE: return "Pause";
+		case SDLK_ESCAPE: return "Escape";
+		case SDLK_SPACE: return "Space";
+		case SDLK_EXCLAIM: return "!";
+		case SDLK_QUOTEDBL: return "\"";
+		case SDLK_HASH: return "Hash";
+		case SDLK_DOLLAR:return "$";
+		case SDLK_AMPERSAND: return "&";
+		case SDLK_QUOTE: return "'";
+		case SDLK_LEFTPAREN: return "(";
+		case SDLK_RIGHTPAREN: return ")";
+		case SDLK_ASTERISK: return "*";
+		case SDLK_PLUS: return "+";
+		case SDLK_COMMA: return ",";
+		case SDLK_MINUS: return "-";
+		case SDLK_PERIOD: return ".";
+		case SDLK_SLASH: return "/";
+		case SDLK_0: return "0";
+		case SDLK_1: return "1";
+		case SDLK_2: return "2";
+		case SDLK_3: return "3";
+		case SDLK_4: return "4";
+		case SDLK_5: return "5";
+		case SDLK_6: return "6";
+		case SDLK_7: return "7";
+		case SDLK_8: return "8";
+		case SDLK_9: return "9";
+		case SDLK_COLON: return ":";
+		case SDLK_SEMICOLON: return ";";
+		case SDLK_LESS: return "<";
+		case SDLK_EQUALS: return "=";
+		case SDLK_GREATER: return ">";
+		case SDLK_QUESTION: return "?";
+		case SDLK_AT: return "@";
+
+		case SDLK_LEFTBRACKET: return "[";
+		case SDLK_BACKSLASH: return "\\";
+		case SDLK_RIGHTBRACKET: return "]";
+		case SDLK_UNDERSCORE: return "_";
+		case SDLK_BACKQUOTE: return "`";
+		
+		case 97:
+		case 98:
+		case 99:
+		case 100:
+		case 101:
+		case 102:
+		case 103:
+		case 104:
+		case 105:
+		case 106:
+		case 107:
+		case 108:
+		case 109:
+		case 110:
+		case 111:
+		case 112:
+		case 113:
+		case 114:
+		case 115:
+		case 116:
+		case 117:
+		case 118:
+		case 119:
+		case 120:
+		case 121:
+		case 122:
+		{
+			static char ascii[2];
+			ascii[0] = key;
+			ascii[1] = 0;
+			return ascii;
+		}
+
+		case SDLK_DELETE: return "delete";
+
+		case SDLK_KP0: return "Numpad 0";
+		case SDLK_KP1: return "Numpad 1";
+		case SDLK_KP2: return "Numpad 2";
+		case SDLK_KP3: return "Numpad 3";
+		case SDLK_KP4: return "Numpad 4";
+		case SDLK_KP5: return "Numpad 5";
+		case SDLK_KP6: return "Numpad 6";
+		case SDLK_KP7: return "Numpad 7";
+		case SDLK_KP8: return "Numpad 8";
+		case SDLK_KP9: return "Numpad 9";
+		case SDLK_KP_PERIOD: return "Numpad .";
+		case SDLK_KP_DIVIDE: return "Numpad /";
+		case SDLK_KP_MULTIPLY: return "Numpad *";
+		case SDLK_KP_MINUS: return "Numpad -";
+		case SDLK_KP_PLUS: return "Numpad +";
+		case SDLK_KP_ENTER: return "Numpad Enter";
+		case SDLK_KP_EQUALS: return "Numpad =";
+
+		case SDLK_UP: return "Up";
+		case SDLK_DOWN: return "Down";
+		case SDLK_RIGHT: return "Right";
+		case SDLK_LEFT: return "Left";
+		case SDLK_INSERT: return "Insert";
+		case SDLK_HOME: return "Home";
+		case SDLK_END: return "End";
+		case SDLK_PAGEUP: return "Pageup";
+		case SDLK_PAGEDOWN: return "Pagedown";
+
+		case SDLK_F1: return "F1";
+		case SDLK_F2: return "F2";
+		case SDLK_F3: return "F3";
+		case SDLK_F4: return "F4";
+		case SDLK_F5: return "F5";
+		case SDLK_F6: return "F6";
+		case SDLK_F7: return "F7";
+		case SDLK_F8: return "F8";
+		case SDLK_F9: return "F9";
+		case SDLK_F10: return "F10";
+		case SDLK_F11: return "F11";
+		case SDLK_F12: return "F12";
+		case SDLK_F13: return "F13";
+		case SDLK_F14: return "F14";
+		case SDLK_F15: return "F15";
+
+		case SDLK_RSHIFT: return "Right shift";
+		case SDLK_LSHIFT: return "Left Shift";
+		case SDLK_RCTRL: return "Right Control";
+		case SDLK_LCTRL: return "Left Control";
+		case SDLK_RALT: return "Right Alt";
+		case SDLK_LALT: return "Left Alt";
+		case SDLK_RMETA: return "Right Meta";
+		case SDLK_LMETA	: return "Left Meta";
+		case SDLK_LSUPER: return "Left Logo";
+		case SDLK_RSUPER	: return "Right Logo";
+
+		case SDLK_HELP: return "Help";
+		case SDLK_PRINT: return "Print";
+		case SDLK_BREAK: return "Break";
+		case SDLK_MENU: return "Menu";
+		default:
+		{
+			static char buffer[256];
+			sprintf(buffer,"Key %i",key);
+			return buffer;
+		}
+	}
+}
 
 #if USE_SDL_KEY_PICKER
 
@@ -677,7 +829,7 @@ void wxSDLKeyPicker::updateLabel()
         }
         else
         {
-            label = SDL_GetKeyName(m_key);
+            label = GetSDLKeyName(m_key);
         }
     }
     else if (m_format == FORMAT_DIGITAL)
