@@ -841,7 +841,7 @@ void wxSDLKeyPicker::updateLabel()
             const bool success = key.ToLong(&keyval);
             if (success)
             {
-                label = SDL_GetKeyName((SDLKey)keyval);
+                label = GetSDLKeyName((SDLKey)keyval);
             }
             else
             {
@@ -896,10 +896,10 @@ void wxSDLKeyPicker::updateLabel()
                                  (key2.IsEmpty() || key2.ToLong(&key2val));
             if (success)
             {
-                label = (key1val < 0 ? "" : SDL_GetKeyName((SDLKey)key1val));
+                label = (key1val < 0 ? "" : GetSDLKeyName((SDLKey)key1val));
                 if (key2val >= 0)
                 {
-                    m_btn2->SetLabel(SDL_GetKeyName((SDLKey)key2val));
+                    m_btn2->SetLabel(GetSDLKeyName((SDLKey)key2val));
                 }
             }
             else
