@@ -554,8 +554,8 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
     public:
         virtual ExitCode Entry()
         {
-            SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-    
+            //SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+            
             m64p_error result = ::runEmulation();
             if (result != M64ERR_SUCCESS)
             {
