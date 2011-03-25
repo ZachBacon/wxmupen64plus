@@ -216,14 +216,14 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
         /* print out the particular plugin used */
         if (g_PluginMap[i].handle == NULL)
         {
-            printf("wxMupen64Plus: using %s plugin: <dummy>\n", g_PluginMap[i].name);
+            printf("[wxMupen64Plus Plugins] using %s plugin: <dummy>\n", g_PluginMap[i].name);
         }
         else
         {
-            printf("wxMupen64Plus: using %s plugin: '%s' v%i.%i.%i\n", g_PluginMap[i].name,
+            printf("[wxMupen64Plus Plugins] using %s plugin: '%s' v%i.%i.%i\n", g_PluginMap[i].name,
                    g_PluginMap[i].libname, VERSION_PRINTF_SPLIT(g_PluginMap[i].libversion));
             if (g_Verbose)
-                printf("wxMupen64Plus: %s plugin library: %s\n", g_PluginMap[i].name, g_PluginMap[i].filename);
+                printf("[wxMupen64Plus Plugins] %s plugin library: %s\n", g_PluginMap[i].name, g_PluginMap[i].filename);
         }
     }
 

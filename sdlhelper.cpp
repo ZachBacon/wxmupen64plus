@@ -26,13 +26,15 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
+std::map<int, std::string> gamepads; 
+
+const std::map<int, std::string>& getGamepadList()
+{
+	return gamepads;
+}
+
 void SDL_Helper_Start()
 {
-#ifdef __WXMAC__
-    // (this is needed on OSX for gamepad input configuration to work [SDL_INIT_VIDEO is necessary to init
-    // keyboard support]
-    // FIXME: SDL_init is also called when starting a game, and also when using the SDL key picker; thus
-    //        SDL_init will be called at times where SDL is already inited. I hvae no idea if this is bad
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
     
     // ====================
@@ -44,11 +46,20 @@ void SDL_Helper_Start()
     if (SDL_NumJoysticks() > 0) printf("The names of the joysticks are:\n");    
     for (int i=0; i<SDL_NumJoysticks(); i++) 
     {
+		gamepads[i] = SDL_JoystickName(i);
         printf("    %s\n", SDL_JoystickName(i));
         /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
     }
+	
+#ifndef __WXMAC__
+    // SDL running is needed on OSX for gamepad input configuration to work [SDL_INIT_VIDEO is necessary to
+    // int keyboard support]
+    // FIXME: SDL_init is also called when starting a game, and also when using the SDL key picker; thus
+    //        SDL_init will be called at times where SDL is already inited. I hvae no idea if this is bad
+	SDL_Quit();
+#endif
+
     printf("\n");
     // ====================
-#endif
 }
 

@@ -22,10 +22,15 @@
 #ifndef SDL_HELPER_H
 #define SDL_HELPER_H
 
+#include <map>
+#include <string>
+
 // This is put in a separate file so that main.cpp does not need to include
 // SDL.h; for some reason (probably the SDL_main dark magic crap), including
 // SDL.h in main.cpp breaks the menu bar
 
 void SDL_Helper_Start();
+
+const std::map<int, std::string>& getGamepadList();
 
 #endif // SDL_KEY_PICKER_H

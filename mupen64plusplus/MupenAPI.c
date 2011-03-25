@@ -214,7 +214,7 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     }
 
     // print some information about the core library
-    printf("wxMupen64Plus: attached to core library '%s' version %i.%i.%i\n", CoreName, VERSION_PRINTF_SPLIT(CoreVersion));
+    printf("[wxMupen64Plus] attached to core library '%s' version %i.%i.%i\n", CoreName, VERSION_PRINTF_SPLIT(CoreVersion));
     if (g_CoreCapabilities & M64CAPS_DYNAREC)
         printf("            Includes support for Dynamic Recompiler.\n");
     if (g_CoreCapabilities & M64CAPS_DEBUGGER)

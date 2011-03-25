@@ -58,21 +58,21 @@ extern "C"
     {
         if (level <= 1)
         {
-            printf("%s Error: %s\n", (const char *) Context, message);
+            printf("[Core] %s Error: %s\n", (const char *) Context, message);
             wxLogError( _("[%s] An error occurred : %s"), (const char *) Context, message );
         }
         else if (level == 2)
         {
-            printf("%s Warning: %s\n", (const char *) Context, message);
+            printf("[Core] %s Warning: %s\n", (const char *) Context, message);
             wxLogWarning( _("[%s] Warning : %s"), (const char *) Context, message );
         }
         else if (level == 3 || (level == 5 && g_Verbose))
         {
-            printf("%s: %s\n", (const char *) Context, message);
+            printf("[Core] %s: %s\n", (const char *) Context, message);
         }
         else if (level == 4)
         {
-            printf("%s Status: %s\n", (const char *) Context, message);
+            printf("[Core] %s Status: %s\n", (const char *) Context, message);
         }
         /* ignore the verbose info for now */
     }
