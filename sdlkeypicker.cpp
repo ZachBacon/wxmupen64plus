@@ -229,8 +229,6 @@ public:
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         SDL_JoystickEventState(SDL_ENABLE);
         
-		SDL_JoystickEventState(SDL_ENABLE);
-	
 	    std::vector<SDL_Joystick*> joysticks;
 		for (int i=0; i<SDL_NumJoysticks(); i++) 
 		{
@@ -453,6 +451,7 @@ private:
     char m_axis_dir;
     
     ResultType m_type;
+    std::vector<SDL_Joystick*> m_joysticks;
     
 public:
 
@@ -530,9 +529,28 @@ public:
         
         Connect(wxEVT_IDLE, wxIdleEventHandler(PressAKey::onIdle), NULL, this);
         
+        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        SDL_JoystickEventState(SDL_ENABLE);
+        
+		for (int i=0; i<SDL_NumJoysticks(); i++) 
+		{
+			 m_joysticks.push_back(SDL_JoystickOpen(i)); // TODO: also close them on shutdown?
+		}
+        
         SetSizer(sizer);
         Center();
         ShowModal();        
+    }
+    
+    ~PressAKey()
+    {
+        for (unsigned int i=0; i<m_joysticks.size(); i++) 
+		{
+			 SDL_JoystickClose(m_joysticks[i]);
+		}
+		
+        // Close the frame
+        SDL_Quit();
     }
     
     /** Get the key/button/axis that was selected by the user, or CANCELLED if it was cancelled */

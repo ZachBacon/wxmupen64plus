@@ -51,13 +51,7 @@ void SDL_Helper_Start()
         /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
     }
 	
-#ifndef __WXMAC__
-    // SDL running is needed on OSX for gamepad input configuration to work [SDL_INIT_VIDEO is necessary to
-    // int keyboard support]
-    // FIXME: SDL_init is also called when starting a game, and also when using the SDL key picker; thus
-    //        SDL_init will be called at times where SDL is already inited. I hvae no idea if this is bad
 	SDL_Quit();
-#endif
 
     printf("\n");
     // ====================
