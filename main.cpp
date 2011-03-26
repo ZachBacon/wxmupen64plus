@@ -87,6 +87,8 @@ DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_READ_OPEN_FILE_QUEUE);
 
 int main(int argc, char** argv)
 {
+    wxDISABLE_DEBUG_SUPPORT();
+    
     MupenFrontendApp* app = new MupenFrontendApp(); 
     wxApp::SetInstance(app);
     return wxEntry(argc, argv);
