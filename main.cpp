@@ -192,6 +192,7 @@ bool MupenFrontendApp::OnInit()
     wxMenuBar* bar = new wxMenuBar();
     
     wxMenu* file = new wxMenu();
+    file->Append(wxID_OPEN, _("&Open\tCtrl-O"));
     file->Append(wxID_ABOUT, _("&About"));
     file->Append(wxID_EXIT, _("&Quit") + "\tCtrl-Q");
     
@@ -211,7 +212,9 @@ bool MupenFrontendApp::OnInit()
     
     m_frame->Connect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED,
                      wxCommandEventHandler(MupenFrontendApp::onAboutMenu), NULL, this);
-    
+    m_frame->Connect(wxID_OPEN, wxEVT_COMMAND_MENU_SELECTED,
+                     wxCommandEventHandler(MupenFrontendApp::onOpenMenu), NULL, this);
+                     
     SetTopWindow( m_frame );
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
     
@@ -304,6 +307,35 @@ void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
 
 // -----------------------------------------------------------------------------------------------------------
 
+/** utility function */
+wxString showFileDialog(wxString message, wxString defaultDir,
+                        wxString filename,
+                        wxString wildcard, bool save)
+{
+    wxFileDialog* dialog = new wxFileDialog( NULL, message, defaultDir, filename, wildcard, (save?wxFD_SAVE:wxFD_OPEN));
+    int answer = dialog->ShowModal();
+    wxString path = dialog->GetPath();
+    dialog->Hide();
+    dialog->Destroy();
+    if (answer != wxID_OK) return wxT("");
+
+    return path;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onOpenMenu(wxCommandEvent& evt)
+{
+    wxString filePath = showFileDialog( _("Select file"), wxT(""), wxT(""), 
+                                        _("N64 ROM") + "|*.v64;*.z64", false /*open*/);
+    if (filePath.size() > 0)
+    {
+        openFile(filePath);
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
 {
     class wxHtmlWindowHelper : public wxHtmlWindow
@@ -326,7 +358,7 @@ void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
                                    wxDefaultPosition, wxSize(500, 400));
     
     wxStaticBitmap* icon = new wxStaticBitmap(about, wxID_ANY, icon_mupen);
-        
+    
     wxStaticText* label = new wxStaticText(about, wxID_ANY,
             wxString::Format("wxMupen64Plus %i.%i", VERSION_MAJOR, VERSION_MINOR) );
     label->SetFont( label->GetFont().MakeBold().Scaled(2.0f) );
@@ -336,7 +368,7 @@ void MupenFrontendApp::onAboutMenu(wxCommandEvent& evt)
                           "<br><br>" + _("by Marianne Gagnon") +
                           "<br><br><a href=\"https://bitbucket.org/auria/wxmupen64plus/wiki\">" +
                           "https://bitbucket.org/auria/wxmupen64plus/wiki</a></p></body></html>";
-                          
+    
     wxHtmlWindowHelper* text_area = new wxHtmlWindowHelper(about);
     text_area->SetPage(about_text);
     

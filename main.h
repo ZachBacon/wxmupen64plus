@@ -111,6 +111,7 @@ public:
     void onClose(wxCloseEvent& evt);
     void onQuitMenu(wxCommandEvent& evt);
     void onAboutMenu(wxCommandEvent& evt);
+    void onOpenMenu(wxCommandEvent& evt);
     
     bool makeToolbar(int plugins, int selectedSection);
     
