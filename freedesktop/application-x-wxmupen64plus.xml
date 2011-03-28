@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+ <mime-type type="application/x-wxmupen64plus">
+   <comment>N64 ROM</comment>
+   <glob pattern="*.v64"/>
+ </mime-type>
+</mime-info>
+
+<!--
+   <mime-type type="application/x-mytype">  
+-->
