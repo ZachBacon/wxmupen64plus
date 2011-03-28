@@ -50,7 +50,7 @@ const char* DEFAULT_INPUT_PLUGIN = "mupen64plus-input-sdl";
 const char* DEFAULT_RSP_PLUGIN   = "mupen64plus-rsp-hle";
 
 const int VERSION_MAJOR = 0;
-const int VERSION_MINOR = 1;
+const int VERSION_MINOR = 2;
 
 extern "C"
 {

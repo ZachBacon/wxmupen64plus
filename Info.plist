@@ -16,13 +16,13 @@
     <string>WXMU</string>
 
     <key>CFBundleVersion</key>
-    <string>0.1</string>
+    <string>0.2</string>
 
     <key>CFBundleShortVersionString</key>
-    <string>0.1</string>
+    <string>0.2</string>
 
     <key>CFBundleGetInfoString</key>
-    <string>wxMupen64Plus 0.1</string>
+    <string>wxMupen64Plus 0.2</string>
 
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>

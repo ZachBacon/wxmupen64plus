@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=wxMupen64Plus Combo
-AppVerName=wxMupen64Plus 0.1 (Combo)
-VersionInfoVersion=0.1
+AppVerName=wxMupen64Plus 0.2 (Combo)
+VersionInfoVersion=0.2
 AppPublisher=
 AppPublisherURL=https://bitbucket.org/auria/wxmupen64plus
 AppSupportURL=
