@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=mmg
-Date                   :=03/28/11
+Date                   :=04/04/11
 CodeLitePath           :="/Users/mmg/Library/Application Support/codelite"
 LinkerName             :=g++
 ArchiveTool            :=ar rcus
@@ -49,8 +49,8 @@ LibPath                := "$(LibraryPathSwitch)."
 ## User defined environment variables
 ##
 CodeLiteDir:=/Users/mmg/My Applications/Applications Dev/CodeLite.app/Contents/SharedSupport/
-Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/sdlhelper$(ObjectSuffix) $(IntermediateDirectory)/config$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) \
-	$(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
+Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/sdlhelper$(ObjectSuffix) $(IntermediateDirectory)/config$(ObjectSuffix) $(IntermediateDirectory)/wxvidext$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) \
+	$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 
 ##
 ## Main Build Targets 
@@ -125,6 +125,14 @@ $(IntermediateDirectory)/config$(DependSuffix): config.cpp
 $(IntermediateDirectory)/config$(PreprocessSuffix): config.cpp
 	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/config$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/config.cpp"
 
+$(IntermediateDirectory)/wxvidext$(ObjectSuffix): wxvidext.cpp $(IntermediateDirectory)/wxvidext$(DependSuffix)
+	$(CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/wxvidext.cpp" $(CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/wxvidext$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/wxvidext$(DependSuffix): wxvidext.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/wxvidext$(ObjectSuffix) -MF$(IntermediateDirectory)/wxvidext$(DependSuffix) -MM "/Users/mmg/Workspace_CL/wxMupen64Plus/wxvidext.cpp"
+
+$(IntermediateDirectory)/wxvidext$(PreprocessSuffix): wxvidext.cpp
+	@$(CompilerName) $(CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/wxvidext$(PreprocessSuffix) "/Users/mmg/Workspace_CL/wxMupen64Plus/wxvidext.cpp"
+
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix): mupen64plusplus/MupenAPI.c $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(C_CompilerName) $(SourceSwitch) "/Users/mmg/Workspace_CL/wxMupen64Plus/mupen64plusplus/MupenAPI.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix): mupen64plusplus/MupenAPI.c
@@ -189,6 +197,9 @@ clean:
 	$(RM) $(IntermediateDirectory)/config$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/config$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/config$(PreprocessSuffix)
+	$(RM) $(IntermediateDirectory)/wxvidext$(ObjectSuffix)
+	$(RM) $(IntermediateDirectory)/wxvidext$(DependSuffix)
+	$(RM) $(IntermediateDirectory)/wxvidext$(PreprocessSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(PreprocessSuffix)

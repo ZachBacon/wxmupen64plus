@@ -21,6 +21,8 @@
     <File Name="config.cpp"/>
     <File Name="config.h"/>
     <File Name="main.h"/>
+    <File Name="wxvidext.cpp"/>
+    <File Name="wxvidext.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="osx">
     <File Name="Info.plist"/>
