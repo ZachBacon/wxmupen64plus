@@ -40,6 +40,9 @@
 #endif
 
 #include <SDL.h>
+#include <SDL_keyboard.h>
+#include <SDL_keysym.h>
+#include <SDL_events.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "wxvidext.h"
@@ -73,9 +76,9 @@ public:
 	void mouseReleased(wxMouseEvent& event);
 	void rightClick(wxMouseEvent& event);
 	void mouseLeftWindow(wxMouseEvent& event);
+    */
 	void keyPressed(wxKeyEvent& event);
 	void keyReleased(wxKeyEvent& event);
-    */
     
     void setCurrent()
     {
@@ -94,9 +97,11 @@ EVT_RIGHT_DOWN(BasicGLPane::rightClick)
 EVT_LEAVE_WINDOW(BasicGLPane::mouseLeftWindow)
  * */
 EVT_SIZE(BasicGLPane::resized)
-/*
+
 EVT_KEY_DOWN(BasicGLPane::keyPressed)
 EVT_KEY_UP(BasicGLPane::keyReleased)
+
+/*
 EVT_MOUSEWHEEL(BasicGLPane::mouseWheelMoved)
 EVT_PAINT(BasicGLPane::render)
  */
@@ -110,9 +115,108 @@ void BasicGLPane::mouseWheelMoved(wxMouseEvent& event) {}
 void BasicGLPane::mouseReleased(wxMouseEvent& event) {}
 void BasicGLPane::rightClick(wxMouseEvent& event) {}
 void BasicGLPane::mouseLeftWindow(wxMouseEvent& event) {}
-void BasicGLPane::keyPressed(wxKeyEvent& event) {}
-void BasicGLPane::keyReleased(wxKeyEvent& event) {}
 */
+
+int wxToSDL(int code)
+{
+    switch (code)
+    {
+        case WXK_BACK:   return SDLK_BACKSPACE;
+        case WXK_TAB:    return SDLK_TAB;
+        case WXK_RETURN: return SDLK_RETURN;
+        case WXK_ESCAPE: return SDLK_ESCAPE;
+
+    /* values from 33 to 126 are reserved for the standard ASCII characters */
+
+    /* values from 128 to 255 are reserved for ASCII extended characters
+           (note that there isn't a single fixed standard for the meaning
+           of these values; avoid them in portable apps!) */
+
+    /* These are not compatible with unicode characters.
+       If you want to get a unicode character from a key event, use
+       wxKeyEvent::GetUnicodeKey                                    */
+       
+        case '\n':        return SDLK_RETURN;
+        case WXK_SPACE:   return SDLK_SPACE;
+        case WXK_DELETE:  return SDLK_DELETE;
+        //case WXK_START:
+        //case WXK_LBUTTON:
+        //case WXK_RBUTTON:
+        //case WXK_CANCEL:
+        //case WXK_MBUTTON:
+        case WXK_CLEAR:    return SDLK_CLEAR;
+        case WXK_SHIFT:    return SDLK_LSHIFT;
+        case WXK_ALT:      return SDLK_LALT;
+        case WXK_CONTROL:  return SDLK_LCTRL;
+        case WXK_MENU:     return SDLK_MENU;
+        case WXK_PAUSE:    return SDLK_PAUSE;
+        //case WXK_CAPITAL:
+        case WXK_END:      return SDLK_END;
+        case WXK_HOME:     return SDLK_HOME;
+        case WXK_LEFT:     return SDLK_LEFT;
+        case WXK_UP:       return SDLK_UP;
+        case WXK_RIGHT:    return SDLK_RIGHT;
+        case WXK_DOWN:     return SDLK_DOWN;
+        //case WXK_SELECT:
+        case WXK_PRINT:    return SDLK_PRINT;
+        //case WXK_EXECUTE:
+        //case WXK_SNAPSHOT:
+        case WXK_INSERT:   return SDLK_INSERT;
+        case WXK_HELP:     return SDLK_HELP;
+        case WXK_NUMPAD0:  return SDLK_0;
+        case WXK_NUMPAD1:  return SDLK_1;
+        case WXK_NUMPAD2:  return SDLK_2;
+        case WXK_NUMPAD3:  return SDLK_3;
+        case WXK_NUMPAD4:  return SDLK_4;
+        case WXK_NUMPAD5:  return SDLK_5;
+        case WXK_NUMPAD6:  return SDLK_6;
+        case WXK_NUMPAD7:  return SDLK_7;
+        case WXK_NUMPAD8:  return SDLK_8;
+        case WXK_NUMPAD9:  return SDLK_9;
+        case WXK_MULTIPLY: return SDLK_ASTERISK;
+        case WXK_ADD:      return SDLK_PLUS;
+        //case WXK_SEPARATOR:
+        case WXK_SUBTRACT: return SDLK_MINUS;
+        //case WXK_DECIMAL:
+        //case WXK_DIVIDE:
+        case WXK_F1:       return SDLK_F1;
+        case WXK_F2:       return SDLK_F2;
+        case WXK_F3:       return SDLK_F3;
+        case WXK_F4:       return SDLK_F4;
+        case WXK_F5:       return SDLK_F5;
+        case WXK_F6:       return SDLK_F6;
+        case WXK_F7:       return SDLK_F7;
+        case WXK_F8:       return SDLK_F8;
+        case WXK_F9:       return SDLK_F9;
+        case WXK_F10:      return SDLK_F10;
+        case WXK_F11:      return SDLK_F11;
+        case WXK_F12:      return SDLK_F12;
+        case WXK_F13:      return SDLK_F13;
+        case WXK_F14:      return SDLK_F14;
+        case WXK_F15:      return SDLK_F15;
+        case WXK_NUMLOCK:  return SDLK_NUMLOCK;
+        //case WXK_SCROLL:
+        case WXK_PAGEUP:   return SDLK_PAGEUP;
+        case WXK_PAGEDOWN: return SDLK_PAGEDOWN;
+        
+        case WXK_WINDOWS_LEFT: return SDLK_LMETA;
+        case WXK_WINDOWS_RIGHT: return SDLK_RMETA;
+        case WXK_WINDOWS_MENU: return SDLK_MENU;
+        case WXK_COMMAND: return SDLK_LCTRL;
+        default: return code;
+    }
+}
+
+void BasicGLPane::keyPressed(wxKeyEvent& event)
+{
+    injectKeyEvent(true, wxToSDL(event.GetKeyCode()));
+}
+
+void BasicGLPane::keyReleased(wxKeyEvent& event)
+{
+    injectKeyEvent(false, wxToSDL(event.GetKeyCode()));
+}
+
 
 BasicGLPane::BasicGLPane(wxFrame* parent, int* args) :
     wxGLCanvas(parent, wxID_ANY, args, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE)

@@ -809,3 +809,11 @@ m64p_error coreOverrideVidExt(m64p_video_extension_functions* VideoFunctionStruc
 {
     return (*CoreOverrideVidExt)(VideoFunctionStruct);
 }
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error injectKeyEvent(int /* bool */ pressed, int key)
+{
+    if (pressed) return (*CoreDoCommand)(M64CMD_SEND_SDL_KEYDOWN, key, NULL);
+    else         return (*CoreDoCommand)(M64CMD_SEND_SDL_KEYUP,   key, NULL);
+}
