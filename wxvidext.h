@@ -27,11 +27,13 @@
 m64p_error VidExt_Init(void);
 m64p_error VidExt_Quit(void);
 m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes);
-m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode);
+m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode);
 m64p_error VidExt_SetCaption(const char *Title);
 m64p_error VidExt_ToggleFullScreen(void);
 void* VidExt_GL_GetProcAddress(const char* Proc);
 m64p_error VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value);
 m64p_error VidExt_GL_SwapBuffers(void);
+
+m64p_error installWxVideoExtension();
 
 #endif // VIDEO_EXTENSION_H

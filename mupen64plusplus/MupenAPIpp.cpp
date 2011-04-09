@@ -26,6 +26,8 @@
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/plugin.h"
+#include "wxvidext.h"
+
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -82,7 +84,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg << result;
         throw CoreNotFoundException(errmsg.str());
     }
-
+    
     result = InitCore(&StateCallback, this, datapath);
     if (result != M64ERR_SUCCESS)
     {
@@ -90,7 +92,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     result = OpenConfigurationHandles(defaultPluginPath, defaultVideoPlugin, defaultAudioPlugin,
                                      defaultInputPlugin, defaultRspPlugin);
     if (result != M64ERR_SUCCESS)
@@ -100,6 +102,13 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         std::string errmsg = "[Mupen64PlusPlus::Mupen64PlusPlus] OpenConfigurationHandles failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
+    }
+    
+    printf("************ will call installWxVideoExtension ************\n");
+    result = installWxVideoExtension();
+    if (result != M64ERR_SUCCESS)
+    {
+        throw std::runtime_error("[Mupen64PlusPlus::Mupen64PlusPlus] Can't init video extension");        
     }
 }
 

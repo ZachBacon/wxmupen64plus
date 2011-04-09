@@ -804,3 +804,8 @@ m64p_error detachPlugins()
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+m64p_error coreOverrideVidExt(m64p_video_extension_functions* VideoFunctionStruct)
+{
+    return (*CoreOverrideVidExt)(VideoFunctionStruct);
+}

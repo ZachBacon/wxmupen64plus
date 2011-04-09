@@ -155,6 +155,7 @@ m64p_error setSaveSlot(int slotId);
  */
 m64p_error takeScreenshot();
 
+m64p_error coreOverrideVidExt(m64p_video_extension_functions* VideoFunctionStruct);
 
 /** Get the path where to find games, in config */
 //m64p_error GetGamesPath(char path[], const int pathLen);
