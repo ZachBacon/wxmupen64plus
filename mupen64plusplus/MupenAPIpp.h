@@ -436,6 +436,8 @@ public:
      * @return same as Mupen64PlusPlus::loadPlugins
      */
     int reloadPlugins();
+    
+    bool useVideoExtension() { return true; }
 };
 
 #endif

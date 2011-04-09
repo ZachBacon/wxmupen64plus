@@ -104,11 +104,14 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         throw std::runtime_error(errmsg);
     }
     
-    printf("************ will call installWxVideoExtension ************\n");
-    result = installWxVideoExtension();
-    if (result != M64ERR_SUCCESS)
+    if (useVideoExtension())
     {
-        throw std::runtime_error("[Mupen64PlusPlus::Mupen64PlusPlus] Can't init video extension");        
+        printf("************ will call installWxVideoExtension ************\n");
+        result = installWxVideoExtension();
+        if (result != M64ERR_SUCCESS)
+        {
+            throw std::runtime_error("[Mupen64PlusPlus::Mupen64PlusPlus] Can't init video extension");        
+        }
     }
 }
 
@@ -576,7 +579,7 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
         }
     };
     
-    if (asynchronous)
+    if (asynchronous and not useVideoExtension())
     {
         EmuThread* t = new EmuThread();
         if (t->Create() != wxTHREAD_NO_ERROR)
