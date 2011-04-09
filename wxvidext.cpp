@@ -29,6 +29,7 @@
 #include <wx/frame.h>
 #include <wx/dc.h>
 #include <wx/dcclient.h>
+#include <wx/msgdlg.h>
 
 #ifdef __WXMAC__
 #include "OpenGL/glu.h"
@@ -287,6 +288,12 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     int args[] = {WX_GL_RGBA, WX_GL_BUFFER_SIZE, buffersize, WX_GL_DOUBLEBUFFER,
                   WX_GL_DEPTH_SIZE, depthsize, /*WX_GL_MIN_RED, redsize,
                   WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,*/ 0};
+    
+    if (not wxGLCanvas::IsDisplaySupported(args))
+    {
+        wxMessageBox( _("Sorry, your system does not support the selected video configuration") );
+        return M64ERR_UNSUPPORTED;
+    }
     
     glPane = new BasicGLPane(frame, args);
     sizer->Add(glPane, 1, wxEXPAND);
