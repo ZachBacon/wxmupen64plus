@@ -40,7 +40,7 @@
 
 #include <SDL.h>
 
-#include "Mupen64PlusPlus/MupenAPI.h"
+#include "mupen64plusplus/MupenAPI.h"
 #include "wxvidext.h"
 
 // FIXME: handle the player closing the frame

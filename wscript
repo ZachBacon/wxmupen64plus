@@ -91,9 +91,9 @@ def configure(ctx):
     if os.name == 'nt':
         if wxhome == None :
             ctx.fatal("On Windows, the --wxhome argument is mandatory")
-        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs --prefix=' + wxhome + ' ' + wxconfig_args, package='', uselib_store='wxWidgets')
+        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs core,base,gl,html --prefix=' + wxhome + ' ' + wxconfig_args, package='', uselib_store='wxWidgets')
     else:
-        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs ' + wxconfig_args, package='', uselib_store='wxWidgets')
+        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
 
 # --------------------------------------------------------------------------------------------
 #                                            BUILD
@@ -160,7 +160,8 @@ def build(bld):
                 linkflags=link_flags + additional_links,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
-                        'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c'] + osal_src,
+                        'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c',
+                        'wxvidext.cpp'] + osal_src,
                 target='wxmupen64plus',
                 uselib = 'SDL wxWidgets',
                 install_path = bin_install_path,
