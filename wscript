@@ -91,7 +91,7 @@ def configure(ctx):
     if os.name == 'nt':
         if wxhome == None :
             ctx.fatal("On Windows, the --wxhome argument is mandatory")
-        ctx.check_cfg(path=wx_config,  args='--cxxflags --libs core,base,gl,html --prefix=' + wxhome + ' ' + wxconfig_args, package='', uselib_store='wxWidgets')
+        ctx.check_cfg(path=wx_config,  args='--cxxflags --prefix=' + wxhome + ' ' + wxconfig_args + ' --libs core,base,gl,html', package='', uselib_store='wxWidgets')
     else:
         ctx.check_cfg(path=wx_config,  args='--cxxflags --libs core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
 
