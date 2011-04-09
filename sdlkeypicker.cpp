@@ -534,7 +534,7 @@ public:
         
 		for (int i=0; i<SDL_NumJoysticks(); i++) 
 		{
-			 m_joysticks.push_back(SDL_JoystickOpen(i)); // TODO: also close them on shutdown?
+			 m_joysticks.push_back(SDL_JoystickOpen(i));
 		}
         
         SetSizer(sizer);
