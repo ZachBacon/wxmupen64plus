@@ -252,7 +252,7 @@ m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
 m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
 {
     printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
-    frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(800,600));
+    frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(Width,Height));
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	
     /*
@@ -292,8 +292,8 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     sizer->Add(glPane, 1, wxEXPAND);
 	
     frame->SetSizer(sizer);
-    frame->SetAutoLayout(true);
-	
+	//frame->Center();
+    frame->Layout();
     frame->Show();
     
     glPane->setCurrent();
