@@ -330,10 +330,12 @@ m64p_error VidExt_ToggleFullScreen()
 
 void* VidExt_GL_GetProcAddress(const char* Proc)
 {
-    printf(">>>>>>>>>>>> WX: VidExt_GL_GetProcAddress : '%s' = %x\n", Proc, SDL_GL_GetProcAddress(Proc));
+    printf(">>>>>>>>>>>> WX: VidExt_GL_GetProcAddress : '%s'\n", Proc);
     
 #ifdef __WXMSW__
     return (void*)wglGetProcAddress(Proc);
+#elif __WXGTK__
+	return (void*)glXGetProcAddress((const GLubyte*)Proc);
 #else
     return SDL_GL_GetProcAddress(Proc);
 #endif
