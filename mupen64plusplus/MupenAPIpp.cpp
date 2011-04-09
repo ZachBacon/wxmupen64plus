@@ -598,7 +598,8 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
     }
     else
     {
-        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        // FIXME: why do I need this?
+        if (not useVideoExtension()) SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         
         m64p_error result = ::runEmulation();
         if (result != M64ERR_SUCCESS)

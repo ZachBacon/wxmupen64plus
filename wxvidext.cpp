@@ -304,6 +304,9 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     frame->Show();
     
     glPane->setCurrent();
+    
+    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+    
     return M64ERR_SUCCESS;
 }
 
@@ -426,6 +429,7 @@ m64p_error VidExt_GL_SwapBuffers()
     }
     
     wxYield();
+    SDL_PumpEvents();
     
     holder = new DcHolder(glPane);
     
