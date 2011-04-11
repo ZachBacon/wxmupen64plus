@@ -93,33 +93,10 @@ public:
 };
 
 BEGIN_EVENT_TABLE(BasicGLPane, wxGLCanvas)
-/*
-EVT_MOTION(BasicGLPane::mouseMoved)
-EVT_LEFT_DOWN(BasicGLPane::mouseDown)
-EVT_LEFT_UP(BasicGLPane::mouseReleased)
-EVT_RIGHT_DOWN(BasicGLPane::rightClick)
-EVT_LEAVE_WINDOW(BasicGLPane::mouseLeftWindow)
- * */
 EVT_SIZE(BasicGLPane::resized)
-
 EVT_KEY_DOWN(BasicGLPane::keyPressed)
 EVT_KEY_UP(BasicGLPane::keyReleased)
-
-/*
-EVT_MOUSEWHEEL(BasicGLPane::mouseWheelMoved)
-EVT_PAINT(BasicGLPane::render)
- */
 END_EVENT_TABLE()
- 
-/*
-// some useful events to use
-void BasicGLPane::mouseMoved(wxMouseEvent& event) {}
-void BasicGLPane::mouseDown(wxMouseEvent& event) {}
-void BasicGLPane::mouseWheelMoved(wxMouseEvent& event) {}
-void BasicGLPane::mouseReleased(wxMouseEvent& event) {}
-void BasicGLPane::rightClick(wxMouseEvent& event) {}
-void BasicGLPane::mouseLeftWindow(wxMouseEvent& event) {}
-*/
 
 int wxToSDL(int code)
 {
@@ -140,6 +117,33 @@ int wxToSDL(int code)
        If you want to get a unicode character from a key event, use
        wxKeyEvent::GetUnicodeKey                                    */
        
+        case 'a': case 'A': return SDLK_a;
+        case 'b': case 'B': return SDLK_b;
+        case 'c': case 'C': return SDLK_c;
+        case 'd': case 'D': return SDLK_d;
+        case 'e': case 'E': return SDLK_e;
+        case 'f': case 'F': return SDLK_f;
+        case 'g': case 'G': return SDLK_g;
+        case 'h': case 'H': return SDLK_h;
+        case 'i': case 'I': return SDLK_i;
+        case 'j': case 'J': return SDLK_j;
+        case 'k': case 'K': return SDLK_k;
+        case 'l': case 'L': return SDLK_l;
+        case 'm': case 'M': return SDLK_m;
+        case 'n': case 'N': return SDLK_n;
+        case 'o': case 'O': return SDLK_o;
+        case 'p': case 'P': return SDLK_p;
+        case 'q': case 'Q': return SDLK_q;
+        case 'r': case 'R': return SDLK_r;
+        case 's': case 'S': return SDLK_s;
+        case 't': case 'T': return SDLK_t;
+        case 'u': case 'U': return SDLK_u;
+        case 'v': case 'V': return SDLK_v;
+        case 'w': case 'W': return SDLK_w;
+        case 'x': case 'X': return SDLK_x;
+        case 'y': case 'Y': return SDLK_y;
+        case 'z': case 'Z': return SDLK_z;
+        
         case '\n':        return SDLK_RETURN;
         case WXK_SPACE:   return SDLK_SPACE;
         case WXK_DELETE:  return SDLK_DELETE;
