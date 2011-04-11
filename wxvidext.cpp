@@ -47,7 +47,11 @@
 #include "mupen64plusplus/MupenAPI.h"
 #include "wxvidext.h"
 
+#include <set>
+
 // FIXME: handle the player closing the frame
+
+std::set<int> pressed_keys;
 
 class BasicGLPane : public wxGLCanvas
 {
@@ -210,11 +214,13 @@ int wxToSDL(int code)
 void BasicGLPane::keyPressed(wxKeyEvent& event)
 {
     injectKeyEvent(true, wxToSDL(event.GetKeyCode()));
+    pressed_keys.insert(event.GetKeyCode());
 }
 
 void BasicGLPane::keyReleased(wxKeyEvent& event)
 {
     injectKeyEvent(false, wxToSDL(event.GetKeyCode()));
+    pressed_keys.erase(event.GetKeyCode());
 }
 
 
@@ -238,52 +244,6 @@ void BasicGLPane::resized(wxSizeEvent& evt)
 	
     Refresh();
 }
- 
-/** Inits the OpenGL viewport for drawing in 3D. */
-#if 0
-void BasicGLPane::prepare3DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y)
-{
-	
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-    glClearDepth(1.0f);	// Depth Buffer Setup
-    glEnable(GL_DEPTH_TEST); // Enables Depth Testing
-    glDepthFunc(GL_LEQUAL); // The Type Of Depth Testing To Do
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	
-    glEnable(GL_COLOR_MATERIAL);
-	
-    glViewport(topleft_x, topleft_y, bottomrigth_x-topleft_x, bottomrigth_y-topleft_y);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-	
-    float ratio_w_h = (float)(bottomrigth_x-topleft_x)/(float)(bottomrigth_y-topleft_y);
-    gluPerspective(45 /*view angle*/, ratio_w_h, 0.1 /*clip close*/, 200 /*clip far*/);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-	
-}
-#endif
- 
-/** Inits the OpenGL viewport for drawing in 2D. */
-#if 0
-void BasicGLPane::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x, int bottomrigth_y)
-{
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-    glEnable(GL_TEXTURE_2D);   // textures
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	
-    glViewport(topleft_x, topleft_y, bottomrigth_x-topleft_x, bottomrigth_y-topleft_y);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    gluOrtho2D(topleft_x, bottomrigth_x, bottomrigth_y, topleft_y);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-#endif
 
 int BasicGLPane::getWidth()
 {
@@ -294,18 +254,6 @@ int BasicGLPane::getHeight()
 {
     return GetSize().y;
 }
- 
-/*
-void BasicGLPane::render( wxPaintEvent& evt )
-{
-    if (!IsShown()) return;
-    
-    wxGLCanvas::SetCurrent(*m_context);
-    wxPaintDC(this);
-	
-    glFlush();
-    SwapBuffers();
-}*/
 
 wxFrame* frame = NULL;
 BasicGLPane* glPane = NULL;
@@ -521,6 +469,19 @@ public:
         delete dc;
     }
 };
+/** Sometimes key up events can be lost (rarely) so make sure every frame */
+void cleanupEvents()
+{
+    std::set<int>::iterator it;
+    for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
+    {
+        if (not wxGetKeyState((wxKeyCode)*it))
+        {
+            injectKeyEvent(false, wxToSDL(*it));            
+            pressed_keys.erase(it);
+        }
+    }
+}
 
 DcHolder* holder = NULL;
 
@@ -533,6 +494,7 @@ m64p_error VidExt_GL_SwapBuffers()
     }
     
     wxYield();
+    cleanupEvents();
     SDL_PumpEvents();
     
     holder = new DcHolder(glPane);
