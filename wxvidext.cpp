@@ -307,11 +307,42 @@ m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
     return M64ERR_SUCCESS;
 }
 
-m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
+int gWidth;
+int gHeight;
+int gBitsPerPixel;
+int gScreenMode;
+
+class Condition
 {
-    printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
-    frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(Width,Height));
-    frame->SetClientSize(wxSize(Width,Height)); // we need a size of Width,Height *excluding* the title bar
+    wxCondition m_condition;
+    wxMutex m_mutex;
+    
+public:
+    
+    Condition() : m_condition(m_mutex)
+    {
+        // the mutex should be initially locked
+        m_mutex.Lock();
+    }
+    
+    void wait()
+    {
+        m_condition.Wait();
+    }
+    
+    void signal()
+    {
+        wxMutexLocker lock(m_mutex);
+        m_condition.Signal();
+    }
+};
+
+Condition* g_condition = NULL;
+
+void VidExt_InitGLCanvas()
+{
+    frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(gWidth, gHeight));
+    frame->SetClientSize(wxSize(gWidth, gHeight)); // we need a size of Width,Height *excluding* the title bar
     
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	
@@ -351,7 +382,9 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     if (not wxGLCanvas::IsDisplaySupported(args))
     {
         wxMessageBox( _("Sorry, your system does not support the selected video configuration") );
-        return M64ERR_UNSUPPORTED;
+        frame = NULL;
+        glPane = NULL;
+        //return M64ERR_UNSUPPORTED;
     }
     
     glPane = new BasicGLPane(frame, args);
@@ -362,6 +395,25 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     frame->Layout();
     frame->Show();
     
+    if (g_condition == NULL) g_condition = new Condition();
+    g_condition->signal();
+}
+
+m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
+{
+    gWidth = Width;
+    gHeight = Height;
+    gBitsPerPixel = BitsPerPixel;
+    gScreenMode = ScreenMode;
+
+    printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
+    wxCommandEvent evt(wxMUPEN_INIT_GL_CANVAS, -1);
+    wxGetApp().AddPendingEvent(evt);
+    
+    if (g_condition == NULL) g_condition = new Condition();
+    g_condition->wait();
+    
+    if (glPane == NULL) return M64ERR_UNSUPPORTED;
     glPane->setCurrent();
     
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);

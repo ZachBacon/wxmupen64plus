@@ -580,7 +580,7 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
         }
     };
     
-    if (asynchronous and not useVideoExtension())
+    if (asynchronous or useVideoExtension())
     {
         EmuThread* t = new EmuThread();
         if (t->Create() != wxTHREAD_NO_ERROR)
