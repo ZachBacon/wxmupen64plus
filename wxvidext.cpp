@@ -481,7 +481,7 @@ void cleanupEvents()
     {
         if (not wxGetKeyState((wxKeyCode)*it))
         {
-            injectKeyEvent(false, wxToSDL(*it));            
+            injectKeyEvent(false, wxToSDL(*it));
             pressed_keys.erase(it);
         }
     }
@@ -506,11 +506,60 @@ m64p_error VidExt_GL_SwapBuffers()
     return M64ERR_SUCCESS;
 }
 
+m64p_error VidExtFuncGLGetAttr(m64p_GLattr Attr, int* value)
+{
+    switch (Attr)
+    {
+        case M64P_GL_DOUBLEBUFFER:
+            *value = doublebuffer;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_BUFFER_SIZE:
+            *value = buffersize;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_DEPTH_SIZE:
+            *value = depthsize;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_RED_SIZE:
+            *value = redsize;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_GREEN_SIZE:
+            *value = greensize;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_BLUE_SIZE:
+            *value = bluesize;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_ALPHA_SIZE:
+            *value = alphasize;
+            return M64ERR_SUCCESS;
+        
+        case M64P_GL_SWAP_CONTROL:
+            // FIXME: what's that?
+            break;
+        
+        case M64P_GL_MULTISAMPLEBUFFERS:
+            // FIXME: what's that?
+            break;
+        
+        case M64P_GL_MULTISAMPLESAMPLES:
+            // FIXME: what's that?
+            break;
+    }
+    
+    return M64ERR_INPUT_INVALID;
+}
+
 m64p_error installWxVideoExtension()
 {
     printf(">>>>>>>>>>>> WX: installWxVideoExtension\n");
     
     m64p_video_extension_functions f;
+    f.Functions            = 0xFFFFFFFF; // FIXME: what's this field? it's not documented
     f.VidExtFuncGLGetProc  = &VidExt_GL_GetProcAddress;
     f.VidExtFuncGLSetAttr  = &VidExt_GL_SetAttribute;
     f.VidExtFuncGLSwapBuf  = &VidExt_GL_SwapBuffers;
@@ -519,7 +568,9 @@ m64p_error installWxVideoExtension()
     f.VidExtFuncQuit       = &VidExt_Quit;
     f.VidExtFuncSetCaption = &VidExt_SetCaption;
     f.VidExtFuncSetMode    = &VidExt_SetVideoMode;
-    
+    f.VidExtFuncGLGetAttr  = &VidExtFuncGLGetAttr;
+    f.VidExtFuncToggleFS   = &VidExt_ToggleFullScreen;
+
     return coreOverrideVidExt(&f);
 }
 
