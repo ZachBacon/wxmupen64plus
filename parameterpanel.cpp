@@ -159,8 +159,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
         ConfigParam* curr = section->m_parameters[p];
         if (not curr->ok())
         {
-            fprintf(stderr, "[ParameterPanel] WARNING: parameter '%s' is not OK\n",
-                    curr->m_param_name.c_str());
+            mplog_warning("ParameterPanel", "WARNING: parameter '%s' is not OK\n",
+                          curr->m_param_name.c_str());
             continue;
         }
         
@@ -382,8 +382,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
             
             default:
             {
-                fprintf(stderr, "[ParameterPanel] Invalid parameter type for '%s' : %i\n",
-                        curr->m_param_name.c_str(), curr->m_param_type);
+                mplog_warning("ParameterPanel", "Invalid parameter type for '%s' : %i\n",
+                             curr->m_param_name.c_str(), curr->m_param_type);
                 assert(false);
                 ctrl = new wxStaticText(this, wxID_ANY, "[???]");
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
@@ -568,8 +568,8 @@ void ParameterPanel::commitNewValues(bool onLeaving)
             
             default:
             {
-                fprintf(stderr, "[ParameterPanel::commitNewValues] Unknown type %i for param %s\n",
-                        param->m_param_type, param->m_param_name.c_str());
+                mplog_warning("ParameterPanel::commitNewValues", "Unknown type %i for param %s\n",
+                              param->m_param_type, param->m_param_name.c_str());
                 assert(false);
             }
         } // end switch
@@ -620,7 +620,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
             
             if (not onLeaving)
             {
-                printf("[ParameterPanel] Commanding a reload of all config options\n");
+                mplog_info("ParameterPanel", "Commanding a reload of all config options\n");
                 
                 // It would be dangerous to delete the toolbar/panel here, because we are likely
                 // in a callback from either the toolbar or panel. So queue the change to be

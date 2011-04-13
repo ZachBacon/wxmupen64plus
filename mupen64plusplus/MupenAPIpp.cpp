@@ -27,6 +27,7 @@
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/plugin.h"
 #include "wxvidext.h"
+#include "main.h"
 
 #include <stdexcept>
 #include <string>
@@ -158,7 +159,7 @@ int Mupen64PlusPlus::loadPlugins()
     {
         std::string errmsg = "[Mupen64PlusPlus::loadPlugins] GetConfigPlugins failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
-        fprintf(stderr, "%s\n", errmsg.c_str());
+        mplog_error("LoadPlugins", "%s\n", errmsg.c_str());
         return 0;
     }
 

@@ -25,7 +25,7 @@
 
 #include "gamespanel.h"
 #include "mupen64plusplus/MupenAPIpp.h"
-
+#include "main.h"
 
 #include "sdlkeypicker.h"
 #include <wx/sizer.h>
@@ -266,9 +266,9 @@ void GamesPanel::populateList()
                 }
                 catch (std::runtime_error& ex)
                 {
-                    fprintf(stderr, "Failed to load rom %s : %s",
-                                    (const char*)curritem.m_full_path.utf8_str(),
-                                    ex.what());
+                    mplog_error("GamesPanel", "Failed to load rom %s : %s",
+                                (const char*)curritem.m_full_path.utf8_str(),
+                                ex.what());
                 }
             }
             

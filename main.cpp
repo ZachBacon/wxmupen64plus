@@ -58,21 +58,21 @@ extern "C"
     {
         if (level <= 1)
         {
-            printf("[Core] %s Error: %s\n", (const char *) Context, message);
+            mplog_error("Core", "%s Error: %s\n", (const char *) Context, message);
             wxLogError( _("[%s] An error occurred : %s"), (const char *) Context, message );
         }
         else if (level == 2)
         {
-            printf("[Core] %s Warning: %s\n", (const char *) Context, message);
+            mplog_warning("Core", "%s Warning: %s\n", (const char *) Context, message);
             wxLogWarning( _("[%s] Warning : %s"), (const char *) Context, message );
         }
         else if (level == 3 || (level == 5 && g_Verbose))
         {
-            printf("[Core] %s: %s\n", (const char *) Context, message);
+            mplog_info("Core", "%s: %s\n", (const char *) Context, message);
         }
         else if (level == 4)
         {
-            printf("[Core] %s Status: %s\n", (const char *) Context, message);
+            mplog_info("Core", "%s Status: %s\n", (const char *) Context, message);
         }
         /* ignore the verbose info for now */
     }
@@ -100,7 +100,6 @@ int main(int argc, char** argv)
 
 bool MupenFrontendApp::OnInit()
 {
-    printf("OnInit()\n");
     m_inited = false;
     
     m_current_panel  = 0;
@@ -129,8 +128,8 @@ bool MupenFrontendApp::OnInit()
     libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
 #endif
 
-    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
-                                                                       (const char*)libs.utf8_str());
+    mplog_info("MupenfrontApp", "Will look for resources in <%s> and librairies in <%s>\n",
+              (const char*)datadir.utf8_str(), (const char*)libs.utf8_str());
     int plugins = 0;
     
     wxString corepath = libs + "libmupen64plus" + OSAL_DLL_EXTENSION;
@@ -157,7 +156,7 @@ bool MupenFrontendApp::OnInit()
         }
         catch (CoreNotFoundException& e)
         {
-            fprintf(stderr, "The core was not found : %s\n", e.what());
+            mplog_error("MupenAPI", "The core was not found : %s\n", e.what());
             wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
             
             wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
@@ -172,7 +171,7 @@ bool MupenFrontendApp::OnInit()
         }
         catch (std::runtime_error& e)
         {
-            fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
+            mplog_error("MupenAPI", "Sorry, a fatal error was caught :\n%s\n",  e.what());
             wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
             return false;
         }
@@ -767,7 +766,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
         }
         else
         {
-            printf("Ignoring config section %s\n", section->m_section_name.c_str());
+            mplog_warning("Config","Ignoring config section %s\n", section->m_section_name.c_str());
         }
     }
     
@@ -812,3 +811,45 @@ void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+
+#define RESET    "\033[0m"
+#define BOLD     "\033[1m"
+#define GREY     "\033[1;30m"
+#define RED      "\033[31m"
+#define YELLOWBG "\033[33m"
+
+extern "C"
+{
+    
+    void mplog_info(const char* who, const char* message, ...)
+    {
+        va_list argp;
+        va_start(argp, message);
+        printf("[" BOLD GREY "%s" RESET "] ", who);
+        vprintf(message, argp);
+        va_end(argp);
+    }
+
+    void mplog_warning(const char* who, const char* message, ...)
+    {
+        va_list argp;
+        va_start(argp, message);
+        printf("[" BOLD YELLOWBG "%s" RESET "] " YELLOWBG, who);
+        vprintf(message, argp);
+        printf(RESET);
+        va_end(argp);
+    }
+
+    void mplog_error(const char* who, const char* message, ...)
+    {
+        printf("[" BOLD RED "%s" RESET "] " RED, who);
+        
+        va_list argp;
+        va_start(argp, message);
+        vprintf(message, argp);
+        printf(RESET);
+        va_end(argp);
+    }
+
+}

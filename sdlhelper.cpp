@@ -26,6 +26,8 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 
+#include "main.h"
+
 std::map<int, std::string> gamepads; 
 
 const std::map<int, std::string>& getGamepadList()
@@ -39,15 +41,15 @@ void SDL_Helper_Start()
     
     // ====================
     // Init Gamepad Support
-    printf("%i joysticks were found.\n\n", SDL_NumJoysticks() );
+    mplog_info("SDL_Helper_Start", "%i joysticks were found.\n\n", SDL_NumJoysticks() );
     
     SDL_JoystickEventState(SDL_ENABLE);
     
-    if (SDL_NumJoysticks() > 0) printf("The names of the joysticks are:\n");    
+    if (SDL_NumJoysticks() > 0) mplog_info("SDL_Helper_Start", "The names of the joysticks are:\n");    
     for (int i=0; i<SDL_NumJoysticks(); i++) 
     {
 		gamepads[i] = SDL_JoystickName(i);
-        printf("    %s\n", SDL_JoystickName(i));
+        mplog_info("SDL_Helper_Start", "    %s\n", SDL_JoystickName(i));
         /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
     }
 	

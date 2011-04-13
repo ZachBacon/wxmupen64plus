@@ -22,6 +22,20 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#include <stdarg.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+void mplog_info(const char* who, const char* message, ...);
+void mplog_warning(const char* who, const char* message, ...);
+void mplog_error(const char* who, const char* message, ...);
+
+#ifdef __cplusplus
+}
+
 #include <wx/app.h>
 #include <wx/string.h>
 
@@ -142,5 +156,6 @@ public:
 };
 
 wxDECLARE_APP(MupenFrontendApp);
+#endif
 
 #endif

@@ -46,6 +46,7 @@
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "wxvidext.h"
+#include "main.h"
 
 #include <set>
 
@@ -414,7 +415,7 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
 
     if (out == NULL)
     {
-        fprintf(stderr, "WARNING: Cannot obtain address of '%s'\n", Proc);
+        mplog_warning("VideoExtension", "WARNING: Cannot obtain address of '%s'\n", Proc);
     }
     
     return out;

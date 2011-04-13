@@ -32,6 +32,7 @@
 #include "mupen64plusplus/plugin.h"
 
 #include "version.h"
+#include "main.h"
 
 int g_Verbose = 1;
 
@@ -81,14 +82,14 @@ static m64p_error PluginLoadTry(const char *filepath, int MapIndex)
     ptr_PluginStartup PluginStartup = (ptr_PluginStartup) osal_dynlib_getproc(handle, "PluginStartup");
     if (PluginStartup == NULL)
     {
-        fprintf(stderr, "Error: library '%s' broken.  No PluginStartup() function found.\n", filepath);
+        mplog_error("Plugin", "ERROR: library '%s' broken.  No PluginStartup() function found.\n", filepath);
         osal_dynlib_close(handle);
         return M64ERR_INCOMPATIBLE;
     }
     rval = (*PluginStartup)(CoreHandle, g_PluginMap[MapIndex].name, DebugCallback);  /* DebugCallback is in main.c */
     if (rval != M64ERR_SUCCESS)
     {
-        fprintf(stderr, "Error: %s plugin library '%s' failed to start.\n", g_PluginMap[MapIndex].name, filepath);
+        mplog_error("Plugin", "ERROR: %s plugin library '%s' failed to start.\n", g_PluginMap[MapIndex].name, filepath);
         osal_dynlib_close(handle);
         return rval;
     }
@@ -115,7 +116,7 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
         lib_filelist = osal_library_search(g_PluginDir);
         if (lib_filelist == NULL)
         {
-            fprintf(stderr, "Error: No plugins found in plugindir path: %s\n", g_PluginDir);
+            mplog_warning("Plugin", "WARNING: No plugins found in plugindir path: %s\n", g_PluginDir);
             return output;
         }
     }
@@ -178,7 +179,7 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
             if (!use_dummy && g_PluginMap[i].handle == NULL)
             {
                 // we couldn't find the specified plugin
-                fprintf(stderr, "Error: Specified %s plugin not found: %s\n", g_PluginMap[i].name, curr_path);
+                mplog_error("Plugin", "ERROR: Specified %s plugin not found: %s\n", g_PluginMap[i].name, curr_path);
             }
             else
             {
@@ -216,14 +217,14 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
         /* print out the particular plugin used */
         if (g_PluginMap[i].handle == NULL)
         {
-            printf("[wxMupen64Plus Plugins] using %s plugin: <dummy>\n", g_PluginMap[i].name);
+            mplog_info("Plugin", "using %s plugin: <dummy>\n", g_PluginMap[i].name);
         }
         else
         {
-            printf("[wxMupen64Plus Plugins] using %s plugin: '%s' v%i.%i.%i\n", g_PluginMap[i].name,
-                   g_PluginMap[i].libname, VERSION_PRINTF_SPLIT(g_PluginMap[i].libversion));
+            mplog_info("Plugin", "using %s plugin: '%s' v%i.%i.%i\n", g_PluginMap[i].name,
+                       g_PluginMap[i].libname, VERSION_PRINTF_SPLIT(g_PluginMap[i].libversion));
             if (g_Verbose)
-                printf("[wxMupen64Plus Plugins] %s plugin library: %s\n", g_PluginMap[i].name, g_PluginMap[i].filename);
+                mplog_info("Plugin", "%s plugin library: %s\n", g_PluginMap[i].name, g_PluginMap[i].filename);
         }
     }
 
