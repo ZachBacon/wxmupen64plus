@@ -310,6 +310,8 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
 {
     printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
     frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(Width,Height));
+    frame->SetClientSize(wxSize(Width,Height)); // we need a size of Width,Height *excluding* the title bar
+    
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	
     /*
