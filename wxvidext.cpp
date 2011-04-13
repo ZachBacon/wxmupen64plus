@@ -391,68 +391,86 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
 {
     printf(">>>>>>>>>>>> WX: VidExt_GL_GetProcAddress : '%s'\n", Proc);
     
+    void* out = NULL;
+    
 #ifdef __WXMSW__
-    return (void*)wglGetProcAddress(Proc);
+    out = (void*)wglGetProcAddress(Proc);
 #elif __WXGTK__
-	return (void*)glXGetProcAddress((const GLubyte*)Proc);
+	oyt = (void*)glXGetProcAddress((const GLubyte*)Proc);
 #else
-    return SDL_GL_GetProcAddress(Proc);
+
+    // FIXME: silly way to fix VidExt_GL_GetProcAddress
+    if (strcmp(Proc, "glActiveTexture") == 0)
+    {
+        out = (void*)&glActiveTexture;
+    }
+    else
+    {
+        out = SDL_GL_GetProcAddress(Proc);
+    }
 #endif
+
+    if (out == NULL)
+    {
+        fprintf(stderr, "WARNING: Cannot obtain address of '%s'\n", Proc);
+    }
+    
+    return out;
 }
 
 m64p_error VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
 {
-    printf(">>>>>>>>>>>> WX: VidExt_GL_SetAttribute\n");
+    //printf(">>>>>>>>>>>> WX: VidExt_GL_SetAttribute\n");
     
     switch (Attr)
     {
         case M64P_GL_DOUBLEBUFFER:
-            printf("M64P_GL_DOUBLEBUFFER = %i\n", Value);
+            //printf("M64P_GL_DOUBLEBUFFER = %i\n", Value);
             doublebuffer = Value;
             break;
         
         case M64P_GL_BUFFER_SIZE:
-            printf("M64P_GL_BUFFER_SIZE = %i\n", Value);
+            //printf("M64P_GL_BUFFER_SIZE = %i\n", Value);
             buffersize = Value;
             break;
         
         case M64P_GL_DEPTH_SIZE:
-            printf("M64P_GL_DEPTH_SIZE = %i\n", Value);
+            //printf("M64P_GL_DEPTH_SIZE = %i\n", Value);
             depthsize = Value;
             break;
         
         case M64P_GL_RED_SIZE:
-            printf("M64P_GL_RED_SIZE = %i\n", Value);
+            //printf("M64P_GL_RED_SIZE = %i\n", Value);
             redsize = Value;
             break;
         
         case M64P_GL_GREEN_SIZE:
-            printf("M64P_GL_GREEN_SIZE = %i\n", Value);
+            //printf("M64P_GL_GREEN_SIZE = %i\n", Value);
             greensize = Value;
             break;
         
         case M64P_GL_BLUE_SIZE:
-            printf("M64P_GL_BLUE_SIZE = %i\n", Value);
+            //printf("M64P_GL_BLUE_SIZE = %i\n", Value);
             bluesize = Value;
             break;
         
         case M64P_GL_ALPHA_SIZE:
-            printf("M64P_GL_ALPHA_SIZE = %i\n", Value);
+            //printf("M64P_GL_ALPHA_SIZE = %i\n", Value);
             alphasize = Value;
             break;
         
         case M64P_GL_SWAP_CONTROL:
-            printf("M64P_GL_SWAP_CONTROL = %i\n", Value);
+            //printf("M64P_GL_SWAP_CONTROL = %i\n", Value);
             // FIXME: what's that?
             break;
         
         case M64P_GL_MULTISAMPLEBUFFERS:
-            printf("M64P_GL_MULTISAMPLEBUFFERS = %i\n", Value);
+            //printf("M64P_GL_MULTISAMPLEBUFFERS = %i\n", Value);
             // FIXME: what's that?
             break;
         
         case M64P_GL_MULTISAMPLESAMPLES:
-            printf("M64P_GL_MULTISAMPLESAMPLES = %i\n", Value);
+            //printf("M64P_GL_MULTISAMPLESAMPLES = %i\n", Value);
             // FIXME: what's that?
             break;
     }
