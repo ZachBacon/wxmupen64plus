@@ -564,6 +564,7 @@ DcHolder* holder = NULL;
 
 m64p_error VidExt_GL_SwapBuffers()
 {
+    wxMutexGuiEnter();
     if (holder != NULL)
     {
         delete holder;
@@ -576,6 +577,7 @@ m64p_error VidExt_GL_SwapBuffers()
     
     holder = new DcHolder(glPane);
     
+    wxMutexGuiLeave();
     return M64ERR_SUCCESS;
 }
 
