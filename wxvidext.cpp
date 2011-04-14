@@ -346,8 +346,8 @@ int gScreenMode;
 #else
     class Condition
     {
-        wxCondition m_condition;
         wxMutex m_mutex;
+        wxCondition m_condition;
         
     public:
         
