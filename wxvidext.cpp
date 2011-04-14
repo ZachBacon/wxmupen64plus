@@ -272,8 +272,11 @@ int greensize = 8;
 int bluesize = 8;
 int alphasize = 8;
 
+wxMutex* g_mutex = NULL;
+
 m64p_error VidExt_Init()
 {
+    g_mutex = new wxMutex();
     printf(">>>>>>>>>>>> WX: VidExt_Init\n");
     return M64ERR_SUCCESS;
 }
@@ -285,6 +288,8 @@ m64p_error VidExt_Quit()
         frame->Close();
         frame = NULL;
     }
+    delete g_mutex;
+    g_mutex = NULL;
     return M64ERR_SUCCESS;
 }
 
@@ -312,30 +317,59 @@ int gHeight;
 int gBitsPerPixel;
 int gScreenMode;
 
-class Condition
-{
-    wxCondition m_condition;
-    wxMutex m_mutex;
-    
-public:
-    
-    Condition() : m_condition(m_mutex)
+#ifdef __WXMSW__
+    // FIXME: for some reason, Condition asserts on Windows???
+    class Condition
     {
-        // the mutex should be initially locked
-        m_mutex.Lock();
-    }
-    
-    void wait()
+        bool m_val;
+        
+    public:
+        
+        Condition()
+        {
+            m_val = false;
+        }
+        
+        void wait()
+        {
+            while (not m_val)
+            {
+                Sleep(100);
+            }
+        }
+        
+        void signal()
+        {
+            m_val = true;
+        }
+    };
+#else
+    class Condition
     {
-        m_condition.Wait();
-    }
-    
-    void signal()
-    {
-        wxMutexLocker lock(m_mutex);
-        m_condition.Signal();
-    }
-};
+        wxCondition m_condition;
+        wxMutex m_mutex;
+        
+    public:
+        
+        Condition() : m_mutex(), m_condition(m_mutex)
+        {
+            printf("Is OK : %i\n", m_condition.IsOk());
+            // the mutex should be initially locked
+            m_mutex.Lock();
+        }
+        
+        void wait()
+        {
+            m_condition.Wait();
+        }
+        
+        void signal()
+        {
+            wxMutexLocker lock(m_mutex);
+            m_condition.Signal();
+        }
+    };
+#endif
 
 Condition* g_condition = NULL;
 
@@ -395,7 +429,11 @@ void VidExt_InitGLCanvas()
     frame->Layout();
     frame->Show();
     
-    if (g_condition == NULL) g_condition = new Condition();
+    if (g_condition == NULL)
+    {
+        wxMutexLocker locker(*g_mutex);
+        if (g_condition == NULL) g_condition = new Condition();
+    }
     g_condition->signal();
 }
 
@@ -410,7 +448,11 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     wxCommandEvent evt(wxMUPEN_INIT_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
     
-    if (g_condition == NULL) g_condition = new Condition();
+    if (g_condition == NULL)
+    {
+        wxMutexLocker locker(*g_mutex);
+        if (g_condition == NULL) g_condition = new Condition();
+    }
     g_condition->wait();
     
     if (glPane == NULL) return M64ERR_UNSUPPORTED;
