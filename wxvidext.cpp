@@ -54,6 +54,8 @@
 
 std::set<int> pressed_keys;
 
+wxMutex* g_mutex = NULL;
+
 class BasicGLPane : public wxGLCanvas
 {
     wxGLContext*	m_context;
@@ -218,12 +220,14 @@ int wxToSDL(int code)
 
 void BasicGLPane::keyPressed(wxKeyEvent& event)
 {
+    wxMutexLocker locker(*g_mutex);
     injectKeyEvent(true, wxToSDL(event.GetKeyCode()));
     pressed_keys.insert(event.GetKeyCode());
 }
 
 void BasicGLPane::keyReleased(wxKeyEvent& event)
 {
+    wxMutexLocker locker(*g_mutex);
     injectKeyEvent(false, wxToSDL(event.GetKeyCode()));
     pressed_keys.erase(event.GetKeyCode());
 }
@@ -271,8 +275,6 @@ int redsize = 8;
 int greensize = 8;
 int bluesize = 8;
 int alphasize = 8;
-
-wxMutex* g_mutex = NULL;
 
 m64p_error VidExt_Init()
 {
@@ -591,12 +593,22 @@ public:
 /** Sometimes key up events can be lost (rarely) so make sure every frame */
 void cleanupEvents()
 {
+    wxMutexLocker locker(*g_mutex);
+    
     std::set<int>::iterator it;
     for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
     {
         if (not wxGetKeyState((wxKeyCode)*it))
         {
             injectKeyEvent(false, wxToSDL(*it));
+            /*
+            printf("Erasing %i from {", *it);
+            for (std::set<int>::iterator it2=pressed_keys.begin(); it2!=pressed_keys.end(); it2++)
+            {
+                printf("%i, ", *it2);
+            }
+            printf("END}\n");
+             * */
             pressed_keys.erase(it);
         }
     }
