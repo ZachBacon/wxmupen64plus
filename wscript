@@ -122,9 +122,7 @@ def build(bld):
     
     # Windows
     if os.name == 'nt':
-        # command = ["windres", "--include-dir="+wxHomePath+"\include", "--input", "win32\Aria.rc", "--output", "msvcr.o"]
-        # FIXME: don't hardcode path
-        cmd = "windres --include-dir=" + wxhome + "\include ${SRC} --output build/${TGT}"
+        cmd = "windres --include-dir=" + wxhome + r"\include ${SRC} --output build/${TGT}"
         bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
         
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
@@ -156,7 +154,7 @@ def build(bld):
     # Build the program
     bld.program(features='c cxx cxxprogram',
                 cxxflags=build_flags,
-                cflags=build_flags,
+                cflags=build_flags+['-Wfatal-errors'],
                 linkflags=link_flags + additional_links,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
