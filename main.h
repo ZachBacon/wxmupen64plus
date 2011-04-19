@@ -53,6 +53,7 @@ class wxToolBarToolBase;
 #include "mupen64plusplus/MupenAPIpp.h"
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS, -1);
+DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_INIT_GL_CANVAS, -1);
 
 // application class
 class MupenFrontendApp : public wxApp
@@ -149,6 +150,7 @@ public:
     std::vector<wxString> m_pending_file_opens;
     
     void onReadOpenFileQueue(wxCommandEvent& evt);
+    void onInitGLCanvas(wxCommandEvent& evt);
     
 #ifdef __WXMAC__    
     virtual void MacOpenFile(const wxString &fileName);

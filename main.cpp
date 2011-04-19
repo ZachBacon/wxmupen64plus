@@ -37,6 +37,7 @@
 #include "sdlkeypicker.h" // to get the USE_WX_KEY_PICKER define
 #include "config.h"
 #include "main.h"
+#include "wxvidext.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -84,6 +85,7 @@ wxString libs;
 wxIMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_READ_OPEN_FILE_QUEUE);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_INIT_GL_CANVAS);
 
 int main(int argc, char** argv)
 {
@@ -220,6 +222,7 @@ bool MupenFrontendApp::OnInit()
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
     
     Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_INIT_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onInitGLCanvas), NULL, this);
 
     // check if filenames to open were given on the command-line
     for (int n=0; n<argc; n++)
@@ -263,6 +266,13 @@ void MupenFrontendApp::onReadOpenFileQueue(wxCommandEvent& evt)
         openFile(m_pending_file_opens[0]);
         m_pending_file_opens.clear();
     }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onInitGLCanvas(wxCommandEvent& evt)
+{
+    VidExt_InitGLCanvas();
 }
 
 // -----------------------------------------------------------------------------------------------------------

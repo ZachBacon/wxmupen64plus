@@ -54,6 +54,8 @@
 
 std::set<int> pressed_keys;
 
+wxMutex* g_mutex = NULL;
+
 class BasicGLPane : public wxGLCanvas
 {
     wxGLContext*	m_context;
@@ -218,12 +220,14 @@ int wxToSDL(int code)
 
 void BasicGLPane::keyPressed(wxKeyEvent& event)
 {
+    wxMutexLocker locker(*g_mutex);
     injectKeyEvent(true, wxToSDL(event.GetKeyCode()));
     pressed_keys.insert(event.GetKeyCode());
 }
 
 void BasicGLPane::keyReleased(wxKeyEvent& event)
 {
+    wxMutexLocker locker(*g_mutex);
     injectKeyEvent(false, wxToSDL(event.GetKeyCode()));
     pressed_keys.erase(event.GetKeyCode());
 }
@@ -274,6 +278,7 @@ int alphasize = 8;
 
 m64p_error VidExt_Init()
 {
+    g_mutex = new wxMutex();
     printf(">>>>>>>>>>>> WX: VidExt_Init\n");
     return M64ERR_SUCCESS;
 }
@@ -285,6 +290,8 @@ m64p_error VidExt_Quit()
         frame->Close();
         frame = NULL;
     }
+    delete g_mutex;
+    g_mutex = NULL;
     return M64ERR_SUCCESS;
 }
 
@@ -307,11 +314,71 @@ m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
     return M64ERR_SUCCESS;
 }
 
-m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
+int gWidth;
+int gHeight;
+int gBitsPerPixel;
+int gScreenMode;
+
+#ifdef __WXMSW__
+    // FIXME: for some reason, Condition asserts on Windows???
+    class Condition
+    {
+        bool m_val;
+        
+    public:
+        
+        Condition()
+        {
+            m_val = false;
+        }
+        
+        void wait()
+        {
+            while (not m_val)
+            {
+                Sleep(100);
+            }
+        }
+        
+        void signal()
+        {
+            m_val = true;
+        }
+    };
+#else
+    class Condition
+    {
+        wxMutex m_mutex;
+        wxCondition m_condition;
+        
+    public:
+        
+        Condition() : m_mutex(), m_condition(m_mutex)
+        {
+            printf("Is OK : %i\n", m_condition.IsOk());
+            // the mutex should be initially locked
+            m_mutex.Lock();
+        }
+        
+        void wait()
+        {
+            m_condition.Wait();
+        }
+        
+        void signal()
+        {
+            wxMutexLocker lock(m_mutex);
+            m_condition.Signal();
+        }
+    };
+#endif
+
+Condition* g_condition = NULL;
+
+void VidExt_InitGLCanvas()
 {
-    printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
-    frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(Width,Height));
-    frame->SetClientSize(wxSize(Width,Height)); // we need a size of Width,Height *excluding* the title bar
+    frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(gWidth, gHeight));
+    frame->SetClientSize(wxSize(gWidth, gHeight)); // we need a size of Width,Height *excluding* the title bar
     
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	
@@ -351,7 +418,9 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     if (not wxGLCanvas::IsDisplaySupported(args))
     {
         wxMessageBox( _("Sorry, your system does not support the selected video configuration") );
-        return M64ERR_UNSUPPORTED;
+        frame = NULL;
+        glPane = NULL;
+        //return M64ERR_UNSUPPORTED;
     }
     
     glPane = new BasicGLPane(frame, args);
@@ -362,6 +431,33 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     frame->Layout();
     frame->Show();
     
+    if (g_condition == NULL)
+    {
+        wxMutexLocker locker(*g_mutex);
+        if (g_condition == NULL) g_condition = new Condition();
+    }
+    g_condition->signal();
+}
+
+m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
+{
+    gWidth = Width;
+    gHeight = Height;
+    gBitsPerPixel = BitsPerPixel;
+    gScreenMode = ScreenMode;
+
+    printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
+    wxCommandEvent evt(wxMUPEN_INIT_GL_CANVAS, -1);
+    wxGetApp().AddPendingEvent(evt);
+    
+    if (g_condition == NULL)
+    {
+        wxMutexLocker locker(*g_mutex);
+        if (g_condition == NULL) g_condition = new Condition();
+    }
+    g_condition->wait();
+    
+    if (glPane == NULL) return M64ERR_UNSUPPORTED;
     glPane->setCurrent();
     
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
@@ -399,7 +495,7 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
 #ifdef __WXMSW__
     out = (void*)wglGetProcAddress(Proc);
 #elif __WXGTK__
-	oyt = (void*)glXGetProcAddress((const GLubyte*)Proc);
+	out = (void*)glXGetProcAddress((const GLubyte*)Proc);
 #else
 
     // FIXME: silly way to fix VidExt_GL_GetProcAddress
@@ -497,12 +593,22 @@ public:
 /** Sometimes key up events can be lost (rarely) so make sure every frame */
 void cleanupEvents()
 {
+    wxMutexLocker locker(*g_mutex);
+    
     std::set<int>::iterator it;
     for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
     {
         if (not wxGetKeyState((wxKeyCode)*it))
         {
             injectKeyEvent(false, wxToSDL(*it));
+            /*
+            printf("Erasing %i from {", *it);
+            for (std::set<int>::iterator it2=pressed_keys.begin(); it2!=pressed_keys.end(); it2++)
+            {
+                printf("%i, ", *it2);
+            }
+            printf("END}\n");
+             * */
             pressed_keys.erase(it);
         }
     }
@@ -512,6 +618,7 @@ DcHolder* holder = NULL;
 
 m64p_error VidExt_GL_SwapBuffers()
 {
+    wxMutexGuiEnter();
     if (holder != NULL)
     {
         delete holder;
@@ -524,6 +631,7 @@ m64p_error VidExt_GL_SwapBuffers()
     
     holder = new DcHolder(glPane);
     
+    wxMutexGuiLeave();
     return M64ERR_SUCCESS;
 }
 

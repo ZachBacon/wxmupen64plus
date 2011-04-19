@@ -36,4 +36,6 @@ m64p_error VidExt_GL_SwapBuffers(void);
 
 m64p_error installWxVideoExtension();
 
+void VidExt_InitGLCanvas();
+
 #endif // VIDEO_EXTENSION_H
