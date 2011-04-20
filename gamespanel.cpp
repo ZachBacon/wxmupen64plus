@@ -168,14 +168,16 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
         }
     }
     
-    m_dir_picker = new wxDirPickerCtrl(this, wxID_ANY, path, _("Directory Picker"), wxDefaultPosition, wxDefaultSize,
+    m_center_panel = new wxPanel(this);
+    
+    m_dir_picker = new wxDirPickerCtrl(m_center_panel, wxID_ANY, path, _("Directory Picker"), wxDefaultPosition, wxDefaultSize,
                                        wxDIRP_DEFAULT_STYLE | wxDIRP_USE_TEXTCTRL);
     m_list_sizer->Add(m_dir_picker, 0, wxALL | wxEXPAND, 5);
 
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                           wxFileDirPickerEventHandler(GamesPanel::onPathChange), NULL, this);
-    
-    m_item_list = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+        
+    m_item_list = new wxListCtrl(m_center_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                  wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES);
     m_list_sizer->Add(m_item_list, 1, wxALL | wxEXPAND, 5);
     
@@ -190,7 +192,9 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     buttons->Add(icon, 0, wxALL, 5);
     */
     
-    oversizer->Add(m_list_sizer, 1, wxEXPAND);
+    m_center_panel->SetSizer(m_list_sizer);
+    
+    oversizer->Add(m_center_panel, 1, wxEXPAND);
     oversizer->Add(buttons, 0, wxEXPAND | wxRIGHT, 5);
     
     SetSizer(oversizer);
@@ -313,13 +317,24 @@ void GamesPanel::initGLCanvas()
     Freeze();
     m_item_list->Hide();
     m_dir_picker->Hide();
-    m_canvas = VidExt_InitGLCanvas(this);
+    m_canvas = VidExt_InitGLCanvas(m_center_panel);
     m_list_sizer->Add(m_canvas, 1, wxEXPAND | wxALL, 5);
+    m_list_sizer->SetSizeHints(m_canvas);
+    m_center_panel->Layout();
     Layout();
     Thaw();
     m_canvas->SetFocus();
-    
-    VidExt_InitedGLCanvas();
+
+    ((wxFrame*)GetParent())->Layout();
+    ((wxFrame*)GetParent())->Refresh();    
+
+    // FIXME: ugly hack to force a fullr efresh
+    ((wxFrame*)GetParent())->SetSize( ((wxFrame*)GetParent())->GetSize() );
+
+    wxCommandEvent evt(wxMUPEN_INITED_GL_CANVAS, -1);
+    wxGetApp().AddPendingEvent(evt);
+
+    //VidExt_InitedGLCanvas();
 }
 
 // -----------------------------------------------------------------------------------------------------------

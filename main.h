@@ -54,6 +54,7 @@ class wxToolBarToolBase;
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_INIT_GL_CANVAS, -1);
+DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_INITED_GL_CANVAS, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_CLEAN_GL_CANVAS, -1);
 
 // application class
@@ -152,6 +153,7 @@ public:
     
     void onReadOpenFileQueue(wxCommandEvent& evt);
     void onInitGLCanvas(wxCommandEvent& evt);
+    void onInitedGLCanvas(wxCommandEvent& evt);
     void onCleanGLCanvas(wxCommandEvent& evt);
     
 #ifdef __WXMAC__    

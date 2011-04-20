@@ -86,6 +86,7 @@ wxIMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_READ_OPEN_FILE_QUEUE);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_INIT_GL_CANVAS);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_INITED_GL_CANVAS);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_CLEAN_GL_CANVAS);
 
 int main(int argc, char** argv)
@@ -224,6 +225,7 @@ bool MupenFrontendApp::OnInit()
     
     Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
     Connect(wxID_ANY, wxMUPEN_INIT_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onInitGLCanvas), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_INITED_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onInitedGLCanvas), NULL, this);
     Connect(wxID_ANY, wxMUPEN_CLEAN_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onCleanGLCanvas), NULL, this);
 
     // check if filenames to open were given on the command-line
@@ -279,6 +281,13 @@ void MupenFrontendApp::onInitGLCanvas(wxCommandEvent& evt)
 
 // -----------------------------------------------------------------------------------------------------------
 
+void MupenFrontendApp::onInitedGLCanvas(wxCommandEvent& evt)
+{
+    VidExt_InitedGLCanvas();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 void MupenFrontendApp::onCleanGLCanvas(wxCommandEvent& evt)
 {
     ((GamesPanel*)m_curr_panel)->cleanGLCanvas();
@@ -315,14 +324,15 @@ void MupenFrontendApp::shutdown()
 
 void MupenFrontendApp::onClose(wxCloseEvent& evt)
 {
-    shutdown();
+    if (m_api->getEmulationState() != M64EMU_STOPPED) evt.Veto();
+    else                                              shutdown();
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
 void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
 {
-    shutdown();
+    if (m_api->getEmulationState() == M64EMU_STOPPED) shutdown();
 }
 
 // -----------------------------------------------------------------------------------------------------------

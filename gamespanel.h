@@ -46,6 +46,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     ConfigParam* m_gamesPathParam;
     wxBoxSizer* m_list_sizer;
     wxGLCanvas* m_canvas;
+    wxPanel* m_center_panel;
     
     /** Callback to sort the list */
     static int wxCALLBACK wxListCompareFunction(long item1, long item2, wxIntPtr sortData);
