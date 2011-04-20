@@ -61,7 +61,7 @@ class BasicGLPane : public wxGLCanvas
     wxGLContext*	m_context;
  
 public:
-	BasicGLPane(wxFrame* parent, int* args);
+	BasicGLPane(wxWindow* parent, int* args);
 	virtual ~BasicGLPane();
     
 	void resized(wxSizeEvent& evt);
@@ -233,7 +233,7 @@ void BasicGLPane::keyReleased(wxKeyEvent& event)
 }
 
 
-BasicGLPane::BasicGLPane(wxFrame* parent, int* args) :
+BasicGLPane::BasicGLPane(wxWindow* parent, int* args) :
     wxGLCanvas(parent, wxID_ANY, args, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE)
 {
 	m_context = new wxGLContext(this);
@@ -264,7 +264,7 @@ int BasicGLPane::getHeight()
     return GetSize().y;
 }
 
-wxFrame* frame = NULL;
+//wxFrame* frame = NULL;
 BasicGLPane* glPane = NULL;
 bool fullscreen = false;
 
@@ -285,11 +285,15 @@ m64p_error VidExt_Init()
 
 m64p_error VidExt_Quit()
 {
+    // TODO: close GL canvas
+    /*
     if (frame)
     {
         frame->Close();
         frame = NULL;
     }
+    */
+    
     delete g_mutex;
     g_mutex = NULL;
     return M64ERR_SUCCESS;
@@ -375,6 +379,64 @@ int gScreenMode;
 
 Condition* g_condition = NULL;
 
+wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
+{
+    /*
+        bool doublebuffer = true;
+        int buffersize = 32;
+        int depthsize = 32;
+        int redsize = 8;
+        int greensize = 8;
+        int bluesize = 8;
+        int alphasize = 8;
+
+        WX_GL_RGBA = 1,        // use true color palette (on if no attrs specified)
+        WX_GL_BUFFER_SIZE,     // bits for buffer if not WX_GL_RGBA
+        WX_GL_LEVEL,           // 0 for main buffer, >0 for overlay, <0 for underlay
+        WX_GL_DOUBLEBUFFER,    // use double buffering (on if no attrs specified)
+        WX_GL_STEREO,          // use stereoscopic display
+        WX_GL_AUX_BUFFERS,     // number of auxiliary buffers
+        WX_GL_MIN_RED,         // use red buffer with most bits (> MIN_RED bits)
+        WX_GL_MIN_GREEN,       // use green buffer with most bits (> MIN_GREEN bits)
+        WX_GL_MIN_BLUE,        // use blue buffer with most bits (> MIN_BLUE bits)
+        WX_GL_MIN_ALPHA,       // use alpha buffer with most bits (> MIN_ALPHA bits)
+        WX_GL_DEPTH_SIZE,      // bits for Z-buffer (0,16,32)
+        WX_GL_STENCIL_SIZE,    // bits for stencil buffer
+        WX_GL_MIN_ACCUM_RED,   // use red accum buffer with most bits (> MIN_ACCUM_RED bits)
+        WX_GL_MIN_ACCUM_GREEN, // use green buffer with most bits (> MIN_ACCUM_GREEN bits)
+        WX_GL_MIN_ACCUM_BLUE,  // use blue buffer with most bits (> MIN_ACCUM_BLUE bits)
+        WX_GL_MIN_ACCUM_ALPHA, // use alpha buffer with most bits (> MIN_ACCUM_ALPHA bits)
+        WX_GL_SAMPLE_BUFFERS,  // 1 for multisampling support (antialiasing)
+        WX_GL_SAMPLES          // 4 for 2x2 antialising supersampling on most graphics cards
+        */
+    // TODO: make more parameters configurable?
+    int args[] = {WX_GL_RGBA, WX_GL_BUFFER_SIZE, buffersize, WX_GL_DOUBLEBUFFER,
+                  WX_GL_DEPTH_SIZE, depthsize, /*WX_GL_MIN_RED, redsize,
+                  WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,*/ 0};
+    
+    if (not wxGLCanvas::IsDisplaySupported(args))
+    {
+        wxMessageBox( _("Sorry, your system does not support the selected video configuration") );
+        glPane = NULL;
+        return NULL;
+    }
+    
+    glPane = new BasicGLPane(parent, args);
+
+    return glPane;
+}
+
+void VidExt_InitedGLCanvas()
+{
+    if (g_condition == NULL)
+    {
+        wxMutexLocker locker(*g_mutex);
+        if (g_condition == NULL) g_condition = new Condition();
+    }
+    g_condition->signal();
+}
+
+#if 0
 void VidExt_InitGLCanvas()
 {
     frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(gWidth, gHeight));
@@ -438,6 +500,7 @@ void VidExt_InitGLCanvas()
     }
     g_condition->signal();
 }
+#endif
 
 m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
 {
@@ -468,10 +531,13 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
 m64p_error VidExt_SetCaption(const char *Title)
 {
     printf(">>>>>>>>>>>> WX: VidExt_SetCaption : '%s'\n", Title);
+    // TODO: set caption?
+    /*
     if (frame)
     {
         frame->SetTitle(wxString("WX : ") + wxString::FromAscii(Title));
     }
+    */
     return M64ERR_SUCCESS;
 }
 
