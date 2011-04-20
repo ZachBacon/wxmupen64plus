@@ -110,6 +110,7 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
 {
     m_curr_col = 0;
     m_api = api;
+    m_canvas = NULL;
     m_gamesPathParam = gamesPathParam;
     api->setListener(this);
     
@@ -312,13 +313,31 @@ void GamesPanel::initGLCanvas()
     Freeze();
     m_item_list->Hide();
     m_dir_picker->Hide();
-    wxGLCanvas* canvas = VidExt_InitGLCanvas(this);
-    m_list_sizer->Add(canvas, 1, wxEXPAND | wxALL, 5);
+    m_canvas = VidExt_InitGLCanvas(this);
+    m_list_sizer->Add(m_canvas, 1, wxEXPAND | wxALL, 5);
     Layout();
     Thaw();
-    canvas->SetFocus();
+    m_canvas->SetFocus();
     
     VidExt_InitedGLCanvas();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::cleanGLCanvas()
+{
+    if (m_canvas)
+    {
+        Freeze();
+        m_item_list->Show();
+        m_dir_picker->Show();
+        m_list_sizer->Detach(m_canvas);
+        m_canvas->Destroy();
+        m_canvas = NULL;
+        Layout();
+        Thaw();
+    }
+    Refresh();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -464,6 +483,7 @@ void GamesPanel::onStop(wxCommandEvent& evt)
     try
     {
         m_api->stopEmulation();
+        cleanGLCanvas();
     }
     catch (std::runtime_error& ex)
     {
@@ -487,7 +507,9 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             m_pause_button->Disable();
             ((wxFrame*)GetParent())->GetStatusBar()->SetStatusText(_("Emulation is stopped"));
             //m_status->SetLabel(_("Emulation is stopped"));
-            Layout();
+            //Layout();
+            
+            cleanGLCanvas();
             break;
         
         case M64EMU_RUNNING:

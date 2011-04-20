@@ -258,7 +258,7 @@ int BasicGLPane::getWidth()
 {
     return GetSize().x;
 }
- 
+
 int BasicGLPane::getHeight()
 {
     return GetSize().y;
@@ -285,7 +285,9 @@ m64p_error VidExt_Init()
 
 m64p_error VidExt_Quit()
 {
-    // TODO: close GL canvas
+    printf(">>>>>>>>>>>> WX: VidExt_Quit\n");
+    wxCommandEvent evt(wxMUPEN_CLEAN_GL_CANVAS, -1);
+    wxGetApp().AddPendingEvent(evt);
     /*
     if (frame)
     {
