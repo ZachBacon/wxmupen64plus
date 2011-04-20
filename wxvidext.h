@@ -23,6 +23,8 @@
 #define VIDEO_EXTENSION_H
 
 #include "m64p_vidext.h"
+class wxGLCanvas;
+class wxWindow;
 
 m64p_error VidExt_Init(void);
 m64p_error VidExt_Quit(void);
@@ -36,6 +38,7 @@ m64p_error VidExt_GL_SwapBuffers(void);
 
 m64p_error installWxVideoExtension();
 
-void VidExt_InitGLCanvas();
+wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent);
+void VidExt_InitedGLCanvas();
 
 #endif // VIDEO_EXTENSION_H

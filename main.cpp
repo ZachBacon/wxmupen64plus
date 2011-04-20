@@ -272,7 +272,7 @@ void MupenFrontendApp::onReadOpenFileQueue(wxCommandEvent& evt)
 
 void MupenFrontendApp::onInitGLCanvas(wxCommandEvent& evt)
 {
-    VidExt_InitGLCanvas();
+    ((GamesPanel*)m_curr_panel)->initGLCanvas();
 }
 
 // -----------------------------------------------------------------------------------------------------------
