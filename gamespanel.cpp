@@ -321,23 +321,24 @@ void GamesPanel::initGLCanvas()
     m_item_list->Hide();
     m_dir_picker->Hide();
     m_canvas = VidExt_InitGLCanvas(m_center_panel);
-    m_list_sizer->Add(m_canvas, 1, wxEXPAND | wxALL, 5);
-    m_list_sizer->SetSizeHints(m_canvas);
-    m_center_panel->Layout();
-    Layout();
-    Thaw();
-    m_canvas->SetFocus();
+    if (m_canvas != NULL)
+    {
+        m_list_sizer->Add(m_canvas, 1, wxEXPAND | wxALL, 5);
+        m_list_sizer->SetSizeHints(m_canvas);
+        m_center_panel->Layout();
+        Layout();
+        Thaw();
+        m_canvas->SetFocus();
 
-    ((wxFrame*)GetParent())->Layout();
-    ((wxFrame*)GetParent())->Refresh();    
+        ((wxFrame*)GetParent())->Layout();
+        ((wxFrame*)GetParent())->Refresh();    
 
-    // FIXME: ugly hack to force a fullr efresh
-    ((wxFrame*)GetParent())->SetSize( ((wxFrame*)GetParent())->GetSize() );
-
+        // FIXME: ugly hack to force a full refresh
+        ((wxFrame*)GetParent())->SetSize( ((wxFrame*)GetParent())->GetSize() );
+    }
+    
     wxCommandEvent evt(wxMUPEN_INITED_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
-
-    //VidExt_InitedGLCanvas();
 }
 
 // -----------------------------------------------------------------------------------------------------------

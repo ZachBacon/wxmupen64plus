@@ -323,7 +323,6 @@ m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
 int gWidth;
 int gHeight;
 int gBitsPerPixel;
-int gScreenMode;
 
 #ifdef __WXMSW__
     // FIXME: for some reason, Condition asserts on Windows???
@@ -411,7 +410,8 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
         WX_GL_SAMPLE_BUFFERS,  // 1 for multisampling support (antialiasing)
         WX_GL_SAMPLES          // 4 for 2x2 antialising supersampling on most graphics cards
         */
-    // TODO: make more parameters configurable?
+    
+        // TODO: make more parameters configurable?
     int args[] = {WX_GL_RGBA, WX_GL_BUFFER_SIZE, buffersize, WX_GL_DOUBLEBUFFER,
                   WX_GL_DEPTH_SIZE, depthsize, /*WX_GL_MIN_RED, redsize,
                   WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,*/ 0};
@@ -423,9 +423,21 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
         return NULL;
     }
     
-    glPane = new BasicGLPane(parent, args);
-
-    return glPane;
+    if (fullscreen)
+    {
+        wxFrame* frame = new wxFrame(NULL, wxID_ANY, "Mupen64Plus", wxDefaultPosition, wxDefaultSize,
+                                     wxSYSTEM_MENU | wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW);
+        glPane = new BasicGLPane(frame, args);
+        frame->Maximize();
+        //frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
+        frame->Show();
+        return NULL;
+    }
+    else
+    {
+        glPane = new BasicGLPane(parent, args);
+        return glPane;
+    }
 }
 
 void VidExt_InitedGLCanvas()
@@ -438,7 +450,7 @@ void VidExt_InitedGLCanvas()
     g_condition->signal();
 }
 
-#if 0
+/*
 void VidExt_InitGLCanvas()
 {
     frame = new wxFrame((wxFrame *)NULL, -1,  wxT("Mupen64Plus"), wxPoint(50,50), wxSize(gWidth, gHeight));
@@ -446,7 +458,7 @@ void VidExt_InitGLCanvas()
     
     wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	
-    /*
+ #if 0
         bool doublebuffer = true;
         int buffersize = 32;
         int depthsize = 32;
@@ -473,11 +485,13 @@ void VidExt_InitGLCanvas()
         WX_GL_MIN_ACCUM_ALPHA, // use alpha buffer with most bits (> MIN_ACCUM_ALPHA bits)
         WX_GL_SAMPLE_BUFFERS,  // 1 for multisampling support (antialiasing)
         WX_GL_SAMPLES          // 4 for 2x2 antialising supersampling on most graphics cards
-        */
+#endif
+
     // TODO: make more parameters configurable?
     int args[] = {WX_GL_RGBA, WX_GL_BUFFER_SIZE, buffersize, WX_GL_DOUBLEBUFFER,
-                  WX_GL_DEPTH_SIZE, depthsize, /*WX_GL_MIN_RED, redsize,
-                  WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,*/ 0};
+                  WX_GL_DEPTH_SIZE, depthsize,
+                  //WX_GL_MIN_RED, redsize, WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,
+                  0};
     
     if (not wxGLCanvas::IsDisplaySupported(args))
     {
@@ -503,14 +517,15 @@ void VidExt_InitGLCanvas()
     g_condition->signal();
 }
 #endif
+*/
 
 m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
 {
     gWidth = Width;
     gHeight = Height;
     gBitsPerPixel = BitsPerPixel;
-    gScreenMode = ScreenMode;
-
+    fullscreen = (ScreenMode == M64VIDEO_FULLSCREEN);
+    
     printf(">>>>>>>>>>>> WX: VidExt_SetVideoMode\n");
     wxCommandEvent evt(wxMUPEN_INIT_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
