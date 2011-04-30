@@ -114,6 +114,9 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     m_gamesPathParam = gamesPathParam;
     api->setListener(this);
     
+    m_width_param = NULL;
+    m_height_param = NULL;
+    
     wxBoxSizer* oversizer = new wxBoxSizer(wxHORIZONTAL);
     
     // ---- Buttons area
@@ -430,10 +433,36 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         return;
     }
     
+    ptr_vector<ConfigSection>& config = wxGetApp().getConfig();
+    for (int n=0; n<config.size(); n++)
+    {
+        if (config[n]->m_section_name == "General")
+        {
+            
+            m_width_param = config[n]->getParamWithName("ScreenWidth");
+            m_height_param = config[n]->getParamWithName("ScreenHeight");
+            break;
+        }
+    }
+    
+    if (m_width_param == NULL or m_height_param == NULL)
+    {
+        mplog_warning("GamesPanel", "Cannot find size parameters\n");
+    }
+    else
+    {
+        m_previous_width = m_width_param->getIntValue();
+        m_previous_height = m_height_param->getIntValue();
+        
+        // maximize (but keep aspect ratio)
+        m_width_param->setIntValue(m_center_panel->GetSize().GetHeight()*1.33f);
+        m_height_param->setIntValue(m_center_panel->GetSize().GetHeight());
+    }
+    
     long item = m_item_list->GetNextItem(-1,
                                         wxLIST_NEXT_ALL,
                                         wxLIST_STATE_SELECTED);
-                                        
+    
     if (item == -1)
     {
         wxMessageBox( _("No game is selected, cannot start emulation") );
@@ -515,6 +544,13 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
     switch (newState)
     {
         case M64EMU_STOPPED:
+        
+            if (m_width_param != NULL and m_height_param != NULL)
+            {
+                m_width_param->setIntValue(m_previous_width);
+                m_height_param->setIntValue(m_previous_height);
+            }
+    
             if (m_api->isARomOpen()) m_api->closeRom();
             m_currently_loaded_rom = "";
             m_play_button->Enable();

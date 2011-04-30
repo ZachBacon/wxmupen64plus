@@ -313,7 +313,7 @@ m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
     
     s[1].uiWidth = 800;
     s[1].uiHeight = 600;
-    
+
     SizeArray = s;
     *NumSizes = 2;
     

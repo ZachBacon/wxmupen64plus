@@ -159,6 +159,8 @@ public:
 #ifdef __WXMAC__    
     virtual void MacOpenFile(const wxString &fileName);
 #endif
+
+    ptr_vector<ConfigSection>& getConfig() { return m_config; }
 };
 
 wxDECLARE_APP(MupenFrontendApp);
