@@ -145,6 +145,7 @@ def build(bld):
     else:
         # For other unices
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
+        link_flags += ['-lGL', '-ldl']
         
         # install target
         data_dir = bld.path.find_dir('data')
