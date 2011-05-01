@@ -16,7 +16,7 @@ Released under the Creative Common Attribution-ShareAlike 3.0 license (http://cr
     mupen64cart.png mupen64cart.icns V64Doc.ico
 
 Released under public domain
-    presskey.bmp cancel.bmp
+    presskey.bmp cancel.bmp erase.bmp
 
 == Waf ==
 Released under the new BSD license
