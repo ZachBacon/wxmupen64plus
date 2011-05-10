@@ -451,7 +451,7 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
 #ifdef __WXMSW__
     out = (void*)wglGetProcAddress(Proc);
 #elif __WXGTK__
-	oyt = (void*)glXGetProcAddress((const GLubyte*)Proc);
+	out = (void*)glXGetProcAddress((const GLubyte*)Proc);
 #else
 
     // FIXME: silly way to fix VidExt_GL_GetProcAddress
