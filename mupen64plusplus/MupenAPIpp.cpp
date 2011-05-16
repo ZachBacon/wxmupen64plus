@@ -26,6 +26,9 @@
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/plugin.h"
+#include "wxvidext.h"
+#include "main.h"
+
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -82,7 +85,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg << result;
         throw CoreNotFoundException(errmsg.str());
     }
-
+    
     result = InitCore(&StateCallback, this, datapath);
     if (result != M64ERR_SUCCESS)
     {
@@ -90,7 +93,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     result = OpenConfigurationHandles(defaultPluginPath, defaultVideoPlugin, defaultAudioPlugin,
                                      defaultInputPlugin, defaultRspPlugin);
     if (result != M64ERR_SUCCESS)
@@ -100,6 +103,16 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         std::string errmsg = "[Mupen64PlusPlus::Mupen64PlusPlus] OpenConfigurationHandles failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
+    }
+    
+    if (useVideoExtension())
+    {
+        printf("************ will call installWxVideoExtension ************\n");
+        result = installWxVideoExtension();
+        if (result != M64ERR_SUCCESS)
+        {
+            throw std::runtime_error("[Mupen64PlusPlus::Mupen64PlusPlus] Can't init video extension");        
+        }
     }
 }
 
@@ -146,7 +159,7 @@ int Mupen64PlusPlus::loadPlugins()
     {
         std::string errmsg = "[Mupen64PlusPlus::loadPlugins] GetConfigPlugins failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
-        fprintf(stderr, "%s\n", errmsg.c_str());
+        mplog_error("LoadPlugins", "%s\n", errmsg.c_str());
         return 0;
     }
 
@@ -561,7 +574,7 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
         }
     };
     
-    if (asynchronous)
+    if (asynchronous or useVideoExtension())
     {
         EmuThread* t = new EmuThread();
         if (t->Create() != wxTHREAD_NO_ERROR)
@@ -580,7 +593,8 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
     }
     else
     {
-        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        // FIXME: why do I need this?
+        if (not useVideoExtension()) SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         
         m64p_error result = ::runEmulation();
         if (result != M64ERR_SUCCESS)

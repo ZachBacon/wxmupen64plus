@@ -27,6 +27,7 @@
 #include "m64p_types.h"
 
 #include "mupen64plusplus/osal_dynamiclib.h"
+#include "main.h"
 
 m64p_error osal_dynlib_open(m64p_dynlib_handle *pLibHandle, const char *pccLibraryPath)
 {
@@ -61,7 +62,7 @@ m64p_error osal_dynlib_close(m64p_dynlib_handle LibHandle)
 
     if (rval != 0)
     {
-        fprintf(stderr, "dlclose() error: %s\n", dlerror());
+        mplog_error("osal", "dlclose() error: %s\n", dlerror());
         return M64ERR_INTERNAL;
     }
 

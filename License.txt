@@ -12,7 +12,11 @@ From the Tango icon set, released under public domain :
 
 Copyright: The Mupen64plus Team / Copyright (C) 2008 Tillin9
 Released under the Creative Common Attribution-ShareAlike 3.0 license (http://creativecommons.org/licenses/by-sa/3.0/)
-    mupenicon.png  wxMupen64Plus.icns mupen64cart.png mupenicon_large.png
+    mupenicon.png  wxMupen64Plus.icns mupenicon_large.png wxmupen64plus.ico
+    mupen64cart.png mupen64cart.icns V64Doc.ico
+
+Released under public domain
+    presskey.bmp cancel.bmp erase.bmp
 
 == Waf ==
 Released under the new BSD license

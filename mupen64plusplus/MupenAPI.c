@@ -28,7 +28,7 @@
 #include "m64p_debugger.h"
 #include "version.h"
 #include "plugin.h"
-//#include "main/main.h"
+#include "main.h"
 
 #include "mupen64plusplus/osal_preproc.h"
 #include "mupen64plusplus/osal_dynamiclib.h"
@@ -159,7 +159,7 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     /* if we haven't found a good core library by now, then we're screwed */
     if (rval != M64ERR_SUCCESS || CoreHandle == NULL)
     {
-        fprintf(stderr, "AttachCoreLib() Error: failed to find Mupen64Plus Core library\n");
+        mplog_error("AttachCoreLib", "ERROR: failed to find Mupen64Plus Core library\n");
         CoreHandle = NULL;
         return M64ERR_INPUT_NOT_FOUND;
     }
@@ -170,8 +170,8 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     CoreVersionFunc = (ptr_PluginGetVersion) osal_dynlib_getproc(CoreHandle, "PluginGetVersion");
     if (CoreVersionFunc == NULL)
     {
-        fprintf(stderr, "AttachCoreLib() Error: Shared library '%s' invalid; no "
-                        "PluginGetVersion() function found.\n", CoreLibFilepath);
+        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; no "
+                    "PluginGetVersion() function found.\n", CoreLibFilepath);
         osal_dynlib_close(CoreHandle);
         CoreHandle = NULL;
         return M64ERR_INPUT_INVALID;
@@ -183,22 +183,22 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     (*CoreVersionFunc)(&PluginType, &CoreVersion, &APIVersion, &CoreName, &g_CoreCapabilities);
     if (PluginType != M64PLUGIN_CORE)
     {
-        fprintf(stderr, "AttachCoreLib() Error: Shared library '%s' invalid; wrong plugin type %i.\n",
-               CoreLibFilepath, (int) PluginType);
+        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; wrong plugin type %i.\n",
+                    CoreLibFilepath, (int) PluginType);
     }
     else if (CoreVersion < MINIMUM_CORE_VERSION)
     {
-        fprintf(stderr, "AttachCoreLib() Error: Shared library '%s' invalid; core version %i.%i.%i "
-                        "is below minimum supported %i.%i.%i\n", CoreLibFilepath,
-                        VERSION_PRINTF_SPLIT(CoreVersion),
-                        VERSION_PRINTF_SPLIT(MINIMUM_CORE_VERSION));
+        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; core version %i.%i.%i "
+                    "is below minimum supported %i.%i.%i\n", CoreLibFilepath,
+                    VERSION_PRINTF_SPLIT(CoreVersion),
+                    VERSION_PRINTF_SPLIT(MINIMUM_CORE_VERSION));
     }
     else if (APIVersion < MINIMUM_API_VERSION)
     {
-        fprintf(stderr, "AttachCoreLib() Error: Shared library '%s' invalid; core API version %i.%i.%i "
-                        "is below minimum supported %i.%i.%i\n", CoreLibFilepath,
-                        VERSION_PRINTF_SPLIT(APIVersion),
-                        VERSION_PRINTF_SPLIT(MINIMUM_API_VERSION));
+        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; core API version %i.%i.%i "
+                    "is below minimum supported %i.%i.%i\n", CoreLibFilepath,
+                    VERSION_PRINTF_SPLIT(APIVersion),
+                    VERSION_PRINTF_SPLIT(MINIMUM_API_VERSION));
     }
     else
     {
@@ -214,13 +214,13 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     }
 
     // print some information about the core library
-    printf("[wxMupen64Plus] attached to core library '%s' version %i.%i.%i\n", CoreName, VERSION_PRINTF_SPLIT(CoreVersion));
+    mplog_info("MupenAPI", "attached to core library '%s' version %i.%i.%i\n", CoreName, VERSION_PRINTF_SPLIT(CoreVersion));
     if (g_CoreCapabilities & M64CAPS_DYNAREC)
-        printf("            Includes support for Dynamic Recompiler.\n");
+        mplog_info("MupenAPI", "            Includes support for Dynamic Recompiler.\n");
     if (g_CoreCapabilities & M64CAPS_DEBUGGER)
-        printf("            Includes support for MIPS r4300 Debugger.\n");
+        mplog_info("MupenAPI", "            Includes support for MIPS r4300 Debugger.\n");
     if (g_CoreCapabilities & M64CAPS_CORE_COMPARE)
-        printf("            Includes support for r4300 Core Comparison.\n");
+        mplog_info("MupenAPI", "            Includes support for r4300 Core Comparison.\n");
 
     // get function pointers to the common and front-end functions
     CoreErrorMessage   = (ptr_CoreErrorMessage) osal_dynlib_getproc(CoreHandle, "CoreErrorMessage");
@@ -371,22 +371,21 @@ m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
     rval = (*PtrConfigOpenSection)("Core", &l_ConfigCore);
     if (rval != M64ERR_SUCCESS)
     {
-        fprintf(stderr, "Error (%s:%i): failed to open 'Core' configuration section\n", __FILE__, __LINE__);
+        mplog_warning("Config", "WARNING: failed to open 'Core' configuration section\n");
         return rval;
     }
 
     rval = (*PtrConfigOpenSection)("Video-General", &l_ConfigVideo);
     if (rval != M64ERR_SUCCESS)
     {
-        fprintf(stderr, "Error (%s:%i): failed to open 'Video-General' configuration section\n",
-                __FILE__, __LINE__);
+        mplog_warning("Config", "WARNING: failed to open 'Video-General' configuration section\n");
         return rval;
     }
 
     rval = (*PtrConfigOpenSection)("UI-wx", &l_ConfigPlugins);
     if (rval != M64ERR_SUCCESS)
     {
-        fprintf(stderr, "Error (%s:%i): failed to open 'UI-wx' configuration section\n", __FILE__, __LINE__);
+        mplog_warning("Config", "WARNING: failed to open 'UI-wx' configuration section\n");
         return rval;
     }
 
@@ -779,7 +778,7 @@ m64p_error attachPlugins()
     // attach plugins to core
     for (i = 0; i < 4; i++)
     {
-        printf("Attaching plugin %i of type %i : %s\n", i, g_PluginMap[i].type, g_PluginMap[i].name);
+        mplog_info("MupenAPI", "Attaching plugin %i of type %i : %s\n", i, g_PluginMap[i].type, g_PluginMap[i].name);
         m64p_error result = (*CoreAttachPlugin)(g_PluginMap[i].type, g_PluginMap[i].handle);
         if (result != M64ERR_SUCCESS)
         {
@@ -804,3 +803,16 @@ m64p_error detachPlugins()
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+m64p_error coreOverrideVidExt(m64p_video_extension_functions* VideoFunctionStruct)
+{
+    return (*CoreOverrideVidExt)(VideoFunctionStruct);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error injectKeyEvent(int /* bool */ pressed, int key)
+{
+    if (pressed) return (*CoreDoCommand)(M64CMD_SEND_SDL_KEYDOWN, key, NULL);
+    else         return (*CoreDoCommand)(M64CMD_SEND_SDL_KEYUP,   key, NULL);
+}

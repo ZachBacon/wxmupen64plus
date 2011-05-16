@@ -21,6 +21,8 @@
     <File Name="config.cpp"/>
     <File Name="config.h"/>
     <File Name="main.h"/>
+    <File Name="wxvidext.h"/>
+    <File Name="wxvidext.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Mupen64PlusPlus">
     <File Name="mupen64plusplus/MupenAPI.c"/>

@@ -19,43 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "sdlhelper.h"
+#ifndef VIDEO_EXTENSION_H
+#define VIDEO_EXTENSION_H
 
-#include <SDL.h>
-#include <SDL_keyboard.h>
-#include <SDL_keysym.h>
-#include <SDL_events.h>
+#include "m64p_vidext.h"
+class wxGLCanvas;
+class wxWindow;
 
-#include "main.h"
+m64p_error VidExt_Init(void);
+m64p_error VidExt_Quit(void);
+m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes);
+m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode);
+m64p_error VidExt_SetCaption(const char *Title);
+m64p_error VidExt_ToggleFullScreen(void);
+void* VidExt_GL_GetProcAddress(const char* Proc);
+m64p_error VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value);
+m64p_error VidExt_GL_SwapBuffers(void);
 
-std::map<int, std::string> gamepads; 
+m64p_error installWxVideoExtension();
 
-const std::map<int, std::string>& getGamepadList()
-{
-	return gamepads;
-}
+wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent);
 
-void SDL_Helper_Start()
-{
-    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-    
-    // ====================
-    // Init Gamepad Support
-    mplog_info("SDL_Helper_Start", "%i joysticks were found.\n\n", SDL_NumJoysticks() );
-    
-    SDL_JoystickEventState(SDL_ENABLE);
-    
-    if (SDL_NumJoysticks() > 0) mplog_info("SDL_Helper_Start", "The names of the joysticks are:\n");    
-    for (int i=0; i<SDL_NumJoysticks(); i++) 
-    {
-		gamepads[i] = SDL_JoystickName(i);
-        mplog_info("SDL_Helper_Start", "    %s\n", SDL_JoystickName(i));
-        /* SDL_Joystick *joystick = */ SDL_JoystickOpen(i); // TODO: also close them on shutdown
-    }
-	
-	SDL_Quit();
+void VidExt_InitedGLCanvas();
+void VidExt_AsyncCleanup();
 
-    printf("\n");
-    // ====================
-}
-
+#endif // VIDEO_EXTENSION_H

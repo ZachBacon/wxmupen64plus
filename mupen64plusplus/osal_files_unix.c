@@ -28,6 +28,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>  // for opendir(), readdir(), closedir()
+#include "main.h"
 
 #include "m64p_types.h"
 #include "mupen64plusplus/osal_preproc.h"
@@ -68,7 +69,7 @@ osal_lib_search *osal_library_search(const char *searchpath)
         newlib = malloc(sizeof(osal_lib_search));
         if (newlib == NULL)
         {
-            fprintf(stderr, "Memory allocation error in osal_library_search()!\n");
+            mplog_error("osal", "Memory allocation error in osal_library_search()!\n");
             osal_free_lib_list(head);
             closedir(dir);
             return NULL;

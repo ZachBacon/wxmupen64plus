@@ -38,10 +38,16 @@
 #include "sdlkeypicker.h" // to get the USE_WX_KEY_PICKER define
 #include "config.h"
 #include "main.h"
+#include "wxvidext.h"
 
 #include <stdexcept>
 #include <algorithm>
 #include "sdlhelper.h"
+
+#ifdef __WXGTK__
+#include <Xlib.h>
+//int XInitThreads();
+#endif
 
 const bool g_Verbose = false;
 
@@ -59,21 +65,21 @@ extern "C"
     {
         if (level <= 1)
         {
-            printf("[Core] %s Error: %s\n", (const char *) Context, message);
+            mplog_error("Core", "%s Error: %s\n", (const char *) Context, message);
             wxLogError( _("[%s] An error occurred : %s"), (const char *) Context, message );
         }
         else if (level == 2)
         {
-            printf("[Core] %s Warning: %s\n", (const char *) Context, message);
+            mplog_warning("Core", "%s Warning: %s\n", (const char *) Context, message);
             wxLogWarning( _("[%s] Warning : %s"), (const char *) Context, message );
         }
         else if (level == 3 || (level == 5 && g_Verbose))
         {
-            printf("[Core] %s: %s\n", (const char *) Context, message);
+            mplog_info("Core", "%s: %s\n", (const char *) Context, message);
         }
         else if (level == 4)
         {
-            printf("[Core] %s Status: %s\n", (const char *) Context, message);
+            mplog_info("Core", "%s Status: %s\n", (const char *) Context, message);
         }
         /* ignore the verbose info for now */
     }
@@ -85,11 +91,18 @@ wxString libs;
 wxIMPLEMENT_APP_NO_MAIN(MupenFrontendApp);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_READ_OPEN_FILE_QUEUE);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_INIT_GL_CANVAS);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_INITED_GL_CANVAS);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_CLEAN_GL_CANVAS);
 
 int main(int argc, char** argv)
 {
     wxDISABLE_DEBUG_SUPPORT();
     
+#ifdef __WXGTK__
+    XInitThreads();
+#endif
+
     MupenFrontendApp* app = new MupenFrontendApp(); 
     wxApp::SetInstance(app);
     return wxEntry(argc, argv);
@@ -101,7 +114,6 @@ int main(int argc, char** argv)
 
 bool MupenFrontendApp::OnInit()
 {
-    printf("OnInit()\n");
     m_inited = false;
     
     m_current_panel  = 0;
@@ -130,8 +142,8 @@ bool MupenFrontendApp::OnInit()
     libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
 #endif
 
-    printf("Will look for resources in <%s> and librairies in <%s>\n", (const char*)datadir.utf8_str(),
-                                                                       (const char*)libs.utf8_str());
+    mplog_info("MupenfrontApp", "Will look for resources in <%s> and librairies in <%s>\n",
+              (const char*)datadir.utf8_str(), (const char*)libs.utf8_str());
     int plugins = 0;
     
     wxString corepath = libs + "libmupen64plus" + OSAL_DLL_EXTENSION;
@@ -158,7 +170,7 @@ bool MupenFrontendApp::OnInit()
         }
         catch (CoreNotFoundException& e)
         {
-            fprintf(stderr, "The core was not found : %s\n", e.what());
+            mplog_error("MupenAPI", "The core was not found : %s\n", e.what());
             wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
             
             wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
@@ -173,13 +185,14 @@ bool MupenFrontendApp::OnInit()
         }
         catch (std::runtime_error& e)
         {
-            fprintf(stderr, "Sorry, a fatal error was caught :\n%s\n",  e.what());
+            mplog_error("MupenAPI", "Sorry, a fatal error was caught :\n%s\n",  e.what());
             wxMessageBox( _("Sorry, initializing Mupen64Plus failed. Please verify the integrity of your installation.") );
             return false;
         }
     } // end while
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
+    SetTopWindow(m_frame);
     
     wxInitAllImageHandlers();
     if (not makeToolbar(plugins, 0)) return false;
@@ -222,6 +235,9 @@ bool MupenFrontendApp::OnInit()
     Connect(wxID_ANY, wxEVT_ACTIVATE_APP, wxActivateEventHandler(MupenFrontendApp::onActivate), NULL, this);
     
     Connect(wxID_ANY, wxMUPEN_RELOAD_OPTIONS, wxCommandEventHandler(MupenFrontendApp::onReloadOptionsRequest), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_INIT_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onInitGLCanvas), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_INITED_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onInitedGLCanvas), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_CLEAN_GL_CANVAS, wxCommandEventHandler(MupenFrontendApp::onCleanGLCanvas), NULL, this);
 
     // check if filenames to open were given on the command-line
     for (int n=0; n<argc; n++)
@@ -269,6 +285,27 @@ void MupenFrontendApp::onReadOpenFileQueue(wxCommandEvent& evt)
 
 // -----------------------------------------------------------------------------------------------------------
 
+void MupenFrontendApp::onInitGLCanvas(wxCommandEvent& evt)
+{
+    ((GamesPanel*)m_curr_panel)->initGLCanvas();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onInitedGLCanvas(wxCommandEvent& evt)
+{
+    VidExt_InitedGLCanvas();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::onCleanGLCanvas(wxCommandEvent& evt)
+{
+    ((GamesPanel*)m_curr_panel)->cleanGLCanvas();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 void MupenFrontendApp::shutdown()
 {
     if (m_curr_panel != NULL)
@@ -298,14 +335,15 @@ void MupenFrontendApp::shutdown()
 
 void MupenFrontendApp::onClose(wxCloseEvent& evt)
 {
-    shutdown();
+    if (m_api->getEmulationState() != M64EMU_STOPPED) evt.Veto();
+    else                                              shutdown();
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
 void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
 {
-    shutdown();
+    if (m_api->getEmulationState() == M64EMU_STOPPED) shutdown();
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -768,7 +806,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
         }
         else
         {
-            printf("Ignoring config section %s\n", section->m_section_name.c_str());
+            mplog_warning("Config","Ignoring config section %s\n", section->m_section_name.c_str());
         }
     }
     
@@ -813,3 +851,45 @@ void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+
+#define RESET    "\033[0m"
+#define BOLD     "\033[1m"
+#define GREY     "\033[1;30m"
+#define RED      "\033[31m"
+#define YELLOWBG "\033[33m"
+
+extern "C"
+{
+    
+    void mplog_info(const char* who, const char* message, ...)
+    {
+        va_list argp;
+        va_start(argp, message);
+        printf("[" BOLD GREY "%s" RESET "] ", who);
+        vprintf(message, argp);
+        va_end(argp);
+    }
+
+    void mplog_warning(const char* who, const char* message, ...)
+    {
+        va_list argp;
+        va_start(argp, message);
+        printf("[" BOLD YELLOWBG "%s" RESET "] " YELLOWBG, who);
+        vprintf(message, argp);
+        printf(RESET);
+        va_end(argp);
+    }
+
+    void mplog_error(const char* who, const char* message, ...)
+    {
+        printf("[" BOLD RED "%s" RESET "] " RED, who);
+        
+        va_list argp;
+        va_start(argp, message);
+        vprintf(message, argp);
+        printf(RESET);
+        va_end(argp);
+    }
+
+}

@@ -27,6 +27,7 @@
 #include "config.h"
 #include "mupen64plusplus/MupenAPI.h"
 #include "sdlhelper.h"
+#include "main.h"
 #include <wx/intl.h>
 
 extern wxString datadir;
@@ -298,7 +299,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             }
             catch (std::exception& e)
             {
-                fprintf(stderr, "Error caught while trying to set up %s : %s\n", (const char*)section->m_section_name.c_str(), e.what());
+                mplog_error("Config", "Error caught while trying to set up %s : %s\n", (const char*)section->m_section_name.c_str(), e.what());
             }
 
             ConfigParam* x_axis = section->getParamWithName("X Axis");

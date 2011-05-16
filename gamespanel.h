@@ -34,6 +34,7 @@ class wxFileDirPickerEvent;
 class wxBitmapButton;
 class wxStaticText;
 class wxListEvent;
+class wxGLCanvas;
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_STATE_CHANGE, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_SAVE_SLOT_CHANGE, -1);
@@ -43,6 +44,14 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     wxListCtrl* m_item_list;
     wxDirPickerCtrl* m_dir_picker;
     ConfigParam* m_gamesPathParam;
+    wxBoxSizer* m_list_sizer;
+    wxGLCanvas* m_canvas;
+    wxPanel* m_center_panel;
+    
+    int m_previous_width, m_previous_height;
+    ConfigParam* m_width_param;
+    ConfigParam* m_height_param;
+    ConfigParam* m_fullscreen_param;
     
     /** Callback to sort the list */
     static int wxCALLBACK wxListCompareFunction(long item1, long item2, wxIntPtr sortData);
@@ -75,7 +84,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     wxBitmapButton* m_play_button;
     wxBitmapButton* m_pause_button;
     wxBitmapButton* m_stop_button;
-    wxStaticText* m_status;
+    //wxStaticText* m_status;
     
     wxString m_currently_loaded_rom;
     
@@ -109,6 +118,9 @@ public:
     
     /** Callback from IEmuStateListener */
     virtual void onSaveSlotChanged(int saveSlot);
+
+    void initGLCanvas();
+    void cleanGLCanvas();
 
     void onMupenStateChangeEvt(wxCommandEvent& evt);
     void onMupenSaveSlotChangeEvt(wxCommandEvent& evt);
