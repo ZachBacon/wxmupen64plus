@@ -617,8 +617,68 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
 	out = (void*)glXGetProcAddress((const GLubyte*)Proc);
 #else
 
-    // FIXME: silly way to fix VidExt_GL_GetProcAddress
-    if (strcmp(Proc, "glActiveTexture") == 0)
+    // FIXME: silly way to fix VidExt_GL_GetProcAddress on OSX
+    if (strcmp(Proc, "glClientActiveTextureARB") == 0)
+    {
+        out = (void*)&glClientActiveTextureARB;
+    }
+    else if (strcmp(Proc, "glCombinerParameterfvNV") == 0)
+    {
+        out = (void*)&glCombinerParameterfvNV;
+    }
+    else if (strcmp(Proc, "glFinalCombinerInputNV") == 0)
+    {
+        out = (void*)&glFinalCombinerInputNV;
+    }
+    else if (strcmp(Proc, "glCombinerOutputNV") == 0)
+    {
+        out = (void*)&glCombinerOutputNV;
+    }
+    else if (strcmp(Proc, "glCombinerInputNV") == 0)
+    {
+        out = (void*)&glCombinerInputNV;
+    }
+    else if (strcmp(Proc, "glCombinerParameteriNV") == 0)
+    {
+        out = (void*)&glCombinerParameteriNV;
+    }
+    else if (strcmp(Proc, "glActiveTextureARB") == 0)
+    {
+        out = (void*)&glActiveTextureARB;
+    }
+    else if (strcmp(Proc, "glMultiTexCoord2f") == 0)
+    {
+        out = (void*)&glMultiTexCoord2f;
+    }
+    else if (strcmp(Proc, "glMultiTexCoord2fv") == 0)
+    {
+        out = (void*)&glMultiTexCoord2fv;
+    }
+    else if (strcmp(Proc, "glDeleteProgramsARB") == 0)
+    {
+        out = (void*)&glDeleteProgramsARB;
+    }  
+    else if (strcmp(Proc, "glProgramStringARB") == 0)
+    {
+        out = (void*)&glProgramStringARB;
+    }    
+    else if (strcmp(Proc, "glBindProgramARB") == 0)
+    {
+        out = (void*)&glBindProgramARB;
+    }
+    else if (strcmp(Proc, "glGenProgramsARB") == 0)
+    {
+        out = (void*)&glGenProgramsARB;
+    }
+    else if (strcmp(Proc, "glProgramEnvParameter4fvARB") == 0)
+    {
+        out = (void*)&glProgramEnvParameter4fvARB;
+    }
+    else if (strcmp(Proc, "glFogCoordPointerEXT") == 0)
+    {
+        out = (void*)&glFogCoordPointerEXT;
+    }
+    else if (strcmp(Proc, "glActiveTexture") == 0)
     {
         out = (void*)&glActiveTexture;
     }

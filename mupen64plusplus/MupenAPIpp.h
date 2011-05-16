@@ -436,8 +436,13 @@ public:
      * @return same as Mupen64PlusPlus::loadPlugins
      */
     int reloadPlugins();
-    
+
+    // TODO: make it configurable whether to use video extension
+#ifdef __WXGTK__
+    bool useVideoExtension() { return false; }
+#else
     bool useVideoExtension() { return true; }
+#endif
 };
 
 #endif
