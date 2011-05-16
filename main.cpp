@@ -182,6 +182,7 @@ bool MupenFrontendApp::OnInit()
     } // end while
     
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
+    SetTopWindow(m_frame);
     
     wxInitAllImageHandlers();
     if (not makeToolbar(plugins, 0)) return false;

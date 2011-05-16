@@ -51,6 +51,7 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     int m_previous_width, m_previous_height;
     ConfigParam* m_width_param;
     ConfigParam* m_height_param;
+    ConfigParam* m_fullscreen_param;
     
     /** Callback to sort the list */
     static int wxCALLBACK wxListCompareFunction(long item1, long item2, wxIntPtr sortData);

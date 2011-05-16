@@ -43,6 +43,7 @@
 #include <wx/statbmp.h>
 #include <wx/frame.h>
 #include <wx/glcanvas.h>
+#include <wx/display.h>
 
 #include <stdexcept>
 #include <map>
@@ -318,11 +319,11 @@ void GamesPanel::populateList()
 void GamesPanel::initGLCanvas()
 {
     Freeze();
-    m_item_list->Hide();
-    m_dir_picker->Hide();
     m_canvas = VidExt_InitGLCanvas(m_center_panel);
     if (m_canvas != NULL)
     {
+        m_item_list->Hide();
+        m_dir_picker->Hide();
         m_list_sizer->Add(m_canvas, 1, wxEXPAND | wxALL, 5);
         m_list_sizer->SetSizeHints(m_canvas);
         m_center_panel->Layout();
@@ -345,6 +346,7 @@ void GamesPanel::initGLCanvas()
 
 void GamesPanel::cleanGLCanvas()
 {
+    VidExt_AsyncCleanup();
     if (m_canvas)
     {
         Freeze();
@@ -442,6 +444,7 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
             
             m_width_param = config[n]->getParamWithName("ScreenWidth");
             m_height_param = config[n]->getParamWithName("ScreenHeight");
+            m_fullscreen_param = config[n]->getParamWithName("Fullscreen");            
             break;
         }
     }
@@ -455,9 +458,26 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         m_previous_width = m_width_param->getIntValue();
         m_previous_height = m_height_param->getIntValue();
         
-        // maximize (but keep aspect ratio)
-        m_width_param->setIntValue(m_center_panel->GetSize().GetHeight()*1.33f);
-        m_height_param->setIntValue(m_center_panel->GetSize().GetHeight());
+        if (m_fullscreen_param->getBoolValue())
+        {
+            int displayID = wxDisplay::GetFromWindow( wxGetApp().GetTopWindow() );
+            if (displayID == wxNOT_FOUND)
+            {
+                wxMessageBox( _("An internal error occurred : can't determine on which display the frame is") );
+                return;
+            }
+            wxDisplay display(displayID);
+            
+            // maximize (but keep aspect ratio)
+            m_width_param->setIntValue(display.GetGeometry().GetHeight()*1.33f);
+            m_height_param->setIntValue(display.GetGeometry().GetHeight());
+        }
+        else
+        {
+            // maximize (but keep aspect ratio)
+            m_width_param->setIntValue(m_center_panel->GetSize().GetHeight()*1.33f);
+            m_height_param->setIntValue(m_center_panel->GetSize().GetHeight());
+        }
     }
     
     long item = m_item_list->GetNextItem(-1,

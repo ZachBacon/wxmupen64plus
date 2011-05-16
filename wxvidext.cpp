@@ -264,8 +264,15 @@ int BasicGLPane::getHeight()
     return GetSize().y;
 }
 
-//wxFrame* frame = NULL;
 BasicGLPane* glPane = NULL;
+
+wxDialog* fullscreen_frame = NULL;
+
+#ifdef __WXMAC__
+// work around wx bug
+wxFrame* fullscreen_helper_frame = NULL;
+#endif
+
 bool fullscreen = false;
 
 bool doublebuffer = true;
@@ -286,6 +293,7 @@ m64p_error VidExt_Init()
 m64p_error VidExt_Quit()
 {
     printf(">>>>>>>>>>>> WX: VidExt_Quit\n");
+    
     wxCommandEvent evt(wxMUPEN_CLEAN_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
     /*
@@ -299,6 +307,24 @@ m64p_error VidExt_Quit()
     delete g_mutex;
     g_mutex = NULL;
     return M64ERR_SUCCESS;
+}
+
+void VidExt_AsyncCleanup()
+{
+    if (fullscreen_frame != NULL)
+    {
+#ifdef __WXMAC__
+        fullscreen_helper_frame->ShowFullScreen(false);
+        fullscreen_helper_frame->Destroy();
+        fullscreen_helper_frame = NULL;
+#endif
+
+#ifndef __WXMAC__
+        fullscreen_frame->ShowFullScreen(false);
+#endif
+        fullscreen_frame->Destroy();
+        fullscreen_frame = NULL;
+    }
 }
 
 m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
@@ -411,7 +437,7 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
         WX_GL_SAMPLES          // 4 for 2x2 antialising supersampling on most graphics cards
         */
     
-        // TODO: make more parameters configurable?
+    // TODO: make more parameters configurable?
     int args[] = {WX_GL_RGBA, WX_GL_BUFFER_SIZE, buffersize, WX_GL_DOUBLEBUFFER,
                   WX_GL_DEPTH_SIZE, depthsize, /*WX_GL_MIN_RED, redsize,
                   WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,*/ 0};
@@ -425,12 +451,22 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
     
     if (fullscreen)
     {
-        wxFrame* frame = new wxFrame(NULL, wxID_ANY, "Mupen64Plus", wxDefaultPosition, wxDefaultSize,
-                                     wxSYSTEM_MENU | wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW);
-        glPane = new BasicGLPane(frame, args);
-        frame->Maximize();
-        //frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
-        frame->Show();
+#ifdef __WXMAC__
+        fullscreen_helper_frame = new wxFrame(NULL, wxID_ANY, "Mupen64Plus");
+        fullscreen_helper_frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
+#endif
+        
+        fullscreen_frame = new wxDialog(NULL, wxID_ANY, "Mupen64Plus", wxDefaultPosition, wxDefaultSize,
+                                        wxSTAY_ON_TOP);//wxSYSTEM_MENU | wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW);
+        glPane = new BasicGLPane(fullscreen_frame, args);
+        
+#ifdef __WXMAC__
+        fullscreen_frame->Maximize();
+        fullscreen_frame->Show();
+#else
+        fullscreen_frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
+#endif
+        glPane->SetFocus();
         return NULL;
     }
     else
