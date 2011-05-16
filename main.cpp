@@ -43,6 +43,11 @@
 #include <algorithm>
 #include "sdlhelper.h"
 
+#ifdef __WXGTK__
+#include <Xlib.h>
+//int XInitThreads();
+#endif
+
 const bool g_Verbose = false;
 
 const char* DEFAULT_VIDEO_PLUGIN = "mupen64plus-video-rice";
@@ -93,6 +98,10 @@ int main(int argc, char** argv)
 {
     wxDISABLE_DEBUG_SUPPORT();
     
+#ifdef __WXGTK__
+    XInitThreads();
+#endif
+
     MupenFrontendApp* app = new MupenFrontendApp(); 
     wxApp::SetInstance(app);
     return wxEntry(argc, argv);

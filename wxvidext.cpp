@@ -436,12 +436,17 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
         WX_GL_SAMPLE_BUFFERS,  // 1 for multisampling support (antialiasing)
         WX_GL_SAMPLES          // 4 for 2x2 antialising supersampling on most graphics cards
         */
-    
+   
+#ifdef __WXGTK__
+    // Mr Linux is more picky (at least for me, I guess YMMV)
+    int args[] = {WX_GL_RGBA,  WX_GL_DOUBLEBUFFER, 0};
+#else
     // TODO: make more parameters configurable?
     int args[] = {WX_GL_RGBA, WX_GL_BUFFER_SIZE, buffersize, WX_GL_DOUBLEBUFFER,
                   WX_GL_DEPTH_SIZE, depthsize, /*WX_GL_MIN_RED, redsize,
                   WX_GL_MIN_GREEN, greensize,  WX_GL_MIN_BLUE, bluesize,*/ 0};
-    
+#endif
+
     if (not wxGLCanvas::IsDisplaySupported(args))
     {
         wxMessageBox( _("Sorry, your system does not support the selected video configuration") );

@@ -144,8 +144,9 @@ def build(bld):
         
     else:
         # For other unices
+        build_flags += ['-I/usr/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
-        link_flags += ['-lGL', '-ldl']
+        link_flags += ['-lGL', '-ldl', '-lX11']
         
         # install target
         data_dir = bld.path.find_dir('data')
