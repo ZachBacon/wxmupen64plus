@@ -30,6 +30,8 @@ def options(opt):
     opt.add_option('--sdlconfig', action='store', help='Which sdl-config utility to use (optional)', default='sdl-config', dest="sdlconfig")
     opt.add_option('--debug',     action='store', help='Whether to make a debug build (may be \'true\' or \'false\')', default='false', dest="debugmode")
     opt.add_option('--wxconfig_args', action='store', help='Additional arguments passed to wx-config', default='',  dest='wxconfig_args')
+    opt.add_option('--datadir', action='store', help='(Optional) the directory where to look for data files', default='',  dest='datadir')
+    opt.add_option('--libdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='libdir')
     
     if os.name == 'nt':
         opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
@@ -77,6 +79,8 @@ def configure(ctx):
     ctx.env['api_path'] = api_path
     ctx.env['is_debug'] = is_debug
     ctx.env['wxhome'] = wxhome
+    ctx.env['datadir'] = Options.options.datadir
+    ctx.env['libdir'] = Options.options.libdir
     
     ctx.find_program('gcc', var='GCC', mandatory=True)
     ctx.find_program('g++', var='GPP', mandatory=True)
@@ -114,6 +118,11 @@ def build(bld):
         build_flags += ['-g','-DDEBUG=1']
     else:
         build_flags += ['-O2','-DNEBUG=1']
+
+    if len(bld.env['datadir']) > 0:
+        build_flags += ['-DDATADIR="' + bld.env['datadir'] + '"']
+    if len(bld.env['libdir']) > 0:
+        build_flags += ['-DLIBDIR="' + bld.env['libdir'] + '"']
 
     bin_install_path = "${PREFIX}/bin"
 
