@@ -28,6 +28,7 @@
 #include <wx/filedlg.h> 
 #include <wx/html/htmlwin.h>
 #include <wx/progdlg.h>
+#include <wx/artprov.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -686,13 +687,13 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
     m_frame->SetIcon( icon_mupen );
 #endif
 
-    assert(icon_mupen.IsOk());    
-    assert(icon_input.IsOk());
-    assert(icon_cpu.IsOk());
-    assert(icon_audio.IsOk());
-    assert(icon_plugins.IsOk());
-    assert(icon_video.IsOk());
-    assert(icon_other.IsOk());
+    if (not icon_mupen.IsOk()) icon_mupen = wxArtProvider::GetIcon(wxART_ERROR, wxART_OTHER, wxSize(32,32));
+    if (not icon_input.IsOk()) icon_input = wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(32,32));
+    if (not icon_cpu.IsOk()) icon_cpu = wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(32,32));
+    if (not icon_audio.IsOk()) icon_audio = wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(32,32));
+    if (not icon_plugins.IsOk()) icon_plugins = wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(32,32));
+    if (not icon_video.IsOk()) icon_video = wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(32,32));
+    if (not icon_other.IsOk()) icon_other = wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(32,32));
     wxToolBarToolBase* t = m_toolbar->AddRadioTool(wxID_ANY, _("Games"), icon_mupen, icon_mupen);
     
     m_toolbar_items.push_back(GraphicalSection::createGamesSection(t));

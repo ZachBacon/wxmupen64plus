@@ -288,20 +288,19 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
     const int rom_size = thefile.Length() + 1024*2 /* in case the OS reports the size inaccurately */;
     char* rom_buf = new char[rom_size];
     wxMemoryOutputStream memoryImage(rom_buf, rom_size);
-//#ifdef __WXMSW__
+
+    int total = 0;
+
     {
         const int BUFFER_SIZE = 1024*20;
         char buffer[BUFFER_SIZE];
         size_t size;
-        
-        int total = 0;
         int t = 0;
         
         //printf("Will read ROM\n");
         do
         {
             size = input.Read(buffer, BUFFER_SIZE).LastRead();
-            
             
             total += size;
             t++;
@@ -325,16 +324,11 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
         }
         while (size > 0 and not input.Eof() and input.IsOk() and input.CanRead());
     }
-//#else
-//    input.Read(memoryImage);
-//#endif
-    
-//    if (dialog != NULL) dialog->Update(50);
     
     wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
     
     m_curr_rom_size = buffer->GetBufferSize();
-    m64p_error result = ::openRom(buffer->GetBufferSize(), buffer->GetBufferStart());
+    m64p_error result = ::openRom(total, buffer->GetBufferStart());
     
     delete[] rom_buf;
     

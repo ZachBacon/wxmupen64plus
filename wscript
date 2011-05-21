@@ -157,6 +157,8 @@ def build(bld):
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         link_flags += ['-lGL', '-ldl', '-lX11']
         
+        link_flags += ['-ldl']
+        
         # install target
         data_dir = bld.path.find_dir('data')
         bld.install_files('${PREFIX}/share/wxmupen64plus/', data_dir.ant_glob('*'))
