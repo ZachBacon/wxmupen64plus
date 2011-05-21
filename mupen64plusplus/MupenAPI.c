@@ -183,22 +183,21 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     (*CoreVersionFunc)(&PluginType, &CoreVersion, &APIVersion, &CoreName, &g_CoreCapabilities);
     if (PluginType != M64PLUGIN_CORE)
     {
-        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; wrong plugin type %i.\n",
-                    CoreLibFilepath, (int) PluginType);
+        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; this is not the emulator core.\n",
+                    CoreLibFilepath);
     }
     else if (CoreVersion < MINIMUM_CORE_VERSION)
     {
-        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; core version %i.%i.%i "
+        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' incompatible; core version %i.%i.%i "
                     "is below minimum supported %i.%i.%i\n", CoreLibFilepath,
                     VERSION_PRINTF_SPLIT(CoreVersion),
                     VERSION_PRINTF_SPLIT(MINIMUM_CORE_VERSION));
     }
-    else if (APIVersion < MINIMUM_API_VERSION)
+    else if ((APIVersion & 0xffff0000) != (CORE_API_VERSION & 0xffff0000))
     {
-        mplog_error("AttachCoreLib", "ERROR: Shared library '%s' invalid; core API version %i.%i.%i "
-                    "is below minimum supported %i.%i.%i\n", CoreLibFilepath,
-                    VERSION_PRINTF_SPLIT(APIVersion),
-                    VERSION_PRINTF_SPLIT(MINIMUM_API_VERSION));
+        fprintf(stderr, "AttachCoreLib() Error: Shared library '%s' incompatible; core API major version "
+                        "%i.%i.%i doesn't match with this application (%i.%i.%i)\n", CoreLibFilepath,
+                        VERSION_PRINTF_SPLIT(APIVersion), VERSION_PRINTF_SPLIT(CORE_API_VERSION));
     }
     else
     {
@@ -210,7 +209,32 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     {
         osal_dynlib_close(CoreHandle);
         CoreHandle = NULL;
+        return M64ERR_INCOMPATIBLE;
+    }
+
+    /* attach and call the CoreGetAPIVersion function, check Config API version for compatibility */
+    ptr_CoreGetAPIVersions CoreAPIVersionFunc;
+    CoreAPIVersionFunc = (ptr_CoreGetAPIVersions) osal_dynlib_getproc(CoreHandle, "CoreGetAPIVersions");
+    if (CoreAPIVersionFunc == NULL)
+    {
+        fprintf(stderr, "AttachCoreLib() Error: Library '%s' broken; no CoreAPIVersionFunc() function found.\n",
+                        CoreLibFilepath);
+        osal_dynlib_close(CoreHandle);
+        CoreHandle = NULL;
         return M64ERR_INPUT_INVALID;
+    }
+    
+    int ConfigAPIVersion, DebugAPIVersion, VidextAPIVersion;
+    (*CoreAPIVersionFunc)(&ConfigAPIVersion, &DebugAPIVersion, &VidextAPIVersion, NULL);
+    
+    if ((ConfigAPIVersion & 0xffff0000) != (CONFIG_API_VERSION & 0xffff0000))
+    {
+        fprintf(stderr, "AttachCoreLib() Error: Emulator core '%s' incompatible; Config API major version "
+                        "%i.%i.%i doesn't match application: %i.%i.%i\n", CoreLibFilepath,
+                        VERSION_PRINTF_SPLIT(ConfigAPIVersion), VERSION_PRINTF_SPLIT(CONFIG_API_VERSION));
+        osal_dynlib_close(CoreHandle);
+        CoreHandle = NULL;
+        return M64ERR_INCOMPATIBLE;
     }
 
     // print some information about the core library
@@ -642,9 +666,9 @@ m64p_error createBoolConfigParam(m64p_handle ConfigSectionHandle, const char *Pa
 
 m64p_error InitCore(ptr_StateCallback stateCallback, void* context, const char* dataPath)
 {
-    return (*CoreStartup)(CONSOLE_API_VERSION, l_ConfigDirPath, dataPath,
-                                      (void*)("Core") /* context */, DebugCallback,
-                                      context, stateCallback);
+    return (*CoreStartup)(CORE_API_VERSION, l_ConfigDirPath, dataPath,
+                          (void*)("Core") /* context */, DebugCallback,
+                          context, stateCallback);
 }
 
 // -----------------------------------------------------------------------------------------------------------

@@ -26,12 +26,13 @@
 #if !defined(VERSION_H)
 #define VERSION_H
 
-#define CONSOLE_UI_VERSION 0x016303
-#define CONSOLE_API_VERSION 0x10000
-#define CONSOLE_UI_NAME    "Mupen64Plus Console User-Interface"
+#define CONSOLE_UI_NAME     "wxMupen64Plus User-Interface"
+#define CONSOLE_UI_VERSION  0x016303
+
+#define CORE_API_VERSION    0x20000
+#define CONFIG_API_VERSION  0x20000
 
 #define MINIMUM_CORE_VERSION 0x016300
-#define MINIMUM_API_VERSION 0x10000
 
 #define VERSION_PRINTF_SPLIT(x) (((x) >> 16) & 0xffff), (((x) >> 8) & 0xff), ((x) & 0xff)
 
