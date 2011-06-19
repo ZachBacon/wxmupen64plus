@@ -32,6 +32,7 @@ def options(opt):
     opt.add_option('--wxconfig_args', action='store', help='Additional arguments passed to wx-config', default='',  dest='wxconfig_args')
     opt.add_option('--datadir', action='store', help='(Optional) the directory where to look for data files', default='',  dest='datadir')
     opt.add_option('--libdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='libdir')
+    opt.add_option('--bindir', action='store', help='(Optional) the directory where to install wxmupen64plus binary', default='',  dest='bindir')
     
     if os.name == 'nt':
         opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
@@ -123,8 +124,10 @@ def build(bld):
         build_flags += ['-DDATADIR="' + bld.env['datadir'] + '"']
     if len(bld.env['libdir']) > 0:
         build_flags += ['-DLIBDIR="' + bld.env['libdir'] + '"']
-
-    bin_install_path = "${PREFIX}/bin"
+    if len(bld.env['bindir']) > 0:
+        bin_install_path = bld.env['bindir']
+    else:
+        bin_install_path = "${PREFIX}/bin"
 
     osal_src = []
     additional_links = []
@@ -161,7 +164,11 @@ def build(bld):
         
         # install target
         data_dir = bld.path.find_dir('data')
-        bld.install_files('${PREFIX}/share/wxmupen64plus/', data_dir.ant_glob('*'))
+        if len(bld.env['datadir']) > 0:
+            share_path = bld.env['datadir']
+        else:
+            share_path = '${PREFIX}/share/wxmupen64plus/'
+        bld.install_files(share_path, data_dir.ant_glob('*'))
 
 
     # Build the program
