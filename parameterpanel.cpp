@@ -153,6 +153,9 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
     sizer->AddSpacer(15);
     sizer->AddSpacer(15);
     
+    // will support some level of hardcoding since those options are not very likely to change...
+    bool fullscreen = false;
+    
     const int count = section->m_parameters.size();
     for (int p=0; p<count; p++)
     {
@@ -193,7 +196,13 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     wxLogError("Could not read value of parameter <%s> : %s\n",
                                curr->m_param_name.c_str(), ex.what());
                 }
-
+                
+                bool greyOut = false;
+                if (curr->m_param_name == "ScreenWidth" or curr->m_param_name == "ScreenHeight")
+                {
+                    greyOut = fullscreen;
+                }
+                
                 if (curr->m_special_type == KEYBOARD_KEY_INT)
                 {
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
@@ -233,6 +242,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                           0 /* min */, 99999 /* max */);
                     ctrl->SetMaxSize(wxSize(100, -1));
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    
+                    if (greyOut) ctrl->Disable();
                 }
                 break;
             }
@@ -270,8 +281,14 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                curr->m_param_name.c_str(), ex.what());
                 }
                 
+                if (curr->m_param_name == "Fullscreen" and currVal)
+                {
+                    fullscreen = true;
+                }
+                
                 wxCheckBox* cbox = new wxCheckBox(this, wxID_ANY, "");
                 cbox->SetValue(currVal);
+                cbox->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &ParameterPanel::onCheckbox, this, cbox->GetId());
                 ctrl = cbox;
                 sizer->Add(ctrl, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
                 break;
@@ -679,6 +696,50 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             {
                 combo->Append(i->path);
             }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void ParameterPanel::onCheckbox(wxCommandEvent& event)
+{
+    // we accept some amount of hardcoding since those parameters are unlikely to change
+    const int count = m_parameter_widgets.size();
+    
+    ConfigParam* eventParam = NULL;
+    for (int n=0; n<count; n++)
+    {
+        wxWindow* w = m_parameter_widgets[n];
+        if (w == event.GetEventObject())
+        {
+            eventParam = (ConfigParam*)w->GetClientData();
+            break;
+        }
+    }
+    if (eventParam == NULL)
+    {
+        wxLogWarning("[ParameterPanel::onPathChanged] Cannot find which path was changed");
+        return;
+    }
+    
+    bool fullscreen = false;
+    
+    for (int n=0; n<count; n++)
+    {
+        wxWindow* w = m_parameter_widgets[n];
+        ConfigParam* param = (ConfigParam*)w->GetClientData();
+        assert(param != NULL);
+        assert(param->ok());
+        
+        if (param->m_param_name == "Fullscreen")
+        {
+            fullscreen = ((wxCheckBox*)w)->GetValue();
+        }
+        else if (param->m_param_name == "ScreenWidth" or param->m_param_name == "ScreenHeight")
+        {
+            w->Enable(not fullscreen);
+            w->Refresh();
         }
     }
 }

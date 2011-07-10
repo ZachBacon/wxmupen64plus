@@ -58,6 +58,8 @@ public:
     }
     
     void onPathChanged(wxFileDirPickerEvent& event);
+    void onCheckbox(wxCommandEvent& evt);
+    
     void onEnterPressed(wxCommandEvent& evt);
     void onFocusLost(wxFocusEvent& evt);
 };
