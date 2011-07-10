@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=mmg
-Date                   :=05/21/11
+Date                   :=07/09/11
 CodeLitePath           :="/Users/mmg/Library/Application Support/codelite"
 LinkerName             :=g++
 ArchiveTool            :=ar rcus
@@ -37,9 +37,9 @@ ArchiveOutputSwitch    :=
 PreprocessOnlySwitch   :=-E 
 ObjectsFileList        :="/Users/mmg/Workspace_CL/wxMupen64Plus/wxMupen64Plus.txt"
 MakeDirCommand         :=mkdir -p
-CmpOptions             :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes core,base,gl) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk $(Preprocessors)
-C_CmpOptions           :=-Wall -g $(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes core,base,gl) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk $(Preprocessors)
-LinkOptions            :=  -mwindows $(shell /usr/local/bin/wx-config-2.9 --debug=yes --unicode=yes --libs core,base,gl,html) -arch i386 $(shell /usr/local/bin/sdl-config --libs) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+CmpOptions             :=-Wall -g $(shell /usr/local/bin/wx-cocoa-config --cxxflags --unicode=yes --debug=yes core,base,gl) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk $(Preprocessors)
+C_CmpOptions           :=-Wall -g $(shell /usr/local/bin/wx-cocoa-config --cxxflags --unicode=yes --debug=yes core,base,gl) -arch i386 $(shell /usr/local/bin/sdl-config --cflags) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk $(Preprocessors)
+LinkOptions            :=  -mwindows $(shell /usr/local/bin/wx-cocoa-config --debug=yes --unicode=yes --libs core,base,gl,html) -arch i386 $(shell /usr/local/bin/sdl-config --libs) -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.5.sdk
 IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch)/Developer/hg/mupen64plus/mupen64plus-core/src/api $(IncludeSwitch)/Developer/hg/mupen64plus/mupen64plus-core/src 
 RcIncludePath          :=
 Libs                   :=
@@ -50,6 +50,8 @@ LibPath                := $(LibraryPathSwitch).
 ## User defined environment variables
 ##
 CodeLiteDir:=/Users/mmg/My Applications/Applications Dev/CodeLite.app/Contents/SharedSupport/
+29xRelease:=/Developer/svn/wxWidgets/dynamic_build
+29xDebug:=/Developer/svn/wxWidgets/dynamic_build
 Objects=$(IntermediateDirectory)/main$(ObjectSuffix) $(IntermediateDirectory)/parameterpanel$(ObjectSuffix) $(IntermediateDirectory)/sdlkeypicker$(ObjectSuffix) $(IntermediateDirectory)/gamespanel$(ObjectSuffix) $(IntermediateDirectory)/sdlhelper$(ObjectSuffix) $(IntermediateDirectory)/config$(ObjectSuffix) $(IntermediateDirectory)/wxvidext$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPI$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_osal_files_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_plugin$(ObjectSuffix) \
 	$(IntermediateDirectory)/mupen64plusplus_osal_dynamiclib_unix$(ObjectSuffix) $(IntermediateDirectory)/mupen64plusplus_MupenAPIpp$(ObjectSuffix) 
 

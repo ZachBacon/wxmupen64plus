@@ -266,7 +266,7 @@ int BasicGLPane::getHeight()
 
 BasicGLPane* glPane = NULL;
 
-wxDialog* fullscreen_frame = NULL;
+wxFrame* fullscreen_frame = NULL;
 
 #ifdef __WXMAC__
 // work around wx bug
@@ -461,16 +461,21 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
         fullscreen_helper_frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
 #endif
         
-        fullscreen_frame = new wxDialog(NULL, wxID_ANY, "Mupen64Plus", wxDefaultPosition, wxDefaultSize,
-                                        wxSTAY_ON_TOP);//wxSYSTEM_MENU | wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW);
+        fullscreen_frame = new wxFrame(NULL, wxID_ANY, "Mupen64Plus", wxDefaultPosition, wxDefaultSize,
+                                       wxSTAY_ON_TOP);//wxSYSTEM_MENU | wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW);
         glPane = new BasicGLPane(fullscreen_frame, args);
         
-#ifdef __WXMAC__
-        fullscreen_frame->Maximize();
+//#ifdef __WXMAC__
+//        fullscreen_frame->Maximize();
+//        fullscreen_frame->Show();
+//#else
+//        fullscreen_frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
+//#endif
         fullscreen_frame->Show();
-#else
-        fullscreen_frame->ShowFullScreen(true, wxFULLSCREEN_NOMENUBAR);
-#endif
+        fullscreen_frame->ShowFullScreen(true);
+        fullscreen_frame->Raise();
+        fullscreen_frame->SetFocus();
+        
         glPane->SetFocus();
         return NULL;
     }

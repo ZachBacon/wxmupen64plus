@@ -42,6 +42,8 @@
     <File Name="mupen64plusplus/MupenAPIpp.cpp"/>
     <File Name="mupen64plusplus/MupenAPIpp.h"/>
   </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-Wall" C_Options="-Wall">
@@ -55,10 +57,10 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags);-mmacosx-version-min=10.4;-isysroot;/Developer/SDKs/MacOSX10.5.sdk" C_Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags);-mmacosx-version-min=10.4;-isysroot;/Developer/SDKs/MacOSX10.5.sdk" Required="yes" PreCompiledHeader="">
+      <Compiler Options="-g;$(shell /usr/local/bin/wx-cocoa-config --cxxflags --unicode=yes --debug=yes core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags);-mmacosx-version-min=10.4;-isysroot;/Developer/SDKs/MacOSX10.5.sdk" C_Options="-g;$(shell /usr/local/bin/wx-cocoa-config --cxxflags --unicode=yes --debug=yes core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags);-mmacosx-version-min=10.4;-isysroot;/Developer/SDKs/MacOSX10.5.sdk" Required="yes" PreCompiledHeader="">
         <Preprocessor Value="__WX__"/>
       </Compiler>
-      <Linker Options="-mwindows;$(shell /usr/local/bin/wx-config-2.9 --debug=yes --unicode=yes --libs core,base,gl,html);-arch;i386;$(shell /usr/local/bin/sdl-config --libs);-mmacosx-version-min=10.4;-isysroot;/Developer/SDKs/MacOSX10.5.sdk" Required="yes"/>
+      <Linker Options="-mwindows;$(shell /usr/local/bin/wx-cocoa-config --debug=yes --unicode=yes --libs core,base,gl,html);-arch;i386;$(shell /usr/local/bin/sdl-config --libs);-mmacosx-version-min=10.4;-isysroot;/Developer/SDKs/MacOSX10.5.sdk" Required="yes"/>
       <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName).app/Contents/MacOS/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName).app/Contents/MacOS/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
@@ -90,10 +92,10 @@ $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icn
       </AdditionalRules>
     </Configuration>
     <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="">
+      <Compiler Options="-O2;$(shell /usr/local/bin/wx-cocoa-config --cxxflags --unicode=yes --debug=no core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-O2;$(shell /usr/local/bin/wx-cocoa-config --cxxflags --unicode=yes --debug=no core,base,gl);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="">
         <Preprocessor Value="__WX__"/>
       </Compiler>
-      <Linker Options="-mwindows;-s;$(shell /usr/local/bin/wx-config-2.9 --debug=no --unicode=yes --libs core,base,gl,html);-arch;i386;$(shell /usr/local/bin/sdl-config --libs)" Required="yes"/>
+      <Linker Options="-mwindows;-s;$(shell /usr/local/bin/wx-cocoa-config --debug=no --unicode=yes --libs core,base,gl,html);-arch;i386;$(shell /usr/local/bin/sdl-config --libs)" Required="yes"/>
       <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName).app/Contents/MacOS/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName).app/Contents/MacOS/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
@@ -126,6 +128,4 @@ $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icn
       </AdditionalRules>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
 </CodeLite_Project>
