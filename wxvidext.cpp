@@ -23,7 +23,6 @@
 #include <wx/wx.h>
 #endif
 
-#include <wx/glcanvas.h>
 #include <wx/event.h>
 #include <wx/sizer.h>
 #include <wx/frame.h>
@@ -32,12 +31,17 @@
 #include <wx/msgdlg.h>
 
 #ifdef __WXMAC__
+/** For a weird reasons, under OSX 10.6, combiners are off by default */
+#define GL_NV_register_combiners 1
 #include "OpenGL/glu.h"
 #include "OpenGL/gl.h"
 #else
 #include <GL/glu.h>
 #include <GL/gl.h>
 #endif
+
+// must come after including gl.h so that we can configure OpenGL
+#include <wx/glcanvas.h>
 
 #include <SDL.h>
 #include <SDL_keyboard.h>
@@ -632,9 +636,14 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
     {
         out = (void*)&glClientActiveTextureARB;
     }
+#if GL_NV_register_combiners
     else if (strcmp(Proc, "glCombinerParameterfvNV") == 0)
     {
+        //#ifdef GL_GLEXT_FUNCTION_POINTERS
+        //out = aglGetProcAddress ("glCombinerParameterfvNV");
+        //#else
         out = (void*)&glCombinerParameterfvNV;
+        //#endif
     }
     else if (strcmp(Proc, "glFinalCombinerInputNV") == 0)
     {
@@ -642,16 +651,27 @@ void* VidExt_GL_GetProcAddress(const char* Proc)
     }
     else if (strcmp(Proc, "glCombinerOutputNV") == 0)
     {
+        //#ifdef GL_GLEXT_FUNCTION_POINTERS
+        //out = aglGetProcAddress ("glCombinerOutputNV");
+        //#else
         out = (void*)&glCombinerOutputNV;
+        //#endif
     }
     else if (strcmp(Proc, "glCombinerInputNV") == 0)
     {
+        //#ifdef GL_GLEXT_FUNCTION_POINTERS
+        //out = aglGetProcAddress ("glCombinerInputNV");
+        //#else
         out = (void*)&glCombinerInputNV;
+        //#endif
     }
     else if (strcmp(Proc, "glCombinerParameteriNV") == 0)
     {
         out = (void*)&glCombinerParameteriNV;
     }
+#else
+#warning "GL_NV_register_combiners is not defined, *NV OpenGL extensions will not be available"
+#endif
     else if (strcmp(Proc, "glActiveTextureARB") == 0)
     {
         out = (void*)&glActiveTextureARB;
