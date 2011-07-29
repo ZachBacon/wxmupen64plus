@@ -859,6 +859,7 @@ void wxSDLKeyPicker::updateLabel()
             }
             else
             {
+                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + "> (not a number)\n");
                 label = m_binding;
             }
         }
@@ -873,6 +874,7 @@ void wxSDLKeyPicker::updateLabel()
             }
             else
             {
+                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n");
                 label = m_binding;
             }
         }
@@ -887,6 +889,7 @@ void wxSDLKeyPicker::updateLabel()
             }
             else
             {
+                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n");
                 label = m_binding;
             }
         }
@@ -896,6 +899,7 @@ void wxSDLKeyPicker::updateLabel()
         }
         else
         {
+            mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n");
             label = m_binding;
         }
     }
@@ -906,6 +910,9 @@ void wxSDLKeyPicker::updateLabel()
             long key1val = -1, key2val = -1;
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
+            
+            mplog_info("SdlKeyPicker", "Binding : <" + m_binding + ">");
+            
             const bool success = (key1.IsEmpty() || key1.ToLong(&key1val)) &&
                                  (key2.IsEmpty() || key2.ToLong(&key2val));
             if (success)
@@ -919,6 +926,7 @@ void wxSDLKeyPicker::updateLabel()
             else
             {
                 label = m_binding;
+                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding format for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n");
                 m_btn2->SetLabel("???");
             }
         }
@@ -932,12 +940,14 @@ void wxSDLKeyPicker::updateLabel()
         }
         else
         {
+            mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n");
             label = m_binding;
         }
     }
     else
     {
         label = "??";
+        mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type format <%i>\n", m_format);
         assert(false);
     }
     
