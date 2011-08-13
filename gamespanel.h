@@ -38,6 +38,7 @@ class wxGLCanvas;
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_STATE_CHANGE, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_SAVE_SLOT_CHANGE, -1);
+DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_CLEANUP_GL_CANVAS, -1);
 
 class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateListener
 {
@@ -121,6 +122,10 @@ public:
 
     void initGLCanvas();
     void cleanGLCanvas();
+    void onCleanGLCanvas(wxCommandEvent& evt)
+    {
+        cleanGLCanvas();
+    }
 
     void onMupenStateChangeEvt(wxCommandEvent& evt);
     void onMupenSaveSlotChangeEvt(wxCommandEvent& evt);

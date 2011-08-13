@@ -50,6 +50,7 @@
 
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_STATE_CHANGE);
 DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_SAVE_SLOT_CHANGE);
+DEFINE_LOCAL_EVENT_TYPE(wxMUPEN_CLEANUP_GL_CANVAS);
 
 enum
 {
@@ -74,7 +75,7 @@ int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPt
 {
     GamesPanel* self = (GamesPanel*)sortData;
     
-#ifdef __WXMAC__
+#if defined(__WXMAC__) && !defined(__WXOSX_COCOA__)
     RomInfo& rom1 = self->m_roms[item1];
     RomInfo& rom2 = self->m_roms[item2];
 #else
@@ -219,7 +220,9 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     Connect(wxID_ANY, wxMUPEN_STATE_CHANGE,
             wxCommandEventHandler(GamesPanel::onMupenStateChangeEvt), NULL, this);
     Connect(wxID_ANY, wxMUPEN_SAVE_SLOT_CHANGE,
-            wxCommandEventHandler(GamesPanel::onMupenSaveSlotChangeEvt), NULL, this);                         
+            wxCommandEventHandler(GamesPanel::onMupenSaveSlotChangeEvt), NULL, this);
+    Connect(wxID_ANY, wxMUPEN_CLEANUP_GL_CANVAS,
+            wxCommandEventHandler(GamesPanel::onCleanGLCanvas), NULL, this);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -548,7 +551,10 @@ void GamesPanel::onStop(wxCommandEvent& evt)
     try
     {
         m_api->stopEmulation();
-        cleanGLCanvas();
+        
+        wxCommandEvent evt(wxMUPEN_CLEANUP_GL_CANVAS, -1);
+        wxGetApp().AddPendingEvent(evt);
+        //cleanGLCanvas();
     }
     catch (std::runtime_error& ex)
     {
