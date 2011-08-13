@@ -434,6 +434,28 @@ ParameterPanel::~ParameterPanel()
 
 // -----------------------------------------------------------------------------------------------------------
 
+#include <wx/timer.h>
+
+/** Needed on wxOSX/Cocoa where we need to let some time elapse between using a combo and destroying it */
+class ApplyChangesTimer : public wxTimer
+{
+    int m_plugins;
+public:
+    ApplyChangesTimer(int plugins) : wxTimer()
+    {
+        m_plugins = plugins;
+        Start(500, wxTIMER_ONE_SHOT);
+    }
+
+    virtual void Notify()
+    {
+        wxCommandEvent evt(wxMUPEN_RELOAD_OPTIONS, wxID_ANY);
+        evt.SetInt(m_plugins);
+        wxGetApp().AddPendingEvent(evt);
+        delete this;
+    }
+};
+
 #define CHATTY 0
 
 void ParameterPanel::commitNewValues(bool onLeaving)
@@ -638,13 +660,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
             if (not onLeaving)
             {
                 mplog_info("ParameterPanel", "Commanding a reload of all config options\n");
-                
+                                
                 // It would be dangerous to delete the toolbar/panel here, because we are likely
                 // in a callback from either the toolbar or panel. So queue the change to be
                 // performed asynchronously
-                wxCommandEvent evt(wxMUPEN_RELOAD_OPTIONS, wxID_ANY);
-                evt.SetInt(plugins);
-                wxGetApp().AddPendingEvent(evt);
+                new ApplyChangesTimer(plugins);
+                
+                //wxCommandEvent evt(wxMUPEN_RELOAD_OPTIONS, wxID_ANY);
+                //evt.SetInt(plugins);
+                //wxGetApp().AddPendingEvent(evt);
             }
         }
     }
