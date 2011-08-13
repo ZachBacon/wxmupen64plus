@@ -893,11 +893,13 @@ void wxSDLKeyPicker::updateLabel()
         else if (m_binding.StartsWith("axis("))
         {
             long axisval = -1;
-            wxString axis = m_binding.AfterFirst('(').BeforeLast(')');
+            wxString axis = m_binding.AfterFirst('(').BeforeLast(')').Trim();
+            wxString sign = axis[axis.size() - 1];
+            axis = axis.SubString(0, axis.size() - 2);
             const bool success = axis.ToLong(&axisval);
             if (success)
             {
-                label = wxString::Format(_("Axis %i"), (int)axisval);
+                label = wxString::Format(_("Axis %i") + " " + sign, (int)axisval);
             }
             else
             {
@@ -947,8 +949,8 @@ void wxSDLKeyPicker::updateLabel()
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
             
-            label = key1;
-            m_btn2->SetLabel(key2);
+            label = wxString::Format(_("Axis %s"), key1);
+            m_btn2->SetLabel(wxString::Format(_("Axis %s"), key2));
         }
         else
         {
