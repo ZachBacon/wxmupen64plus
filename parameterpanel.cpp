@@ -694,7 +694,10 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             combo->Clear();
             for (wxVector<PluginsFinder::PluginInfo>::iterator i = choices.begin(); i != choices.end(); ++i)
             {
-                combo->Append(i->path);
+                if (param->m_plugin_type == M64PLUGIN_NULL or i->type == param->m_plugin_type)
+                {
+                    combo->Append(i->path);
+                }
             }
         }
     }
