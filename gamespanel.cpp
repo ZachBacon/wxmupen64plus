@@ -584,6 +584,7 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             m_stop_button->Disable();
             m_pause_button->Disable();
             ((wxFrame*)GetParent())->GetStatusBar()->SetStatusText(_("Emulation is stopped"));
+            wxGetApp().enableToolbar(true);
             //m_status->SetLabel(_("Emulation is stopped"));
             //Layout();
             
@@ -595,6 +596,7 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             m_stop_button->Enable();
             m_pause_button->Enable();
             ((wxFrame*)GetParent())->GetStatusBar()->SetStatusText(wxString::Format(_("'%s' is running"), m_currently_loaded_rom.mb_str()));
+            wxGetApp().enableToolbar(false);
             //m_status->SetLabel(wxString::Format(_("'%s' is running"), m_currently_loaded_rom.mb_str()));
             Layout();
             break;
@@ -604,6 +606,7 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             m_stop_button->Enable();
             m_pause_button->Disable();
             ((wxFrame*)GetParent())->GetStatusBar()->SetStatusText(wxString::Format(_("'%s' is paused"), m_currently_loaded_rom.mb_str()));
+            wxGetApp().enableToolbar(false);
             //m_status->SetLabel(wxString::Format(_("'%s' is paused"), m_currently_loaded_rom.mb_str()));
             Layout();
             break;

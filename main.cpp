@@ -555,6 +555,12 @@ void MupenFrontendApp::setCurrentPanel(int sectionId)
 
 void MupenFrontendApp::onToolbarItem(wxCommandEvent& evt)
 {
+    if (m_api->getEmulationState() == M64EMU_RUNNING or m_api->getEmulationState() == M64EMU_PAUSED)
+    {
+        wxBell();
+        return;
+    }
+    
 #ifndef __WXGTK__
     // FIXME: for some reason, Freeze and Thaw cause some random hanging on wxGTK. For now I'll just disable
     //        them in this case, anyway freeze and thaw don't appear to be needed on this platform
@@ -827,6 +833,17 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
     m_toolbar->ToggleTool( m_toolbar_items[selectedSection].m_tool->GetId(), true );
     
     return true;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MupenFrontendApp::enableToolbar(bool enable)
+{
+    for (unsigned int n=0; n<m_toolbar_items.size(); n++)
+    {
+        m_toolbar->EnableTool( m_toolbar_items[n].m_tool->GetId(), enable );        
+    }
+    
 }
 
 // -----------------------------------------------------------------------------------------------------------

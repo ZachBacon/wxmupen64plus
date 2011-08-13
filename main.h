@@ -156,6 +156,8 @@ public:
     void onInitedGLCanvas(wxCommandEvent& evt);
     void onCleanGLCanvas(wxCommandEvent& evt);
     
+    void enableToolbar(bool enable);
+    
 #ifdef __WXMAC__    
     virtual void MacOpenFile(const wxString &fileName);
 #endif
