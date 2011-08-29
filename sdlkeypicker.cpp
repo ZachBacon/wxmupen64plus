@@ -583,7 +583,7 @@ public:
         
                 wxPanel* pane = new wxPanel(this);
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-        wxStaticText* label = new wxStaticText(pane, wxID_ANY, _("Please use your keyboard now"),
+        wxStaticText* label = new wxStaticText(pane, wxID_ANY, _("Please use your keyboard/gamepad now"),
                                                wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
         
         sizer->AddStretchSpacer();
