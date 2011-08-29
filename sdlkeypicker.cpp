@@ -1109,7 +1109,10 @@ void wxSDLKeyPicker::updateLabel()
         }
         else
         {
-            mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n");
+            if (not m_binding.IsEmpty())
+            {
+                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n");
+            }
             label = m_binding;
         }
     }
