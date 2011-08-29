@@ -645,6 +645,7 @@ public:
         {
             wxYield();
             wxMilliSleep(10);
+            poll();
         }
     }
     
@@ -662,7 +663,11 @@ public:
     void onIdle(wxIdleEvent& evt)
     {
         evt.RequestMore();
-        
+        poll();
+    }
+    
+    void poll()
+    {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -672,6 +677,7 @@ public:
                 m_result = event.key.keysym.sym;
                 EndModal( GetReturnCode() );
             }
+            /*
             else if (event.type == SDL_JOYAXISMOTION)
             {
                 //printf("SDL_JOYAXISMOTION\n");
@@ -690,6 +696,36 @@ public:
                 {
                     m_type = GAMEPAD_BUTTON;
                     m_button = event.jbutton.button;
+                    EndModal( GetReturnCode() );
+                }
+            }*/
+        }
+        
+        SDL_JoystickUpdate();
+        
+        for (unsigned int i=0; i<m_joysticks.size(); i++) 
+		{
+            const int count = SDL_JoystickNumAxes(m_joysticks[i]);
+            for (int axis=0; axis<count; axis++)
+            {
+                Sint16 axisVal = SDL_JoystickGetAxis(m_joysticks[i], axis);
+                if (abs(axisVal) > 32767*2/3)
+                {
+                    m_type = GAMEPAD_AXIS;
+                    m_axis = axis;
+                    m_axis_dir = (axisVal > 0 ? '+' : '-');
+                    EndModal( GetReturnCode() );
+                }
+            }
+            
+            const int count2 = SDL_JoystickNumButtons(m_joysticks[i]);
+            for (int btn=0; btn<count2; btn++)
+            {
+                Uint8 btnVal = SDL_JoystickGetButton(m_joysticks[i], btn);
+                if (btnVal == SDL_PRESSED)
+                {
+                    m_type = GAMEPAD_BUTTON;
+                    m_button = btn;
                     EndModal( GetReturnCode() );
                 }
             }
