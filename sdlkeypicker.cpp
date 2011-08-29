@@ -451,6 +451,55 @@ private:
     
 public:
 
+    PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250))
+    {
+        m_result = SDLK_UNKNOWN;
+        m_type = CANCELLED;
+        
+        wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+        wxStaticText* label = new wxStaticText(this, wxID_ANY, _("Please use your keyboard/gamepad now"),
+                                               wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
+        
+        sizer->AddStretchSpacer();
+        sizer->Add(label, 0, wxEXPAND | wxALL, 5);
+        sizer->AddStretchSpacer();
+        
+        wxButton* cancel = new wxButton(this, wxID_CANCEL, _("Cancel"));
+        sizer->Add(cancel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
+        cancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onCancel), NULL, this);
+        
+        wxButton* erase = new wxButton(this, wxID_CANCEL, _("Erase this key binding"));
+        sizer->Add(erase, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
+        erase->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onErase), NULL, this);
+        
+        sizer->AddSpacer(25);
+        
+        Connect(wxEVT_IDLE, wxIdleEventHandler(PressAKey::onIdle), NULL, this);
+        
+        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        SDL_JoystickEventState(SDL_ENABLE);
+        
+		for (int i=0; i<SDL_NumJoysticks(); i++) 
+		{
+			 m_joysticks.push_back(SDL_JoystickOpen(i));
+		}
+        
+        SetSizer(sizer);
+        Center();
+        ShowModal();        
+    }
+    
+    ~PressAKey()
+    {
+        for (unsigned int i=0; i<m_joysticks.size(); i++) 
+		{
+			 SDL_JoystickClose(m_joysticks[i]);
+		}
+		
+        // Close the frame
+        SDL_Quit();
+    }
+    
     void onIdle(wxIdleEvent& evt)
     {
         evt.RequestMore();
@@ -498,55 +547,6 @@ public:
     {
         m_type = DELETE_BINDING;
         EndModal( GetReturnCode() );
-    }
-
-    PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250))
-    {
-        m_result = SDLK_UNKNOWN;
-        m_type = CANCELLED;
-        
-        wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-        wxStaticText* label = new wxStaticText(this, wxID_ANY, _("Please use your keyboard/gamepad now"),
-                                               wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
-                                               
-        sizer->AddStretchSpacer();
-        sizer->Add(label, 0, wxEXPAND | wxALL, 5);
-        sizer->AddStretchSpacer();
-        
-        wxButton* cancel = new wxButton(this, wxID_CANCEL, _("Cancel"));
-        sizer->Add(cancel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
-        cancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onCancel), NULL, this);
-        
-        wxButton* erase = new wxButton(this, wxID_CANCEL, _("Erase this key binding"));
-        sizer->Add(erase, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
-        erase->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onErase), NULL, this);
-        
-        sizer->AddSpacer(25);
-        
-        Connect(wxEVT_IDLE, wxIdleEventHandler(PressAKey::onIdle), NULL, this);
-        
-        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-        SDL_JoystickEventState(SDL_ENABLE);
-        
-		for (int i=0; i<SDL_NumJoysticks(); i++) 
-		{
-			 m_joysticks.push_back(SDL_JoystickOpen(i));
-		}
-        
-        SetSizer(sizer);
-        Center();
-        ShowModal();        
-    }
-    
-    ~PressAKey()
-    {
-        for (unsigned int i=0; i<m_joysticks.size(); i++) 
-		{
-			 SDL_JoystickClose(m_joysticks[i]);
-		}
-		
-        // Close the frame
-        SDL_Quit();
     }
     
     /** Get the key/button/axis that was selected by the user, or CANCELLED if it was cancelled */
