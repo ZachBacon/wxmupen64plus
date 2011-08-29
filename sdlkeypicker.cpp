@@ -39,8 +39,133 @@
 #include <wx/stattext.h>
 #include <wx/log.h>
 #include <wx/statbmp.h>
+#include <wx/event.h>
 
 // -----------------------------------------------------------------------------------------------------------
+
+SDLKey wxKeyToSDL(int wxkey)
+{
+    switch (wxkey)
+    {
+        case WXK_BACK: return SDLK_BACKSPACE;
+        case WXK_TAB: return SDLK_TAB;
+        case WXK_RETURN: return SDLK_RETURN;
+        case WXK_ESCAPE: return SDLK_ESCAPE;
+        case WXK_SPACE: return SDLK_SPACE;
+        case WXK_DELETE: return SDLK_DELETE;
+        //case: //WXK_START: ?
+        //case: //WXK_LBUTTON: ?
+        //case: //WXK_RBUTTON: ?
+        //case: //WXK_CANCEL: ?
+        //case: //WXK_MBUTTON: ?
+        case WXK_CLEAR: return SDLK_CLEAR;
+        case WXK_SHIFT: return SDLK_LSHIFT; // FIXME: tell apart left shift from right shift
+        case WXK_ALT: return SDLK_LALT; // FIXME: tell apart left alt from right alt
+        case WXK_CONTROL: return SDLK_LCTRL; // FIXME: tell apart left control from right control
+        case WXK_MENU: return SDLK_MENU;
+        case WXK_PAUSE: return SDLK_PAUSE;
+        //case: //WXK_CAPITAL: ?
+        case WXK_END: return SDLK_END;
+        case WXK_HOME: return SDLK_HOME;
+        case WXK_LEFT: return SDLK_LEFT;
+        case WXK_UP: return SDLK_UP;
+        case WXK_RIGHT: return SDLK_RIGHT;
+        case WXK_DOWN: return SDLK_DOWN;
+        //case: //WXK_SELECT: ?
+        case WXK_PRINT: return SDLK_PRINT;
+        //case: //WXK_EXECUTE: ?
+        //case: //WXK_SNAPSHOT: ?
+        case WXK_INSERT: return SDLK_INSERT;
+        case WXK_HELP: return SDLK_HELP;
+        case WXK_NUMPAD0: return SDLK_0;
+        case WXK_NUMPAD1: return SDLK_1;
+        case WXK_NUMPAD2: return SDLK_2;
+        case WXK_NUMPAD3: return SDLK_3;
+        case WXK_NUMPAD4: return SDLK_4;
+        case WXK_NUMPAD5: return SDLK_5;
+        case WXK_NUMPAD6: return SDLK_6;
+        case WXK_NUMPAD7: return SDLK_7;
+        case WXK_NUMPAD8: return SDLK_8;
+        case WXK_NUMPAD9: return SDLK_9;
+        case WXK_MULTIPLY: return SDLK_ASTERISK;
+        case WXK_ADD: return SDLK_PLUS;
+        //case: //WXK_SEPARATOR: ?
+        case WXK_SUBTRACT: return SDLK_MINUS;
+        //case: //WXK_DECIMAL: ?
+        case WXK_DIVIDE: return SDLK_SLASH;
+        case WXK_F1: return SDLK_F1;
+        case WXK_F2: return SDLK_F2;
+        case WXK_F3: return SDLK_F3;
+        case WXK_F4: return SDLK_F4;
+        case WXK_F5: return SDLK_F5;
+        case WXK_F6: return SDLK_F6;
+        case WXK_F7: return SDLK_F7;
+        case WXK_F8: return SDLK_F8;
+        case WXK_F9: return SDLK_F9;
+        case WXK_F10: return SDLK_F10;
+        case WXK_F11: return SDLK_F11;
+        case WXK_F12: return SDLK_F12;
+        case WXK_F13: return SDLK_F13;
+        case WXK_F14: return SDLK_F14;
+        case WXK_F15: return SDLK_F15;
+        case WXK_NUMLOCK: return SDLK_NUMLOCK;
+        case WXK_SCROLL: return SDLK_SCROLLOCK;
+        case WXK_PAGEUP: return SDLK_PAGEUP;
+        case WXK_PAGEDOWN: return SDLK_PAGEDOWN;
+        //case WXK_NUMPAD_SPACE: ?
+        //case WXK_NUMPAD_TAB: ?
+        case WXK_NUMPAD_ENTER: return SDLK_KP_ENTER;
+        /*
+        case: //WXK_NUMPAD_F1:
+        case: //WXK_NUMPAD_F2:
+        case: //WXK_NUMPAD_F3:
+        case: //WXK_NUMPAD_F4:
+        case: //WXK_NUMPAD_HOME:
+        case: //WXK_NUMPAD_LEFT:
+        case: //WXK_NUMPAD_UP: ?
+        case: //WXK_NUMPAD_RIGHT: ?
+        case: //WXK_NUMPAD_DOWN: ?
+        case: //WXK_NUMPAD_PAGEUP: ?
+        case: //WXK_NUMPAD_PAGEDOWN: ?
+        case: //WXK_NUMPAD_END: ?
+        case: //WXK_NUMPAD_BEGIN: ?
+        case: //WXK_NUMPAD_INSERT: ?
+        case: //WXK_NUMPAD_DELETE: ?
+         * */
+        case WXK_NUMPAD_EQUAL: return SDLK_KP_EQUALS;
+        case WXK_NUMPAD_MULTIPLY: return SDLK_KP_MULTIPLY;
+        case WXK_NUMPAD_ADD: return SDLK_KP_PLUS;
+        //case WXK_NUMPAD_SEPARATOR: ?
+        case WXK_NUMPAD_SUBTRACT: return SDLK_KP_MINUS;
+        case WXK_NUMPAD_DECIMAL: return SDLK_KP_PERIOD;
+        case WXK_NUMPAD_DIVIDE: return SDLK_KP_DIVIDE;
+        case WXK_WINDOWS_LEFT: return SDLK_LMETA;
+        case WXK_WINDOWS_RIGHT: return SDLK_RMETA;
+        case WXK_WINDOWS_MENU: return SDLK_MENU;
+        case WXK_COMMAND: return SDLK_LMETA;
+        case '=': return SDLK_EQUALS;
+        case ':': return SDLK_COLON;
+        case ';': return SDLK_SEMICOLON;
+        case ',': return SDLK_COMMA;
+        case '.': return SDLK_PERIOD;
+        case '/': return SDLK_SLASH;
+        case '\\': return SDLK_BACKSLASH;
+        case '`': return SDLK_BACKQUOTE;
+        case '&': return SDLK_AMPERSAND;
+        case '"': return SDLK_QUOTE;
+        case '-': return SDLK_MINUS;
+        case '[': return SDLK_LEFTBRACKET;
+        case ']': return SDLK_RIGHTBRACKET;
+        case '(': return SDLK_LEFTPAREN;
+        case ')': return SDLK_RIGHTPAREN;
+        default:
+            // ASCII
+            if (wxkey >= 'a' and wxkey <= 'z') return (SDLKey)wxkey;
+            if (wxkey >= 'A' and wxkey <= 'Z') return (SDLKey)(wxkey + 'a' - 'A');
+            if (wxkey >= '0' and wxkey <= '9') return (SDLKey)wxkey;
+            return SDLK_UNKNOWN;
+    }
+}
 
 /** Needed because SDL_GetKeyName requires SDL to be initialised, and SDL is not initialised here. */
 const char* GetSDLKeyName(SDLKey key)
@@ -451,41 +576,56 @@ private:
     
 public:
 
-    PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250))
+    PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250), wxDEFAULT_DIALOG_STYLE | wxWANTS_CHARS)
     {
         m_result = SDLK_UNKNOWN;
         m_type = CANCELLED;
         
+                wxPanel* pane = new wxPanel(this);
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-        wxStaticText* label = new wxStaticText(this, wxID_ANY, _("Please use your keyboard/gamepad now"),
+        wxStaticText* label = new wxStaticText(pane, wxID_ANY, _("Please use your keyboard now"),
                                                wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
         
         sizer->AddStretchSpacer();
         sizer->Add(label, 0, wxEXPAND | wxALL, 5);
         sizer->AddStretchSpacer();
         
-        wxButton* cancel = new wxButton(this, wxID_CANCEL, _("Cancel"));
+        wxButton* cancel = new wxButton(pane, wxID_CANCEL, _("Cancel"));
         sizer->Add(cancel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
         cancel->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onCancel), NULL, this);
         
-        wxButton* erase = new wxButton(this, wxID_CANCEL, _("Erase this key binding"));
+        wxButton* erase = new wxButton(pane, wxID_CANCEL, _("Erase this key binding"));
         sizer->Add(erase, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 5);
         erase->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(PressAKey::onErase), NULL, this);
         
         sizer->AddSpacer(25);
         
-        Connect(wxEVT_IDLE, wxIdleEventHandler(PressAKey::onIdle), NULL, this);
+        //Connect(wxEVT_IDLE, wxIdleEventHandler(PressAKey::onIdle), NULL, this);
         
+        Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        
+        pane->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        pane->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        
+        cancel->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        cancel->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        
+        erase->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        erase->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        
+        pane->SetSizer(sizer);
+        Center();
+        
+        pane->SetFocus();
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        
         SDL_JoystickEventState(SDL_ENABLE);
         
 		for (int i=0; i<SDL_NumJoysticks(); i++) 
 		{
 			 m_joysticks.push_back(SDL_JoystickOpen(i));
 		}
-        
-        SetSizer(sizer);
-        Center();
         ShowModal();        
     }
     
@@ -503,7 +643,7 @@ public:
     void onIdle(wxIdleEvent& evt)
     {
         evt.RequestMore();
-                
+        
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -535,6 +675,21 @@ public:
         }
         
         wxMilliSleep(50);
+    }
+    
+    void onWxKeyPress(wxKeyEvent& evt)
+    {
+        m_type = KEY;
+        m_result = wxKeyToSDL(evt.GetKeyCode());
+        
+        if (m_result == SDLK_UNKNOWN)
+        {
+            wxBell();
+        }
+        else
+        {
+            EndModal( GetReturnCode() );
+        }
     }
     
     void onCancel(wxCommandEvent& evt)
