@@ -105,6 +105,7 @@ EVT_KEY_DOWN(BasicGLPane::keyPressed)
 EVT_KEY_UP(BasicGLPane::keyReleased)
 END_EVENT_TABLE()
 
+// FIXME: I had forgotten that this function existed and re-coded it in sdlkeypicker.cpp :'( merge the two
 int wxToSDL(int code)
 {
     switch (code)
