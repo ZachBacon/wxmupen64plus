@@ -348,7 +348,7 @@ private:
     ResultType m_type;
 public:
 
-    PressAKey()
+    PressAKey(wxWindow* parent)
     {
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         SDL_JoystickEventState(SDL_ENABLE);
@@ -551,6 +551,14 @@ public:
 
 #if USE_WX_KEY_PICKER
 
+bool g_have_answer = false;
+int g_answer;
+void sheetCallback(wxWindowModalDialogEvent& evt)
+{
+    g_answer = evt.GetReturnCode();
+    g_have_answer = true;
+}
+
 class PressAKey : public wxDialog
 {
     
@@ -576,7 +584,7 @@ private:
     
 public:
 
-    PressAKey() : wxDialog(NULL, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250), wxDEFAULT_DIALOG_STYLE | wxWANTS_CHARS)
+    PressAKey(wxWindow* parent) : wxDialog(parent, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250), wxDEFAULT_DIALOG_STYLE | wxWANTS_CHARS)
     {
         m_result = SDLK_UNKNOWN;
         m_type = CANCELLED;
@@ -620,13 +628,24 @@ public:
         pane->SetFocus();
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         
+        
         SDL_JoystickEventState(SDL_ENABLE);
         
 		for (int i=0; i<SDL_NumJoysticks(); i++) 
 		{
 			 m_joysticks.push_back(SDL_JoystickOpen(i));
 		}
-        ShowModal();        
+        
+        g_have_answer = false;
+        Bind(wxEVT_WINDOW_MODAL_DIALOG_CLOSED, &sheetCallback);
+        ShowWindowModal();
+
+        // FIXME: that's ugly :)
+        while (not g_have_answer)
+        {
+            wxYield();
+            wxMilliSleep(10);
+        }
     }
     
     ~PressAKey()
@@ -655,6 +674,7 @@ public:
             }
             else if (event.type == SDL_JOYAXISMOTION)
             {
+                //printf("SDL_JOYAXISMOTION\n");
                 if (abs(event.jaxis.value) > 32767*2/3)
                 {
                     m_type = GAMEPAD_AXIS;
@@ -665,6 +685,7 @@ public:
             }
             else if (event.type == SDL_JOYBUTTONDOWN)
             {
+                //printf("SDL_JOYBUTTONDOWN\n");                
                 if (event.jbutton.state == SDL_PRESSED)
                 {
                     m_type = GAMEPAD_BUTTON;
@@ -855,7 +876,7 @@ wxSDLKeyPicker::wxSDLKeyPicker(wxWindow* parent, wxString curr, const ConfigPara
 
 void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 {
-    PressAKey dialog;
+    PressAKey dialog(wxGetApp().GetTopWindow());
         
     const PressAKey::ResultType type = dialog.getResultType();
     if (type == PressAKey::CANCELLED) return;
@@ -1080,7 +1101,7 @@ void wxSDLKeyPicker::updateLabel()
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
             
-            mplog_info("SdlKeyPicker", "Binding : <" + m_binding + ">");
+            mplog_info("SdlKeyPicker", "Binding : <" + m_binding + ">\n");
             
             const bool success = (key1.IsEmpty() || key1.ToLong(&key1val)) &&
                                  (key2.IsEmpty() || key2.ToLong(&key2val));
