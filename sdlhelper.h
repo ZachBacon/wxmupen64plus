@@ -25,6 +25,8 @@
 #include <map>
 #include <string>
 
+#include <SDL_keysym.h>
+
 // This is put in a separate file so that main.cpp does not need to include
 // SDL.h; for some reason (probably the SDL_main dark magic crap), including
 // SDL.h in main.cpp breaks the menu bar
@@ -32,5 +34,8 @@
 void SDL_Helper_Start();
 
 const std::map<int, std::string>& getGamepadList();
+
+const char* GetSDLKeyName(SDLKey key);
+SDLKey wxKeyToSDL(int wxkey);
 
 #endif // SDL_KEY_PICKER_H
