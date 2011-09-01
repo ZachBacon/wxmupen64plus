@@ -677,7 +677,7 @@ public:
     DcHolder(wxGLCanvas* canvas)
     {
         dc = new wxClientDC(canvas);
-        glClear(GL_COLOR_BUFFER_BIT);
+        //glClear(GL_COLOR_BUFFER_BIT);
     }
     ~DcHolder()
     {
