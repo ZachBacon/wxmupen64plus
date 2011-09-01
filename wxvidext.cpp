@@ -672,16 +672,14 @@ m64p_error VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
 
 class DcHolder
 {
-    wxClientDC* dc;
+    wxClientDC dc;
 public:
-    DcHolder(wxGLCanvas* canvas)
+    DcHolder(wxGLCanvas* canvas) : dc(canvas)
     {
-        dc = new wxClientDC(canvas);
         //glClear(GL_COLOR_BUFFER_BIT);
     }
     ~DcHolder()
     {
-        delete dc;
     }
 };
 /** Sometimes key up events can be lost (rarely) so make sure every frame */
