@@ -160,7 +160,6 @@ SDLKey wxKeyToSDL(int wxkey)
         case WXK_WINDOWS_LEFT: return SDLK_LMETA;
         case WXK_WINDOWS_RIGHT: return SDLK_RMETA;
         case WXK_WINDOWS_MENU: return SDLK_MENU;
-        case WXK_COMMAND: return SDLK_LMETA;
         case '=': return SDLK_EQUALS;
         case ':': return SDLK_COLON;
         case ';': return SDLK_SEMICOLON;
