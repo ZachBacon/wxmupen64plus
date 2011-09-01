@@ -155,6 +155,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
     
     // will support some level of hardcoding since those options are not very likely to change...
     bool fullscreen = false;
+    bool is_input = false;
     
     const int count = section->m_parameters.size();
     for (int p=0; p<count; p++)
@@ -170,6 +171,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
         //printf("Parameter %i : %s (enabled = %i)\n", p, section.m_parameters[p].m_param_name.c_str(),
         //                                             section.m_parameters[p].m_enabled);
         if (not curr->m_enabled) continue;
+
+        if (curr->m_param_name == "device") is_input = true;
 
         // if help string is short enough, use it instead of param name, often it's a clearer string
         wxString labelstr = (curr->m_help_string.size() < 30 and
@@ -430,6 +433,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
     SetSizer(sizer);
     FitInside(); // ask the sizer about the needed size
     SetScrollRate(5, 5);
+    
+    if (is_input)
+    {
+        update();
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -789,6 +797,8 @@ void ParameterPanel::update()
     }
     
     Layout();
+    FitInside(); // ask the sizer about the needed size
+    SetScrollRate(5, 5);
 }
 
 // -----------------------------------------------------------------------------------------------------------
