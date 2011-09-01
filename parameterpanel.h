@@ -45,6 +45,8 @@ class ParameterPanel : public wxScrolledWindow, public IConfigurationPanel
     unsigned long m_magic_number;
     Mupen64PlusPlus* m_api;
     
+    void update();
+    
 public:
 
 	ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSection* section);
@@ -62,7 +64,14 @@ public:
     
     void onEnterPressed(wxCommandEvent& evt);
     void onFocusLost(wxFocusEvent& evt);
-    void onKeyPicked(wxCommandEvent& evt);
+    void onKeyPicked(wxCommandEvent& evt)
+    {
+        update();
+    }
+    void onInputDeviceChange(wxCommandEvent& evt)
+    {
+        update();
+    }
 };
 
 class ParameterGroupsPanel : public wxNotebook, public IConfigurationPanel

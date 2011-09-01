@@ -235,6 +235,13 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     
                     ctrl = choice;
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    
+                    // FIXME: don't hardcode parameter name 'device'?
+                    if (curr->m_param_name == "device")
+                    {
+                        choice->Connect(choice->GetId(), wxEVT_COMMAND_CHOICE_SELECTED,
+                                        wxCommandEventHandler(ParameterPanel::onInputDeviceChange), NULL, this);
+                    }
                 }
                 else
                 {
@@ -625,39 +632,6 @@ void ParameterPanel::commitNewValues(bool onLeaving)
             int plugins = m_api->reloadPlugins();
             printf("===========================\n");
             
-            /*
-            for (int n=0; n<count; n++)
-            {
-                ConfigParam* param = (ConfigParam*)m_parameter_widgets[n]->GetClientData();
-                assert(param != NULL);
-                assert(param->ok());
-                
-                if (param->m_special_type == PLUGIN_FILE)
-                {
-                    if (param->m_param_name == "VideoPlugin")
-                    {
-                        param->m_is_ok = (plugins & 0x1) != 0;
-                    }
-                    else if (param->m_param_name == "AudioPlugin")
-                    {
-                        param->m_is_ok = (plugins & 0x2) != 0;
-                    }
-                    else if (param->m_param_name == "InputPlugin")
-                    {
-                        param->m_is_ok = (plugins & 0x4) != 0;
-                    }
-                    else if (param->m_param_name == "RspPlugin")
-                    {
-                        param->m_is_ok = (plugins & 0x8) != 0;
-                    }
-                    
-                    wxComboBoxWithIcon* c = (wxComboBoxWithIcon*)m_parameter_widgets[n];
-                    c->m_icon->Show(not param->m_is_ok);
-                } // end if
-
-            } // end for
-            */
-            
             Layout();
             
             if (not onLeaving)
@@ -668,10 +642,6 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                 // in a callback from either the toolbar or panel. So queue the change to be
                 // performed asynchronously
                 new ApplyChangesTimer(plugins);
-                
-                //wxCommandEvent evt(wxMUPEN_RELOAD_OPTIONS, wxID_ANY);
-                //evt.SetInt(plugins);
-                //wxGetApp().AddPendingEvent(evt);
             }
         }
     }
@@ -732,10 +702,8 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
 
 // -----------------------------------------------------------------------------------------------------------
 
-void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
+void ParameterPanel::update()
 {
-    printf("onKeyPicked\n");
-    
     enum DeviceType
     {
         UNKNOWN,
@@ -752,14 +720,25 @@ void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
         
         if (param->m_param_name == "device")
         {
-            int value = param->getIntValue();
-            if (value == -2)
+
+            if (dynamic_cast<wxChoice*>(m_parameter_widgets[n])  != NULL)
             {
-                device_type = KEYBOARD;
+                wxChoice* ctrl = (wxChoice*)m_parameter_widgets[n];
+                
+                const int value = (int)((long)ctrl->GetClientData( ctrl->GetSelection() ));
+                
+                if (value == -2)
+                {
+                    device_type = KEYBOARD;
+                }
+                else if (value >= 0)
+                {
+                    device_type = GAMEPAD;
+                }
             }
-            else if (value >= 0)
+            else
             {
-                device_type = GAMEPAD;
+                mplog_warning("ParameterPanel", "'device' was expected to be of type wxChoice\n");
             }
         }
         
@@ -809,6 +788,7 @@ void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
         }
     }
     
+    Layout();
 }
 
 // -----------------------------------------------------------------------------------------------------------
