@@ -768,9 +768,7 @@ void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
             wxSDLKeyPicker* p = (wxSDLKeyPicker*)m_parameter_widgets[n];
             wxString str = p->getBindingString();
             
-            // TODO: find way to remove previously set bitmap
-            //p->getButton()->SetBitmap(wxBitmap());
-            p->getButton()->SetToolTip("");
+            bool error = false;
             
             if (device_type == KEYBOARD)
             {
@@ -784,6 +782,7 @@ void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
                     }
                     p->getButton()->SetBitmap(icon);
                     p->getButton()->SetToolTip(_("This keyboard configuration contains gamepad keys!"));
+                    error = true;
                 }
             }
             else if (device_type == GAMEPAD)
@@ -798,7 +797,14 @@ void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
                     }
                     p->getButton()->SetBitmap(icon);
                     p->getButton()->SetToolTip(_("This gamepad configuration contains keyboard keys!"));
+                    error = true;
                 }
+            }
+            
+            if (not error)
+            {
+                p->getButton()->SetBitmap(wxBitmap());
+                p->getButton()->SetToolTip("");
             }
         }
     }
