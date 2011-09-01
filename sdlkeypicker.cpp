@@ -43,6 +43,8 @@
 #include <wx/statbmp.h>
 #include <wx/event.h>
 
+DEFINE_LOCAL_EVENT_TYPE(wxKEY_PICKED);
+
 // -----------------------------------------------------------------------------------------------------------
 
 #if USE_SDL_KEY_PICKER
@@ -646,6 +648,9 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         m_key = SDLK_UNKNOWN;
         m_binding = "";
         updateLabel();
+        wxCommandEvent evt(wxKEY_PICKED, GetId());
+        evt.SetString(GetLabel());
+        AddPendingEvent(evt);
         return;
     }
 
@@ -764,6 +769,10 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
 
     }
     updateLabel();
+    
+    wxCommandEvent notification(wxKEY_PICKED, GetId());
+    notification.SetString(GetLabel());
+    AddPendingEvent(notification);
 }
 
 // -----------------------------------------------------------------------------------------------------------

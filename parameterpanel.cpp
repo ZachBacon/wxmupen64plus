@@ -206,6 +206,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 if (curr->m_special_type == KEYBOARD_KEY_INT)
                 {
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
+                    ctrl->Connect(wxID_ANY, wxKEY_PICKED, wxCommandEventHandler(ParameterPanel::onKeyPicked),NULL,this);
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (curr->m_choices.size() > 0)
@@ -312,12 +313,14 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
                                               curr, false);
+                    ctrl->Connect(wxID_ANY, wxKEY_PICKED, wxCommandEventHandler(ParameterPanel::onKeyPicked),NULL,this);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (curr->m_special_type == BINDING_ANALOG_COUPLE_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
                                               curr, true);
+                    ctrl->Connect(wxID_ANY, wxKEY_PICKED, wxCommandEventHandler(ParameterPanel::onKeyPicked),NULL,this);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
                 }
                 else if (curr->m_special_type == DIRECTORY)
@@ -374,7 +377,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     {
                         wxLogWarning("Failed to load icon 'warning.png', make sure your installation is OK");
                         icon_widget = new wxStaticBitmap(container, wxID_ANY,
-                                wxArtProvider::GetBitmap(wxART_ERROR));                        
+                                wxArtProvider::GetBitmap(wxART_ERROR));
                     }
                     else
                     {
@@ -725,6 +728,81 @@ void ParameterPanel::onPathChanged(wxFileDirPickerEvent& event)
             }
         }
     }
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void ParameterPanel::onKeyPicked(wxCommandEvent& evt)
+{
+    printf("onKeyPicked\n");
+    
+    enum DeviceType
+    {
+        UNKNOWN,
+        KEYBOARD,
+        GAMEPAD
+    } device_type = UNKNOWN;
+    
+    const int count = m_parameter_widgets.size();
+    for (int n=0; n<count; n++)
+    {
+        ConfigParam* param = (ConfigParam*)m_parameter_widgets[n]->GetClientData();
+        assert(param != NULL);
+        assert(param->ok());
+        
+        if (param->m_param_name == "device")
+        {
+            int value = param->getIntValue();
+            if (value == -2)
+            {
+                device_type = KEYBOARD;
+            }
+            else if (value >= 0)
+            {
+                device_type = GAMEPAD;
+            }
+        }
+        
+        if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
+        {
+            wxSDLKeyPicker* p = (wxSDLKeyPicker*)m_parameter_widgets[n];
+            wxString str = p->getBindingString();
+            
+            // TODO: find way to remove previously set bitmap
+            //p->getButton()->SetBitmap(wxBitmap());
+            p->getButton()->SetToolTip("");
+            
+            if (device_type == KEYBOARD)
+            {
+                if (str.StartsWith("axis") or str.StartsWith("button"))
+                {
+                    wxBitmap icon(datadir + "warning.png", wxBITMAP_TYPE_ANY);
+                    if (not icon.IsOk())
+                    {
+                        wxLogWarning("Cannot locate " + datadir + "warning.png, is your installation ok?");
+                        return;
+                    }
+                    p->getButton()->SetBitmap(icon);
+                    p->getButton()->SetToolTip(_("This keyboard configuration contains gamepad keys!"));
+                }
+            }
+            else if (device_type == GAMEPAD)
+            {
+                if (str.StartsWith("key"))
+                {
+                    wxBitmap icon(datadir + "warning.png", wxBITMAP_TYPE_ANY);     
+                    if (not icon.IsOk())
+                    {
+                        wxLogWarning("Cannot locate " + datadir + "warning.png, is your installation ok?");
+                        return;
+                    }
+                    p->getButton()->SetBitmap(icon);
+                    p->getButton()->SetToolTip(_("This gamepad configuration contains keyboard keys!"));
+                }
+            }
+        }
+    }
+    
 }
 
 // -----------------------------------------------------------------------------------------------------------

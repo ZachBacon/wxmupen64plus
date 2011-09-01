@@ -62,6 +62,7 @@ public:
     
     void onEnterPressed(wxCommandEvent& evt);
     void onFocusLost(wxFocusEvent& evt);
+    void onKeyPicked(wxCommandEvent& evt);
 };
 
 class ParameterGroupsPanel : public wxNotebook, public IConfigurationPanel

@@ -38,6 +38,9 @@ class ConfigParam;
 #define USE_WX_KEY_PICKER 0
 #endif
 
+DECLARE_LOCAL_EVENT_TYPE(wxKEY_PICKED, -1);
+
+
 class wxButton;
 
 class wxSDLKeyPicker : public wxPanel
@@ -108,6 +111,11 @@ public:
     {
         assert(m_format == FORMAT_DIGITAL || m_format == FORMAT_ANALOG_COUPLE);
         return m_binding;
+    }
+    
+    wxButton* getButton()
+    {
+        return m_btn;
     }
 };
 
