@@ -314,7 +314,7 @@ public:
         m_result = SDLK_UNKNOWN;
         m_type = CANCELLED;
         
-                wxPanel* pane = new wxPanel(this);
+        wxPanel* pane = new wxPanel(this);
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
         wxStaticText* label = new wxStaticText(pane, wxID_ANY, _("Please use your keyboard/gamepad now"),
                                                wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
