@@ -865,6 +865,18 @@ void wxSDLKeyPicker::updateLabel()
     }
     else if (m_format == FORMAT_ANALOG_COUPLE)
     {
+        int count = 0;
+        for (wxString::iterator it = m_binding.begin(); it != m_binding.end(); it++)
+        {
+            if (*it == '(') count++;
+        }
+        if (count > 1)
+        {
+            // TODO: handle multiple bindings
+            mplog_warning("KeyPicker", "Cannot handle '" + m_binding + "', will strip it down to the first option only\n");
+            m_binding = m_binding.BeforeFirst(L')') + ")";
+        }
+        
         if (m_binding.StartsWith("key("))
         {
             long key1val = -1, key2val = -1;
