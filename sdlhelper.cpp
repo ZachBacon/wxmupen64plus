@@ -62,7 +62,7 @@ void SDL_Helper_Start()
 
 
 SDLKey wxKeyToSDL(int wxkey)
-{
+{    
     switch (wxkey)
     {
         case WXK_BACK: return SDLK_BACKSPACE;
@@ -79,7 +79,11 @@ SDLKey wxKeyToSDL(int wxkey)
         case WXK_CLEAR: return SDLK_CLEAR;
         case WXK_SHIFT: return SDLK_LSHIFT; // FIXME: tell apart left shift from right shift
         case WXK_ALT: return SDLK_LALT; // FIXME: tell apart left alt from right alt
+#ifdef __WXOSX__
+        case WXK_CONTROL: return SDLK_LMETA; // FIXME: tell apart left alt from right alt
+#else
         case WXK_CONTROL: return SDLK_LCTRL; // FIXME: tell apart left control from right control
+#endif
         case WXK_MENU: return SDLK_MENU;
         case WXK_PAUSE: return SDLK_PAUSE;
         //case: //WXK_CAPITAL: ?
@@ -160,6 +164,9 @@ SDLKey wxKeyToSDL(int wxkey)
         case WXK_WINDOWS_LEFT: return SDLK_LMETA;
         case WXK_WINDOWS_RIGHT: return SDLK_RMETA;
         case WXK_WINDOWS_MENU: return SDLK_MENU;
+#ifdef __WXOSX__
+        case WXK_RAW_CONTROL: return SDLK_LCTRL;
+#endif
         case '=': return SDLK_EQUALS;
         case ':': return SDLK_COLON;
         case ';': return SDLK_SEMICOLON;
@@ -180,6 +187,9 @@ SDLKey wxKeyToSDL(int wxkey)
             if (wxkey >= 'a' and wxkey <= 'z') return (SDLKey)wxkey;
             if (wxkey >= 'A' and wxkey <= 'Z') return (SDLKey)(wxkey + 'a' - 'A');
             if (wxkey >= '0' and wxkey <= '9') return (SDLKey)wxkey;
+            
+            mplog_warning("SDLHelper", "Unknown key %i\n", wxkey);
+            
             return SDLK_UNKNOWN;
     }
 }
