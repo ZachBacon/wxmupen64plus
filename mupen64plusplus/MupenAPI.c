@@ -748,6 +748,7 @@ m64p_error getRomHeader(const char* path, m64p_rom_header* out)
 
 m64p_error getRomSettings(m64p_rom_settings* out)
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_ROM_GET_SETTINGS, sizeof(m64p_rom_settings), out);
 }
 
@@ -755,6 +756,7 @@ m64p_error getRomSettings(m64p_rom_settings* out)
 
 m64p_error runEmulation()
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_EXECUTE, 0 /* unused */, NULL /* unused */);
 }
 
@@ -762,6 +764,7 @@ m64p_error runEmulation()
 
 m64p_error stopEmulation()
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_STOP, 0 /* unused */, NULL /* unused */);
 }
 
@@ -769,6 +772,7 @@ m64p_error stopEmulation()
 
 m64p_error pauseEmulation()
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_PAUSE, 0 /* unused */, NULL /* unused */);
 }
 
@@ -776,6 +780,7 @@ m64p_error pauseEmulation()
 
 m64p_error resumeEmulation()
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_RESUME, 0 /* unused */, NULL /* unused */);
 }
 
@@ -783,6 +788,7 @@ m64p_error resumeEmulation()
 
 m64p_error getState(m64p_core_param  which, int* out)
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_CORE_STATE_QUERY, which, out );
 }
 
@@ -790,6 +796,7 @@ m64p_error getState(m64p_core_param  which, int* out)
 
 m64p_error saveGame(int pj64Format, char* path /* optional */)
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_STATE_SAVE, (pj64Format ? 2 : 1), path);
 }
 
@@ -797,6 +804,7 @@ m64p_error saveGame(int pj64Format, char* path /* optional */)
 
 m64p_error setSaveSlot(int slotId)
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_STATE_SET_SLOT, slotId, NULL);
 }
 
@@ -804,6 +812,7 @@ m64p_error setSaveSlot(int slotId)
 
 m64p_error takeScreenshot()
 {
+    assert(CoreDoCommand != NULL);
     return (*CoreDoCommand)(M64CMD_TAKE_NEXT_SCREENSHOT, 0 /* unused */, NULL /* unused */);
 }
 
@@ -830,6 +839,7 @@ m64p_error attachPlugins()
 
 m64p_error detachPlugins()
 {
+    assert(CoreDetachPlugin != NULL);
     int i;
     
     // detach plugins from core and unload them
