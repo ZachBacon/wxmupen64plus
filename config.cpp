@@ -119,6 +119,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                 ConfigParam* param = section->m_parameters[p];
                 param->m_choices.push_back( ConfigParamChoice(_("Internal"), std::string("internal") ) );
                 param->m_choices.push_back( ConfigParamChoice(_("External"), std::string("external") ) );
+                param->m_need_restart = true;
             }
             else if (param_wxname == "R4300Emulator")
             {

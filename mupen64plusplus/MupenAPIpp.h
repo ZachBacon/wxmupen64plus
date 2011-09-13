@@ -109,10 +109,14 @@ public:
     /** Only set if m_special_type is PLUGIN_FILE. */
     m64p_plugin_type m_plugin_type; 
 
+    /** Set to true if this parameter will only take effect on restart */
+    bool m_need_restart;
+
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     ConfigParam()
     {
         m_enabled = false;
+        m_need_restart = false;
         m_parent_section = 0;
         m_special_type = NOTHING_SPECIAL;
         m_plugin_type = M64PLUGIN_NULL;
@@ -124,6 +128,7 @@ public:
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
     {
         m_enabled = true;
+        m_need_restart = false;
         m_parent_section = section;
         m_special_type = type;
         m_magic_number = 0xC001C001;
@@ -135,6 +140,7 @@ public:
     void copyFrom(const ConfigParam& other)
     {
         m_enabled = other.m_enabled;
+        m_need_restart = other.m_need_restart;
         m_parent_section = other.m_parent_section;
         m_special_type = other.m_special_type;
         m_choices = other.m_choices;
