@@ -335,15 +335,31 @@ void MupenFrontendApp::shutdown()
 
 void MupenFrontendApp::onClose(wxCloseEvent& evt)
 {
-    if (m_api->getEmulationState() != M64EMU_STOPPED) evt.Veto();
-    else                                              shutdown();
+    try
+    {
+        if (m_api->getEmulationState() != M64EMU_STOPPED) evt.Veto();
+        else                                              shutdown();
+    }
+    catch (std::exception& e)
+    {
+        mplog_warning("MupenFrontendApp", "Exception caught when getting emulation state : %s\n", e.what());
+        shutdown();
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
 void MupenFrontendApp::onQuitMenu(wxCommandEvent& evt)
 {
-    if (m_api->getEmulationState() == M64EMU_STOPPED) shutdown();
+    try
+    {
+        if (m_api->getEmulationState() == M64EMU_STOPPED) shutdown();
+    }
+    catch (std::exception& e)
+    {
+        mplog_warning("MupenFrontendApp", "Exception caught when getting emulation state : %s\n", e.what());
+        shutdown();
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
