@@ -80,6 +80,8 @@ m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
                             char inputPlugin[], const int inputPluginLen,
                             char rspPlugin[],   const int rspPluginLen);
 
+m64p_error GetVideoExtension(char videoExtension[], const int videoExtensionLen);
+
 extern ptr_CoreShutdown  CoreShutdown;
 extern ptr_CoreStartup   CoreStartup;
 

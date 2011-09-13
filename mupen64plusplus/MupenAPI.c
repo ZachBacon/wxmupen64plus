@@ -469,6 +469,14 @@ m64p_error GetConfigPlugins(char pluginsPath[], const int pluginsPathLen,
 
 // -----------------------------------------------------------------------------------------------------------
 
+m64p_error GetVideoExtension(char videoExtension[], const int videoExtensionLen)
+{
+    return getStringConfigParam(l_ConfigPlugins, "VideoExtension",
+                                videoExtension, videoExtensionLen);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 const char* getErrorMessage(m64p_error err)
 {
     static char buffer[1024];

@@ -302,6 +302,9 @@ class Mupen64PlusPlus
  
     IEmuStateListener* m_listener;
  
+    /**  Whether to use the wxWidgets video extension (one-window mupen) */
+    bool m_use_video_extension;
+ 
 public:
 
     enum ROM_FORMAT
@@ -443,12 +446,10 @@ public:
      */
     int reloadPlugins();
 
-    // TODO: make it configurable whether to use video extension
-#ifdef __WXGTK__
-    bool useVideoExtension() { return false; }
-#else
-    bool useVideoExtension() { return true; }
-#endif
+    /**
+     * Whether to use the wxWidgets video extension (one-window mupen)
+     */
+    bool useVideoExtension() { return m_use_video_extension; }
 };
 
 #endif

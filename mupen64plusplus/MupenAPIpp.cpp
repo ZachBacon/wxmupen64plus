@@ -105,6 +105,39 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         throw std::runtime_error(errmsg);
     }
     
+    char videoExtension[16];
+    result = GetVideoExtension(videoExtension, 16);
+    if (result != M64ERR_SUCCESS)
+    {
+        mplog_warning("MupenApiPP", "Cannot retrieve video extension from config, will use platform defaults\n");
+#ifdef __WXGTK__
+        m_use_video_extension = false;
+#else
+        m_use_video_extension = true;
+#endif
+    }
+    else
+    {
+        mplog_info("MupenApiPP", "Using video extension '%s'\n", videoExtension);
+        if (strcmp(videoExtension, "internal") == 0)
+        {
+            m_use_video_extension = true;
+        }
+        else if (strcmp(videoExtension, "external") == 0)
+        {
+            m_use_video_extension = false;
+        }
+        else
+        {
+            mplog_warning("MupenApiPP", "Unknown video extension in config, will use platform defaults\n");
+#ifdef __WXGTK__
+            m_use_video_extension = false;
+#else
+            m_use_video_extension = true;
+#endif
+        }
+    }
+    
     if (useVideoExtension())
     {
         printf("************ will call installWxVideoExtension ************\n");
