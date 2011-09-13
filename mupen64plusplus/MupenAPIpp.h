@@ -44,9 +44,9 @@ class ConfigParamChoice
 {
 public:
     wxString m_name;
-    int m_value;
+    wxAny m_value;
 
-    ConfigParamChoice(wxString name, int value)
+    ConfigParamChoice(wxString name, wxAny value)
     {
         m_name = name;
         m_value = value;

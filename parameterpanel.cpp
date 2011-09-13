@@ -222,7 +222,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     const int count = curr->m_choices.size();
                     for (int n=0; n<count; n++)
                     {
-                        const int choiceVal = curr->m_choices[n].m_value;
+                        const int choiceVal = curr->m_choices[n].m_value.As<int>();
                         
                         // FIXME: the user data pointer is abused to contain an int
                         const int index = choice->Append(curr->m_choices[n].m_name,
@@ -400,6 +400,38 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     combo->m_icon = icon_widget;
                     
                     sizer->Add(container, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                }
+                else if (curr->m_choices.size() > 0)
+                {
+                    // if choices are offered, show a combo
+ 
+                    wxChoice* choice = new wxChoice(this, wxID_ANY);
+                    
+                    int selection = 0;
+                    const int count = curr->m_choices.size();
+                    for (int n=0; n<count; n++)
+                    {
+                        std::string val = curr->m_choices[n].m_value.As<std::string>();
+                        
+                        const int index = choice->Append(val);
+                        
+                        if (currVal == val)
+                        {
+                            selection = index;
+                        }
+                    }
+                    
+                    choice->SetSelection(selection);
+                    
+                    ctrl = choice;
+                    sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    
+                    // FIXME: don't hardcode parameter name 'device'?
+                    if (curr->m_param_name == "device")
+                    {
+                        choice->Connect(choice->GetId(), wxEVT_COMMAND_CHOICE_SELECTED,
+                                        wxCommandEventHandler(ParameterPanel::onInputDeviceChange), NULL, this);
+                    }
                 }
                 else
                 {
@@ -604,6 +636,17 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     #endif
                     
                     param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                }
+                else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n])  != NULL)
+                {
+                    wxChoice* ctrl = (wxChoice*)m_parameter_widgets[n];
+                    
+                    #if CHATTY
+                    printf("[string] parameter %s has value %s\n", param->m_param_name.c_str(),
+                           (const char*)ctrl->GetValue().mb_str());
+                    #endif
+                    
+                    param->setStringValue((const char*)ctrl->GetStringSelection().mb_str());
                 }
                 else
                 {

@@ -139,6 +139,7 @@ void BasicGLPane::resized(wxSizeEvent& evt)
 {
 //	wxGLCanvas::OnSize(evt);
 	
+    glViewport(0, 0, GetSize().x, GetSize().y);    
     Refresh();
 }
 

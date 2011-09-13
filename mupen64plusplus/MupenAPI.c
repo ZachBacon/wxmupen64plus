@@ -431,7 +431,13 @@ m64p_error OpenConfigurationHandles(const char* defaultPluginDir,
                                  "Filename of RSP plugin");
     (*PtrConfigSetDefaultString)(l_ConfigPlugins, "GamesPath", "",
                                  "Where to search for games");
-
+#ifdef __WXGTK__
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "VideoExtension", "external",
+                                 "Whether to run game in main frame or in external frame. Running in external frame works better on Linux.");
+#else
+    (*PtrConfigSetDefaultString)(l_ConfigPlugins, "VideoExtension", "internal",
+                                     "Whether to run game in main frame or in external frame. Running in external frame works better on Linux.");
+#endif
     return M64ERR_SUCCESS;
 }
 

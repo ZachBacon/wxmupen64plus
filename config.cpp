@@ -114,6 +114,12 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             {
                 section->m_parameters[p]->m_special_type = DIRECTORY;
             }
+            else if (param_wxname == "VideoExtension")
+            {
+                ConfigParam* param = section->m_parameters[p];
+                param->m_choices.push_back( ConfigParamChoice(_("Internal"), std::string("internal") ) );
+                param->m_choices.push_back( ConfigParamChoice(_("External"), std::string("external") ) );
+            }
             else if (param_wxname == "R4300Emulator")
             {
                 ConfigParam* param = section->m_parameters[p];
