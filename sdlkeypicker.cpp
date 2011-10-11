@@ -674,6 +674,17 @@ void wxSDLKeyPicker::onClick(wxCommandEvent& evt)
         if (type == PressAKey::KEY)
         {
             SDLKey key = dialog.getKey();
+            
+            #ifdef __WXOSX__
+            if (key == SDLK_LALT or key == SDLK_RALT or
+                key == SDLK_LMETA or key == SDLK_RMETA or
+                key == SDLK_LCTRL or key == SDLK_RCTRL or
+                key == SDLK_MENU)
+            {
+                wxMessageBox( _("WARNING, Control, Command and Alt are known to cause problems, it is recommended to use another key.") );
+            }
+            #endif
+            
             if (key != SDLK_UNKNOWN)
             {
                 m_binding = wxString::Format("key(%i)", key);
