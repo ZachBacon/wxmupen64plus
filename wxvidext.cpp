@@ -55,8 +55,6 @@
 
 #include <set>
 
-// FIXME: handle the player closing the frame
-
 std::set<int> pressed_keys;
 
 wxMutex* g_mutex = NULL;
@@ -117,7 +115,7 @@ void BasicGLPane::keyReleased(wxKeyEvent& event)
 {
     wxMutexLocker locker(*g_mutex);
     injectKeyEvent(false, wxKeyToSDL(event.GetKeyCode()));
-    pressed_keys.erase(event.GetKeyCode());
+    pressed_keys.erase(event.GetKeyCode());    
 }
 
 
