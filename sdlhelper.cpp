@@ -80,7 +80,7 @@ SDLKey wxKeyToSDL(int wxkey)
         case WXK_SHIFT: return SDLK_LSHIFT; // FIXME: tell apart left shift from right shift
         case WXK_ALT: return SDLK_LALT; // FIXME: tell apart left alt from right alt
 #ifdef __WXOSX__
-        case WXK_CONTROL: return SDLK_LMETA; // FIXME: tell apart left alt from right alt
+        case WXK_CONTROL: return SDLK_LMETA; // FIXME: tell apart left meta from right meta
 #else
         case WXK_CONTROL: return SDLK_LCTRL; // FIXME: tell apart left control from right control
 #endif

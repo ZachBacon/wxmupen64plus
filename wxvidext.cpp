@@ -689,8 +689,16 @@ void cleanupEvents()
     std::set<int>::iterator it;
     for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
     {
+        #if defined(__WXOSX__)
+        // work around weird issue on OSX, wxGetKeyState always returns false for these keys
+        // here (threading issue? SDL interference?)
+        if (*it == WXK_CONTROL or *it == WXK_COMMAND or *it == WXK_ALT or
+            *it == WXK_MENU or *it == WXK_RAW_CONTROL or *it == WXK_WINDOWS_LEFT or
+            *it == WXK_WINDOWS_MENU or *it == WXK_WINDOWS_RIGHT) continue;
+        #endif
         if (not wxGetKeyState((wxKeyCode)*it))
         {
+            printf("auto-releasing %i\n", *it);
             injectKeyEvent(false, wxKeyToSDL(*it));
             /*
             printf("Erasing %i from {", *it);
