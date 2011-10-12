@@ -475,6 +475,12 @@ m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_v
     
     SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
     
+    // clear both buffers with black
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glPane->SwapBuffers();
+    glClear(GL_COLOR_BUFFER_BIT);
+    
     return M64ERR_SUCCESS;
 }
 
