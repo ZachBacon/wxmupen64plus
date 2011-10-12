@@ -59,29 +59,55 @@ const char* DEFAULT_RSP_PLUGIN   = "mupen64plus-rsp-hle";
 const int VERSION_MAJOR = 0;
 const int VERSION_MINOR = 2;
 
+bool osd_logging = false;
+
+void setOsdLogging(bool p)
+{
+    osd_logging = p;
+}
+
 extern "C"
 {
     void DebugCallback(void *Context, int level, const char *message)
     {
-        if (level <= 1)
+        if (osd_logging)
         {
-            mplog_error("Core", "%s Error: %s\n", (const char *) Context, message);
-            wxLogError( _("[%s] An error occurred : %s"), (const char *) Context, message );
+            // TODO: if someday OSD is exposed to the frontend, use it
+            if (level <= 1)
+            {
+                wxString msg = wxString::Format( "%s Error : %s", (const char*)Context, message );
+                printf(msg.utf8_str());
+                //osdNewMessage(msg.utf8_str());
+            }
+            else if (level == 2)
+            {
+                wxString msg = wxString::Format( "%s Warning : %s", (const char*)Context, message );
+                printf(msg.utf8_str());
+                //osdNewMessage(msg.utf8_str());
+            }
         }
-        else if (level == 2)
+        else
         {
-            mplog_warning("Core", "%s Warning: %s\n", (const char *) Context, message);
-            wxLogWarning( _("[%s] Warning : %s"), (const char *) Context, message );
+            if (level <= 1)
+            {
+                mplog_error("Core", "%s Error: %s\n", (const char *) Context, message);
+                wxLogError( _("[%s] An error occurred : %s"), (const char *) Context, message );
+            }
+            else if (level == 2)
+            {
+                mplog_warning("Core", "%s Warning: %s\n", (const char *) Context, message);
+                wxLogWarning( _("[%s] Warning : %s"), (const char *) Context, message );
+            }
+            else if (level == 3 || (level == 5 && g_Verbose))
+            {
+                mplog_info("Core", "%s: %s\n", (const char *) Context, message);
+            }
+            else if (level == 4)
+            {
+                mplog_info("Core", "%s Status: %s\n", (const char *) Context, message);
+            }
+            /* ignore the verbose info for now */
         }
-        else if (level == 3 || (level == 5 && g_Verbose))
-        {
-            mplog_info("Core", "%s: %s\n", (const char *) Context, message);
-        }
-        else if (level == 4)
-        {
-            mplog_info("Core", "%s Status: %s\n", (const char *) Context, message);
-        }
-        /* ignore the verbose info for now */
     }
 }
 

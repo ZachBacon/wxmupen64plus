@@ -124,6 +124,61 @@ const char* concat(const char* a, const char* b)
     return concat_buff;
 }
 
+
+// -----------------------------------------------------------------------------------------------------------
+// FIXME: copied from mupen64plus-core/src/osd/osd.h
+enum osd_corner
+{
+    OSD_TOP_LEFT,       // 0 in the picture above
+    OSD_TOP_CENTER,     // 1 in the picture above
+    OSD_TOP_RIGHT,      // 2 in the picture above
+
+    OSD_MIDDLE_LEFT,    // 3 in the picture above
+    OSD_MIDDLE_CENTER,  // 4 in the picture above
+    OSD_MIDDLE_RIGHT,   // 5 in the picture above
+
+    OSD_BOTTOM_LEFT,    // 6 in the picture above
+    OSD_BOTTOM_CENTER,  // 7 in the picture above
+    OSD_BOTTOM_RIGHT,   // 8 in the picture above
+
+    OSD_NUM_CORNERS
+};
+enum osd_message_state
+{
+    OSD_APPEAR,     // OSD message is appearing on the screen
+    OSD_DISPLAY,    // OSD message is being displayed on the screen
+    OSD_DISAPPEAR,  // OSD message is disappearing from the screen
+
+    OSD_NUM_STATES
+};
+enum osd_animation_type
+{
+    OSD_NONE,
+    OSD_FADE,
+
+    OSD_NUM_ANIM_TYPES
+};
+typedef struct
+{
+    char *text;        // Text that this object will have when displayed
+    enum osd_corner corner; // One of the 9 corners
+    float xoffset;     // Relative X position
+    float yoffset;     // Relative Y position
+    float color[3];    // Red, Green, Blue values
+    float sizebox[4];  // bounding box (xmin, ymin, xmax, ymax)
+    int state;         // display state of current message
+    enum osd_animation_type animation[OSD_NUM_STATES]; // animations for each display state
+    unsigned int timeout[OSD_NUM_STATES]; // timeouts for each display state
+#define OSD_INFINITE_TIMEOUT 0xffffffff
+    unsigned int frames; // number of frames in this state
+} osd_message_t;
+
+typedef osd_message_t* (*ptr_osdMessage)(enum osd_corner, const char *, ...);
+ptr_osdMessage osd_new_message = NULL;
+
+// -----------------------------------------------------------------------------------------------------------
+
+
 // -----------------------------------------------------------------------------------------------------------
 
 m64p_error AttachCoreLib(const char *CoreLibFilepath)
@@ -304,6 +359,8 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     DebugGetCPUDataPtr     = (ptr_DebugGetCPUDataPtr)     osal_dynlib_getproc(CoreHandle, "DebugGetCPUDataPtr");
     DebugBreakpointLookup  = (ptr_DebugBreakpointLookup)  osal_dynlib_getproc(CoreHandle, "DebugBreakpointLookup");
     DebugBreakpointCommand = (ptr_DebugBreakpointCommand) osal_dynlib_getproc(CoreHandle, "DebugBreakpointCommand");
+
+    osd_new_message = (ptr_osdMessage) osal_dynlib_getproc(CoreHandle, "osd_new_message");
 
     return M64ERR_SUCCESS;
 }
@@ -863,4 +920,11 @@ m64p_error injectKeyEvent(int /* bool */ pressed, int key)
 {
     if (pressed) return (*CoreDoCommand)(M64CMD_SEND_SDL_KEYDOWN, key, NULL);
     else         return (*CoreDoCommand)(M64CMD_SEND_SDL_KEYUP,   key, NULL);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void osdNewMessage(const char* message)
+{
+    (*osd_new_message)(OSD_BOTTOM_CENTER, message);
 }

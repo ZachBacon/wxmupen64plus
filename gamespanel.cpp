@@ -500,7 +500,7 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
 // -----------------------------------------------------------------------------------------------------------
 
 void GamesPanel::loadRom(wxString name, wxString file)
-{
+{    
     if (m_api->getEmulationState() != M64EMU_STOPPED)
     {
         wxMessageBox( _("A game is already running") );
@@ -513,8 +513,9 @@ void GamesPanel::loadRom(wxString name, wxString file)
     printf("\n==== Running file '%s' ====\n\n", (const char*)file.utf8_str());
 
     try
-    {
+    {        
         m_api->loadRom(file, true, &dialog);
+        
         m_currently_loaded_rom = name;
         dialog.Hide();
         #ifdef __WXMAC__
@@ -522,6 +523,9 @@ void GamesPanel::loadRom(wxString name, wxString file)
         #else
         const bool asynchronous = true;
         #endif
+        
+        setOsdLogging(true);
+        
         m_api->runEmulation(asynchronous);
     }
     catch (std::runtime_error& ex)
@@ -572,6 +576,8 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
     {
         case M64EMU_STOPPED:
         
+            setOsdLogging(false);
+        
             if (m_width_param != NULL and m_height_param != NULL)
             {
                 m_width_param->setIntValue(m_previous_width);
@@ -592,6 +598,9 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             break;
         
         case M64EMU_RUNNING:
+            
+            setOsdLogging(true);
+            
             m_play_button->Disable();
             m_stop_button->Enable();
             m_pause_button->Enable();

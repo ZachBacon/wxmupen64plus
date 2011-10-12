@@ -165,6 +165,8 @@ public:
     ptr_vector<ConfigSection>& getConfig() { return m_config; }
 };
 
+void setOsdLogging(bool p);
+
 wxDECLARE_APP(MupenFrontendApp);
 #endif
 

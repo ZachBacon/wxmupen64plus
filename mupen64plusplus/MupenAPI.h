@@ -167,6 +167,8 @@ m64p_error injectKeyEvent(/*bool*/ int pressed, int key);
 /** Set the path where to find games, in config */
 //m64p_error SetGamesPath(char path[]);
 
+void osdNewMessage(const char* message);
+
 #ifdef __cplusplus
 }
 #endif
