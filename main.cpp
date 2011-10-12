@@ -76,13 +76,13 @@ extern "C"
             if (level <= 1)
             {
                 wxString msg = wxString::Format( "%s Error : %s", (const char*)Context, message );
-                printf(msg.utf8_str());
+                printf("%s\n", msg.utf8_str());
                 //osdNewMessage(msg.utf8_str());
             }
             else if (level == 2)
             {
                 wxString msg = wxString::Format( "%s Warning : %s", (const char*)Context, message );
-                printf(msg.utf8_str());
+                printf("%s\n", msg.utf8_str());
                 //osdNewMessage(msg.utf8_str());
             }
         }
