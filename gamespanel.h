@@ -111,7 +111,8 @@ public:
     void onPause(wxCommandEvent& evt);
     void onStop(wxCommandEvent& evt);
     void onColClick(wxListEvent& evt);
-    
+    void wanderingFocus(wxFocusEvent& evt);
+	
     void loadRom(wxString name, wxString pathAndFile);
     
     /** Callback from IEmuStateListener */

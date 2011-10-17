@@ -142,11 +142,17 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
                                        wxBORDER_NONE);
     buttons->Add(m_pause_button, 0, wxALL, 5);
     
+	m_pause_button->SetCanFocus(false);
+	m_pause_button->Connect(m_pause_button->GetId(), wxEVT_SET_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
+	
     wxBitmap icon_stop(datadir + "stop.png", wxBITMAP_TYPE_PNG);  
     m_stop_button = new wxBitmapButton(this, wxID_ANY, icon_stop, wxDefaultPosition, wxDefaultSize,
                                        wxBORDER_NONE);
     buttons->Add(m_stop_button, 0, wxALL, 5);
     
+	m_stop_button->SetCanFocus(false);
+	m_stop_button->Connect(m_pause_button->GetId(), wxEVT_SET_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
+	
     buttons->AddStretchSpacer();
     
 #ifdef __WXMSW__
@@ -343,6 +349,15 @@ void GamesPanel::initGLCanvas()
     
     wxCommandEvent evt(wxMUPEN_INITED_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
+	
+	m_canvas->SetFocus();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void GamesPanel::wanderingFocus(wxFocusEvent& evt)
+{
+	if (m_canvas != NULL) m_canvas->SetFocus();
 }
 
 // -----------------------------------------------------------------------------------------------------------
