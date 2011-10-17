@@ -843,7 +843,12 @@ void ParameterPanel::update()
             
             if (not error)
             {
-                p->getButton()->SetBitmap(wxBitmap());
+#ifdef __WXMSW__
+				// FIXME: wxWidgets bug
+                p->getButton()->SetBitmap(wxBitmap(1, 1));
+#else
+				p->getButton()->SetBitmap(wxBitmap());
+#endif
                 p->getButton()->SetToolTip("");
             }
         }
