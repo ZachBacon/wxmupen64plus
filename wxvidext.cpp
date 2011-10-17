@@ -212,6 +212,8 @@ void VidExt_AsyncCleanup()
         fullscreen_frame->Destroy();
         fullscreen_frame = NULL;
     }
+	
+	glPane = NULL;
 }
 
 m64p_error VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
