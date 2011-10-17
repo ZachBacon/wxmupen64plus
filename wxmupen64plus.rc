@@ -1,6 +1,6 @@
 
 // important : constant names determine icon order in exe
-IDR_MAINFRAME ICON "data\wxmupen64plus.ico"
+IDR_MAINFRAME ICON "data\\wxmupen64plus.ico"
 
 
 #include "wx\msw\wx.rc"

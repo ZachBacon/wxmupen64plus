@@ -134,7 +134,7 @@ def build(bld):
     
     # Windows
     if os.name == 'nt':
-        cmd = "windres --include-dir=" + wxhome + r"\include ${SRC} --output build/${TGT}"
+        cmd = "windres --include-dir=" + wxhome + r"\include ${SRC} --output ${TGT}"
         bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
         
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
