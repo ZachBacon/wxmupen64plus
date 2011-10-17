@@ -258,6 +258,7 @@ int gBitsPerPixel;
             {
                 Sleep(100);
             }
+			m_val = false;
         }
         
         void signal()
