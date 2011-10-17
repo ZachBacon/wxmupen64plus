@@ -693,6 +693,27 @@ void cleanupEvents()
     wxMutexLocker locker(*g_mutex);
     
     std::set<int>::iterator it;
+	
+#if defined(__WXMSW__)
+	// FIXME: wxWidgets bug, enter isn't processed as a normal event
+	if (wxGetKeyState(WXK_RETURN))
+	{
+		if (pressed_keys.find(WXK_RETURN) == pressed_keys.end())
+		{
+			injectKeyEvent(true, wxKeyToSDL(WXK_RETURN));
+			pressed_keys.insert(WXK_RETURN);
+		}
+	}
+	else
+	{
+		if (pressed_keys.find(WXK_RETURN) != pressed_keys.end())
+		{
+			injectKeyEvent(false, wxKeyToSDL(WXK_RETURN));
+			pressed_keys.erase(WXK_RETURN);
+		}	
+	}
+#endif
+	
     for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
     {
         #if defined(__WXOSX__)
