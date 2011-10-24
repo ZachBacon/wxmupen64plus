@@ -758,7 +758,7 @@ m64p_error VidExt_GL_SwapBuffers()
         glPane->SwapBuffers();
     }
     
-    wxYield();
+    //wxYield();
     cleanupEvents();
     SDL_PumpEvents();
     
