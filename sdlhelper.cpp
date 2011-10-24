@@ -167,6 +167,11 @@ SDLKey wxKeyToSDL(int wxkey)
 #ifdef __WXOSX__
         case WXK_RAW_CONTROL: return SDLK_LCTRL;
 #endif
+        case WXK_NUMPAD_UP: return SDLK_8;
+        case WXK_NUMPAD_LEFT: return SDLK_4;
+        case WXK_NUMPAD_DOWN: return SDLK_5;
+        case WXK_NUMPAD_RIGHT: return SDLK_6;
+        
         case '=': return SDLK_EQUALS;
         case ':': return SDLK_COLON;
         case ';': return SDLK_SEMICOLON;
