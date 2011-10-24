@@ -20,7 +20,7 @@ WindowVisible=no
 AppCopyright=Copyright Auria
 OutputBaseFilename=wxMupen64PlusSetup
 UninstallDisplayIcon={app}\wxmupen64plus.exe
-LicenseFile=WinRuntime\Legal\wxMupen64PlusLicense.txt
+LicenseFile=WinRuntime\License.txt
 DisableStartupPrompt=yes
 ChangesAssociations=yes
 
