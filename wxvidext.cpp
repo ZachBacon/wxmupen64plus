@@ -106,7 +106,6 @@ END_EVENT_TABLE()
 
 void BasicGLPane::keyPressed(wxKeyEvent& event)
 {
-    printf("Keypress %i\n", event.GetKeyCode());
     wxMutexLocker locker(*g_mutex);
     injectKeyEvent(true, wxKeyToSDL(event.GetKeyCode()));
     pressed_keys.insert(event.GetKeyCode());
