@@ -907,6 +907,10 @@ void MupenFrontendApp::onReloadOptionsRequest(wxCommandEvent& evt)
 #endif
 
     m_frame->Thaw();
+    
+#ifdef __WXMSW__
+    m_frame->Layout();
+#endif
 }
 
 // -----------------------------------------------------------------------------------------------------------
