@@ -333,7 +333,8 @@ public:
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
         
 #ifdef __WXMSW__
-        wxTextCtrl* inputCapture = new wxTextCtrl(pane, wxID_ANY);
+        wxTextCtrl* inputCapture = new wxTextCtrl(pane, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
+                                                  wxTE_PROCESS_ENTER | wxTE_PROCESS_TAB);
 #endif
 
         wxStaticText* label = new wxStaticText(pane, wxID_ANY, _("Please use your keyboard/gamepad now"),
@@ -373,6 +374,7 @@ public:
 #ifdef __WXMSW__
         inputCapture->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         inputCapture->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        inputCapture->Connect(wxID_ANY, wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(PressAKey::onEnterKeyPress), NULL, this);        
 #endif
 
         erase->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
@@ -506,6 +508,13 @@ public:
         }
         
         wxMilliSleep(50);
+    }
+    
+    void onEnterKeyPress(wxCommandEvent& evt)
+    {
+        m_type = KEY;
+        m_result = SDLK_RETURN;
+        closeDlg();
     }
     
     void onWxKeyPress(wxKeyEvent& evt)
