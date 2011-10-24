@@ -26,6 +26,8 @@
 #include <wx/msw/winundef.h>
 #endif
 
+#include <wx/textctrl.h>
+
 #include <SDL.h>
 #include <SDL_keyboard.h>
 #include <SDL_keysym.h>
@@ -329,11 +331,19 @@ public:
         
         wxPanel* pane = new wxPanel(this);
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+        
+#ifdef __WXMSW__
+        wxTextCtrl* inputCapture = new wxTextCtrl(pane, wxID_ANY);
+#endif
+
         wxStaticText* label = new wxStaticText(pane, wxID_ANY, _("Please use your keyboard/gamepad now"),
                                                wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
         
         sizer->AddStretchSpacer();
         sizer->Add(label, 0, wxEXPAND | wxALL, 5);
+#ifdef __WXMSW__
+        sizer->Add(inputCapture, 0, wxEXPAND | wxALL, 5);
+#endif
         sizer->AddStretchSpacer();
         
         wxButton* cancel = new wxButton(pane, wxID_CANCEL, _("Cancel"));
@@ -360,17 +370,22 @@ public:
         label->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         label->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         
+#ifdef __WXMSW__
+        inputCapture->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        inputCapture->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+#endif
+
         erase->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         erase->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         
         pane->SetSizer(sizer);
         Center();
         
-        #ifdef __WXMSW__
-        label->SetFocus();
-        #else
+#ifdef __WXMSW__
+        inputCapture->SetFocus();
+#else
         pane->SetFocus();
-        #endif
+#endif
                 
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         
