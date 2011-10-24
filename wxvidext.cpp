@@ -106,6 +106,7 @@ END_EVENT_TABLE()
 
 void BasicGLPane::keyPressed(wxKeyEvent& event)
 {
+    printf("Keypress %i\n", event.GetKeyCode());
     wxMutexLocker locker(*g_mutex);
     injectKeyEvent(true, wxKeyToSDL(event.GetKeyCode()));
     pressed_keys.insert(event.GetKeyCode());
@@ -702,7 +703,7 @@ void cleanupEvents()
     std::set<int>::iterator it;
 	
 #if defined(__WXMSW__)
-	// FIXME: wxWidgets bug, enter isn't processed as a normal event
+	// FIXME: wxWidgets bug, enter and arrows aren't processed as a normal events
 	if (wxGetKeyState(WXK_RETURN))
 	{
 		if (pressed_keys.find(WXK_RETURN) == pressed_keys.end())
@@ -711,6 +712,7 @@ void cleanupEvents()
 			pressed_keys.insert(WXK_RETURN);
 		}
 	}
+    /*
 	else
 	{
 		if (pressed_keys.find(WXK_RETURN) != pressed_keys.end())
@@ -719,6 +721,40 @@ void cleanupEvents()
 			pressed_keys.erase(WXK_RETURN);
 		}	
 	}
+    */
+    
+    if (wxGetKeyState(WXK_LEFT))
+    {
+        if (pressed_keys.find(WXK_LEFT) == pressed_keys.end())
+		{
+			injectKeyEvent(true, wxKeyToSDL(WXK_LEFT));
+			pressed_keys.insert(WXK_LEFT);
+		}
+    }
+    if (wxGetKeyState(WXK_RIGHT))
+    {
+        if (pressed_keys.find(WXK_RIGHT) == pressed_keys.end())
+		{
+			injectKeyEvent(true, wxKeyToSDL(WXK_RIGHT));
+			pressed_keys.insert(WXK_RIGHT);
+		}
+    }
+    if (wxGetKeyState(WXK_UP))
+    {
+        if (pressed_keys.find(WXK_UP) == pressed_keys.end())
+		{
+			injectKeyEvent(true, wxKeyToSDL(WXK_UP));
+			pressed_keys.insert(WXK_UP);
+		}
+    }
+    if (wxGetKeyState(WXK_DOWN))
+    {
+        if (pressed_keys.find(WXK_DOWN) == pressed_keys.end())
+		{
+			injectKeyEvent(true, wxKeyToSDL(WXK_DOWN));
+			pressed_keys.insert(WXK_DOWN);
+		}
+    }
 #endif
 	
     for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
@@ -732,7 +768,7 @@ void cleanupEvents()
         #endif
         if (not wxGetKeyState((wxKeyCode)*it))
         {
-            printf("auto-releasing %i\n", *it);
+            //printf("auto-releasing %i\n", *it);
             injectKeyEvent(false, wxKeyToSDL(*it));
             /*
             printf("Erasing %i from {", *it);
