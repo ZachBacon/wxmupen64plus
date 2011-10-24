@@ -357,13 +357,20 @@ public:
         cancel->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         cancel->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         
+        label->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        label->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
+        
         erase->Connect(wxID_ANY, wxEVT_KEY_DOWN, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         erase->Connect(wxID_ANY, wxEVT_CHAR, wxKeyEventHandler(PressAKey::onWxKeyPress), NULL, this);
         
         pane->SetSizer(sizer);
         Center();
         
+        #ifdef __WXMSW__
+        label->SetFocus();
+        #else
         pane->SetFocus();
+        #endif
                 
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
         
