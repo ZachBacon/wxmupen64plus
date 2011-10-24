@@ -77,7 +77,12 @@ public:
 
     PressAKey(wxWindow* parent)
     {
-        SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        int error = SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
+        if (error != 0)
+        {
+            mplog_error("SDLKeyPicker", "SDL Init failed");
+            return;
+        }
         SDL_JoystickEventState(SDL_ENABLE);
         
 	    std::vector<SDL_Joystick*> joysticks;
@@ -85,8 +90,13 @@ public:
 		{
 			 joysticks.push_back(SDL_JoystickOpen(i)); // TODO: also close them on shutdown?
 		}
-	
+        
         screen = SDL_SetVideoMode( 550, 200, 32, SDL_SWSURFACE ); 
+        if (screen == NULL)
+        {
+            mplog_error("SDLKeyPicker", "SDL SetVideoMode failed");
+            return;
+        }
         
         message = SDL_LoadBMP( datadir + "/presskey.bmp" ); 
         if (message == NULL)
@@ -137,9 +147,9 @@ public:
 		// Purge the event queue before starting
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) { }
-		
+		        
         while (not done)
-        {
+        {            
             SDL_FillRect(screen, &rect, white);
 
             SDL_BlitSurface( message, NULL, screen, &dst_msg );
@@ -216,7 +226,7 @@ public:
                 
             } // end while SDL_PollEvent
         } // end while not done
-		
+		        
         SDL_FreeSurface( screen );
         SDL_FreeSurface( message );
         SDL_FreeSurface( cancel );
@@ -311,7 +321,8 @@ private:
     
 public:
 
-    PressAKey(wxWindow* parent) : wxDialog(parent, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250), wxDEFAULT_DIALOG_STYLE | wxWANTS_CHARS)
+    PressAKey(wxWindow* parent) : wxDialog(parent, wxID_ANY, _("Press a key..."), wxDefaultPosition, wxSize(450, 250),
+                                           wxDEFAULT_DIALOG_STYLE | wxWANTS_CHARS | wxSTAY_ON_TOP)
     {
         m_result = SDLK_UNKNOWN;
         m_type = CANCELLED;
@@ -353,8 +364,8 @@ public:
         Center();
         
         pane->SetFocus();
+                
         SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-        
         
         SDL_JoystickEventState(SDL_ENABLE);
         
@@ -365,7 +376,11 @@ public:
         
         g_have_answer = false;
         Bind(wxEVT_WINDOW_MODAL_DIALOG_CLOSED, &sheetCallback);
+#ifdef __WXMAC__
         ShowWindowModal();
+#else
+        Show();
+#endif
 
         // FIXME: that's ugly :)
         while (not g_have_answer)
@@ -393,6 +408,16 @@ public:
         poll();
     }
     
+    void closeDlg()
+    {
+#ifdef __WXMAC__
+        EndModal( GetReturnCode() );
+#else
+        Hide();
+        g_have_answer = true;
+#endif
+    }
+    
     void poll()
     {
         SDL_Event event;
@@ -402,7 +427,7 @@ public:
             {
                 m_type = KEY;
                 m_result = event.key.keysym.sym;
-                EndModal( GetReturnCode() );
+                closeDlg();
             }
             /*
             else if (event.type == SDL_JOYAXISMOTION)
@@ -441,7 +466,7 @@ public:
                     m_type = GAMEPAD_AXIS;
                     m_axis = axis;
                     m_axis_dir = (axisVal > 0 ? '+' : '-');
-                    EndModal( GetReturnCode() );
+                    closeDlg();
                 }
             }
             
@@ -453,7 +478,7 @@ public:
                 {
                     m_type = GAMEPAD_BUTTON;
                     m_button = btn;
-                    EndModal( GetReturnCode() );
+                    closeDlg();
                 }
             }
         }
@@ -472,20 +497,20 @@ public:
         }
         else
         {
-            EndModal( GetReturnCode() );
+            closeDlg();
         }
     }
     
     void onCancel(wxCommandEvent& evt)
     {
         m_type = CANCELLED;
-        EndModal( GetReturnCode() );
+        closeDlg();
     }
 
     void onErase(wxCommandEvent& evt)
     {
         m_type = DELETE_BINDING;
-        EndModal( GetReturnCode() );
+        closeDlg();
     }
     
     /** Get the key/button/axis that was selected by the user, or CANCELLED if it was cancelled */
