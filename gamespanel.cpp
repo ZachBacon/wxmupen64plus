@@ -151,7 +151,7 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     buttons->Add(m_stop_button, 0, wxALL, 5);
     
 	m_stop_button->SetCanFocus(false);
-	m_stop_button->Connect(m_pause_button->GetId(), wxEVT_SET_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
+	m_stop_button->Connect(m_stop_button->GetId(), wxEVT_SET_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
 	
     buttons->AddStretchSpacer();
     
@@ -339,6 +339,7 @@ void GamesPanel::initGLCanvas()
         Layout();
         Thaw();
         m_canvas->SetFocus();
+        //m_canvas->Connect(wxID_ANY, wxEVT_KILL_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
 
         ((wxFrame*)GetParent())->Layout();
         ((wxFrame*)GetParent())->Refresh();    
