@@ -113,6 +113,11 @@ public:
         return m_binding;
     }
     
+    bool isStringBinding() const
+    {
+        return (m_format == FORMAT_DIGITAL or m_format == FORMAT_ANALOG_COUPLE);
+    }
+    
     wxButton* getButton()
     {
         return m_btn;

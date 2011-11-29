@@ -806,6 +806,8 @@ void ParameterPanel::update()
         if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
         {
             wxSDLKeyPicker* p = (wxSDLKeyPicker*)m_parameter_widgets[n];
+            if (not p->isStringBinding()) continue; // nothing to validate for others
+            
             wxString str = p->getBindingString();
             
             bool error = false;
@@ -844,10 +846,10 @@ void ParameterPanel::update()
             if (not error)
             {
 #ifdef __WXMSW__
-				// FIXME: wxWidgets bug
+                // FIXME: wxWidgets bug
                 p->getButton()->SetBitmap(wxBitmap(1, 1));
 #else
-				p->getButton()->SetBitmap(wxBitmap());
+                p->getButton()->SetBitmap(wxBitmap());
 #endif
                 p->getButton()->SetToolTip("");
             }
