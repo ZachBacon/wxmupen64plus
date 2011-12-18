@@ -160,7 +160,8 @@ def build(bld):
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         link_flags += ['-lGL', '-ldl', '-lX11']
         
-        link_flags += ['-ldl']
+        if os.uname()[0] != 'FreeBSD':
+            link_flags += ['-ldl']
         
         # install target
         data_dir = bld.path.find_dir('data')
