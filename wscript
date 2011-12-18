@@ -154,6 +154,15 @@ def build(bld):
         bld.install_files('wxMupen64Plus.app/Contents/Resources', data_dir.ant_glob('*'))
         bin_install_path = "wxMupen64Plus.app/Contents/MacOS"
         
+    elif os.uname()[0] == 'FreeBSD':
+        if 'LOCALBASE' in os.environ:
+           LOCALBASE = os.environ['LOCALBASE']
+        else:
+           LOCALBASE = '/usr/local/'
+        
+        build_flags += ['-I'+ LOCALBASE +'/include/X11']
+        osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
+        link_flags += ['-lGL','-lX11']
     else:
         # For other unices
         build_flags += ['-I/usr/include/X11']
