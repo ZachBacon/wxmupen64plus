@@ -359,7 +359,18 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     subsizer->Add(combo, 1, wxEXPAND);
                     
                     assert(curr->m_dir != NULL);
-                    wxString dir = curr->m_dir->getStringValue();
+                    wxString dir;
+                    
+                    try
+                    {
+                        dir = curr->m_dir->getStringValue();
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not read value of parameter <%s> : %s\n",
+                                   curr->m_param_name.c_str(), ex.what());
+                    }
+                    
                     wxVector<PluginsFinder::PluginInfo> choices = PluginsFinder::getPluginsIn(dir);
                     for (wxVector<PluginsFinder::PluginInfo>::iterator i = choices.begin(); i != choices.end(); ++i)
                     {
@@ -544,7 +555,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), ctrl->GetValue());
                     #endif
                     
-                    param->setIntValue(ctrl->GetValue());
+                    try
+                    {
+                        param->setIntValue(ctrl->GetValue());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n]) != NULL)
                 {
@@ -556,7 +575,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), value);
                     #endif
                     
-                    param->setIntValue(value);
+                    try
+                    {
+                        param->setIntValue(value);
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
                 {
@@ -566,7 +593,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     printf("[int] parameter %s has value %i\n", param->m_param_name.c_str(), ctrl->getKey());
                     #endif
                     
-                    param->setIntValue(ctrl->getKey());
+                    try
+                    {
+                        param->setIntValue(ctrl->getKey());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else
                 {
@@ -583,7 +618,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                 printf("[float] parameter %s has value %f\n", param->m_param_name.c_str(), ctrl->GetValue());
                 #endif
                 
-                param->setFloatValue(ctrl->GetValue());
+                try
+                {
+                    param->setFloatValue(ctrl->GetValue());
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not set value of parameter <%s> : %s\n",
+                               param->m_param_name.c_str(), ex.what());
+                }
                 break;
             }
                 
@@ -596,13 +639,33 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                        ctrl->IsChecked() ? "true" : "false");
                 #endif
                 
-                param->setBoolValue(ctrl->IsChecked() ? 1 : 0);
+                try
+                {
+                    param->setBoolValue(ctrl->IsChecked() ? 1 : 0);
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not set value of parameter <%s> : %s\n",
+                               param->m_param_name.c_str(), ex.what());
+                }
+                
                 break;
             }
             
             case M64TYPE_STRING:
             {
-                wxString previousValue = param->getStringValue();
+                wxString previousValue;
+
+                try
+                {
+                    previousValue = param->getStringValue();
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not read value of parameter <%s> : %s\n",
+                               param->m_param_name.c_str(), ex.what());
+                }
+                
                 if (dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]) != NULL)
                 {
                     wxTextCtrl* ctrl = (wxTextCtrl*)m_parameter_widgets[n];
@@ -612,7 +675,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                            (const char*)ctrl->GetValue().mb_str());
                     #endif
                     
-                    param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                    try
+                    {
+                        param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
                 {
@@ -623,7 +694,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                            (const char*)ctrl->getBindingString().mb_str());
                     #endif
                     
-                    param->setStringValue((const char*)ctrl->getBindingString().mb_str());
+                    try
+                    {
+                        param->setStringValue((const char*)ctrl->getBindingString().mb_str());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else if (dynamic_cast<wxDirPickerCtrl*>(m_parameter_widgets[n])  != NULL)
                 {
@@ -634,7 +713,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                            (const char*)ctrl->GetPath().mb_str());
                     #endif
                     
-                    param->setStringValue((const char*)ctrl->GetPath().mb_str());
+                    try
+                    {
+                        param->setStringValue((const char*)ctrl->GetPath().mb_str());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else if (dynamic_cast<wxComboBox*>(m_parameter_widgets[n])  != NULL)
                 {
@@ -645,7 +732,15 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                            (const char*)ctrl->GetValue().mb_str());
                     #endif
                     
-                    param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                    try
+                    {
+                        param->setStringValue((const char*)ctrl->GetValue().mb_str());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n])  != NULL)
                 {
@@ -656,14 +751,33 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                            (const char*)ctrl->GetValue().mb_str());
                     #endif
                     
-                    param->setStringValue((const char*)ctrl->GetStringSelection().mb_str());
+                    try
+                    {
+                        param->setStringValue((const char*)ctrl->GetStringSelection().mb_str());
+                    }
+                    catch (std::runtime_error& ex)
+                    {
+                        wxLogError("Could not set value of parameter <%s> : %s\n",
+                                   param->m_param_name.c_str(), ex.what());
+                    }
                 }
                 else
                 {
                     assert(false);
                 }
                 
-                wxString newValue = param->getStringValue();
+                wxString newValue;
+
+                try
+                {
+                    newValue = param->getStringValue();
+                }
+                catch (std::runtime_error& ex)
+                {
+                    wxLogError("Could not read value of parameter <%s> : %s\n",
+                               param->m_param_name.c_str(), ex.what());
+                }
+                
                 if (param->m_special_type == PLUGIN_FILE)
                 {
                     havePlugins = true;

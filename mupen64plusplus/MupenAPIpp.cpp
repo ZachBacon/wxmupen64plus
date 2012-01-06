@@ -922,7 +922,7 @@ void ConfigParam::setBoolValue(const int newValue)
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "[Mupen64PlusPlus::ConfigParam::setBoolValue(";
-        errmsg += newValue;
+        errmsg += (newValue ? "true" : "false");
         errmsg += ")] parameter ";
         errmsg += m_param_name;
         errmsg += " value could not be written to, error : ";
