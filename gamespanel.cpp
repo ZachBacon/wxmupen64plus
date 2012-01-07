@@ -493,9 +493,12 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         }
         else
         {
-            // maximize (but keep aspect ratio)
-            m_width_param->setIntValue(m_center_panel->GetSize().GetHeight()*1.33f);
-            m_height_param->setIntValue(m_center_panel->GetSize().GetHeight());
+            if (m_api->useVideoExtension())
+            {
+                // maximize (but keep aspect ratio)
+                m_width_param->setIntValue(m_center_panel->GetSize().GetHeight()*1.33f);
+                m_height_param->setIntValue(m_center_panel->GetSize().GetHeight());
+            }
         }
     }
     
@@ -594,7 +597,7 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
         
             setOsdLogging(false);
         
-            if (m_width_param != NULL and m_height_param != NULL)
+            if (m_width_param != NULL and m_height_param != NULL and m_api->useVideoExtension())
             {
                 m_width_param->setIntValue(m_previous_width);
                 m_height_param->setIntValue(m_previous_height);
