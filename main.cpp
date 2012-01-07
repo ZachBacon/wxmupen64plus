@@ -765,7 +765,7 @@ bool MupenFrontendApp::makeToolbar(int plugins, int selectedSection)
             ConfigParam* ptr_param = section->getParamWithName("GamesPath");
             if (ptr_param != NULL)
             {
-                ptr_param->m_enabled = false;
+                ptr_param->setEnabled( false );
                 m_gamesPathParam = ptr_param;
             }
             

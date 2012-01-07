@@ -164,27 +164,27 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
         if (not curr->ok())
         {
             mplog_warning("ParameterPanel", "WARNING: parameter '%s' is not OK\n",
-                          curr->m_param_name.c_str());
+                          curr->getName().c_str());
             continue;
         }
         
         //printf("Parameter %i : %s (enabled = %i)\n", p, section.m_parameters[p].m_param_name.c_str(),
         //                                             section.m_parameters[p].m_enabled);
-        if (not curr->m_enabled) continue;
+        if (not curr->isEnabled()) continue;
 
-        if (curr->m_param_name == "device") is_input = true;
+        if (curr->getName() == "device") is_input = true;
 
         // if help string is short enough, use it instead of param name, often it's a clearer string
-        wxString labelstr = (curr->m_help_string.size() < 30 and
-                             curr->m_help_string.size() > 0) ?
-                             curr->m_help_string :
-                             curr->m_param_name;
+        wxString labelstr = (curr->getHelpString().size() < 30 and
+                             curr->getHelpString().size() > 0) ?
+                             curr->getHelpString() :
+                             curr->getName();
 
         wxStaticText* label = new wxStaticText(this, wxID_ANY, labelstr);
         sizer->Add( label, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 15 );
         wxWindow* ctrl;
 
-        switch (curr->m_param_type)
+        switch (curr->getType())
         {
             case M64TYPE_INT:
             {
@@ -197,11 +197,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               curr->m_param_name.c_str(), ex.what());
+                               curr->getName().c_str(), ex.what());
                 }
                 
                 bool greyOut = false;
-                if (curr->m_param_name == "ScreenWidth" or curr->m_param_name == "ScreenHeight")
+                if (curr->getName() == "ScreenWidth" or curr->getName() == "ScreenHeight")
                 {
                     greyOut = fullscreen;
                 }
@@ -240,7 +240,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                     
                     // FIXME: don't hardcode parameter name 'device'?
-                    if (curr->m_param_name == "device")
+                    if (curr->getName() == "device")
                     {
                         choice->Connect(choice->GetId(), wxEVT_COMMAND_CHOICE_SELECTED,
                                         wxCommandEventHandler(ParameterPanel::onInputDeviceChange), NULL, this);
@@ -269,7 +269,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               curr->m_param_name.c_str(), ex.what());
+                               curr->getName().c_str(), ex.what());
                 }
 
                 ctrl = new wxSpinCtrlDouble(this, wxID_ANY, wxString::Format("%f", currVal),
@@ -289,10 +289,10 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               curr->m_param_name.c_str(), ex.what());
+                               curr->getName().c_str(), ex.what());
                 }
                 
-                if (curr->m_param_name == "Fullscreen" and currVal)
+                if (curr->getName() == "Fullscreen" and currVal)
                 {
                     fullscreen = true;
                 }
@@ -316,7 +316,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               curr->m_param_name.c_str(), ex.what());
+                               curr->getName().c_str(), ex.what());
                 }
                 
                 if (curr->m_special_type == BINDING_DIGITAL_STRING)
@@ -368,7 +368,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not read value of parameter <%s> : %s\n",
-                                   curr->m_param_name.c_str(), ex.what());
+                                   curr->getName().c_str(), ex.what());
                     }
                     
                     wxVector<PluginsFinder::PluginInfo> choices = PluginsFinder::getPluginsIn(dir);
@@ -438,7 +438,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                     
                     // FIXME: don't hardcode parameter name 'device'?
-                    if (curr->m_param_name == "device")
+                    if (curr->getName() == "device")
                     {
                         choice->Connect(choice->GetId(), wxEVT_COMMAND_CHOICE_SELECTED,
                                         wxCommandEventHandler(ParameterPanel::onInputDeviceChange), NULL, this);
@@ -456,7 +456,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
             default:
             {
                 mplog_warning("ParameterPanel", "Invalid parameter type for '%s' : %i\n",
-                             curr->m_param_name.c_str(), curr->m_param_type);
+                             curr->getName().c_str(), curr->getType());
                 assert(false);
                 ctrl = new wxStaticText(this, wxID_ANY, "[???]");
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
@@ -464,8 +464,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
             }
         } // end switch
         
-        label->SetToolTip( curr->m_help_string );
-        ctrl->SetToolTip( curr->m_help_string );
+        label->SetToolTip( curr->getHelpString() );
+        ctrl->SetToolTip( curr->getHelpString() );
         ctrl->SetClientData( curr );
         m_parameter_widgets.push_back(ctrl);
         
@@ -543,7 +543,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
         assert(param != NULL);
         assert(param->ok());
         
-        switch (param->m_param_type)
+        switch (param->getType())
         {
             case M64TYPE_INT:
             {
@@ -562,7 +562,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n]) != NULL)
@@ -582,7 +582,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
@@ -600,7 +600,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else
@@ -625,7 +625,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not set value of parameter <%s> : %s\n",
-                               param->m_param_name.c_str(), ex.what());
+                               param->getName().c_str(), ex.what());
                 }
                 break;
             }
@@ -646,7 +646,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not set value of parameter <%s> : %s\n",
-                               param->m_param_name.c_str(), ex.what());
+                               param->getName().c_str(), ex.what());
                 }
                 
                 break;
@@ -663,7 +663,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               param->m_param_name.c_str(), ex.what());
+                               param->getName().c_str(), ex.what());
                 }
                 
                 if (dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]) != NULL)
@@ -682,7 +682,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else if (dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]) != NULL)
@@ -701,7 +701,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else if (dynamic_cast<wxDirPickerCtrl*>(m_parameter_widgets[n])  != NULL)
@@ -720,7 +720,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else if (dynamic_cast<wxComboBox*>(m_parameter_widgets[n])  != NULL)
@@ -739,7 +739,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else if (dynamic_cast<wxChoice*>(m_parameter_widgets[n])  != NULL)
@@ -758,7 +758,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                     catch (std::runtime_error& ex)
                     {
                         wxLogError("Could not set value of parameter <%s> : %s\n",
-                                   param->m_param_name.c_str(), ex.what());
+                                   param->getName().c_str(), ex.what());
                     }
                 }
                 else
@@ -775,7 +775,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
                 catch (std::runtime_error& ex)
                 {
                     wxLogError("Could not read value of parameter <%s> : %s\n",
-                               param->m_param_name.c_str(), ex.what());
+                               param->getName().c_str(), ex.what());
                 }
                 
                 if (param->m_special_type == PLUGIN_FILE)
@@ -793,7 +793,7 @@ void ParameterPanel::commitNewValues(bool onLeaving)
             default:
             {
                 mplog_warning("ParameterPanel::commitNewValues", "Unknown type %i for param %s\n",
-                              param->m_param_type, param->m_param_name.c_str());
+                              param->getType(), param->getName().c_str());
                 assert(false);
             }
         } // end switch
@@ -893,7 +893,7 @@ void ParameterPanel::update()
         assert(param != NULL);
         assert(param->ok());
         
-        if (param->m_param_name == "device")
+        if (param->getName() == "device")
         {
 
             if (dynamic_cast<wxChoice*>(m_parameter_widgets[n])  != NULL)
@@ -1007,11 +1007,11 @@ void ParameterPanel::onCheckbox(wxCommandEvent& event)
         assert(param != NULL);
         assert(param->ok());
         
-        if (param->m_param_name == "Fullscreen")
+        if (param->getName() == "Fullscreen")
         {
             fullscreen = ((wxCheckBox*)w)->GetValue();
         }
-        else if (param->m_param_name == "ScreenWidth" or param->m_param_name == "ScreenHeight")
+        else if (param->getName() == "ScreenWidth" or param->getName() == "ScreenHeight")
         {
             w->Enable(not fullscreen);
             w->Refresh();

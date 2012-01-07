@@ -255,12 +255,9 @@ void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type
     m64p_handle* section = (m64p_handle*)sectionHandle;
 
     ConfigParam* param = new ConfigParam(*section);
-    param->m_param_type = ParamType;
-    param->m_param_name = ParamName;
-
     const char* help = getParameterHelp(section, ParamName);
-    if (help != NULL) param->m_help_string = help;
-
+    param->setDetails(ParamType, ParamName, help);    
+    
     (*g_config_sections)[g_config_sections->size() - 1]->m_parameters.push_back(param);
 }
 
@@ -977,7 +974,7 @@ bool ConfigSection::hasChildNamed(const char* name) const
     const int count = m_parameters.size();
     for (int n=0; n<count; n++)
     {
-        if (m_parameters[n]->m_param_name == name) return true;
+        if (m_parameters[n]->getName() == name) return true;
     }
     return false;
 }
@@ -989,7 +986,7 @@ ConfigParam* ConfigSection::getParamWithName(const char* name)
     const int count = m_parameters.size();
     for (int n=0; n<count; n++)
     {
-        if (m_parameters[n]->m_param_name == name) return m_parameters[n];
+        if (m_parameters[n]->getName() == name) return m_parameters[n];
     }
     return NULL;
 }
@@ -1000,8 +997,7 @@ void ConfigSection::addNewParam(const char* name, const char* help, wxVariant va
 								 SpecialParamType sptype)
 {
     ConfigParam* newParam = new ConfigParam(m_handle, sptype);
-    newParam->m_param_type = type;
-    newParam->m_param_name = name;
+    newParam->setDetails(type, name, help);
     m_parameters.push_back(newParam);
 
     m64p_error result;

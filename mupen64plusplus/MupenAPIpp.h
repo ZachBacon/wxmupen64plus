@@ -81,13 +81,13 @@ class ConfigParam
 {
     unsigned long m_magic_number;
 
-public:
-
     m64p_type   m_param_type;
     std::string m_param_name;
     std::string m_help_string;
     m64p_handle m_parent_section;
     bool        m_enabled;
+    
+public:
     
     /** Not read for all types of parameters. Second icon used only for parameter couples */
     wxString m_icon_1;
@@ -113,6 +113,7 @@ public:
     bool m_need_restart;
 
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
+    /*
     ConfigParam()
     {
         m_enabled = false;
@@ -124,7 +125,8 @@ public:
         m_dir = NULL;
         m_is_ok = true;
     }
-
+    */
+    
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
     {
         m_enabled = true;
@@ -219,6 +221,20 @@ public:
     void setBoolValue(const int newValue);
     void setFloatValue(const float newValue);
     void setStringValue(const std::string& newValue);
+    
+    const std::string& getName      () const { return m_param_name;  }
+    const std::string& getHelpString() const { return m_help_string; }
+    bool               isEnabled    () const { return m_enabled;     }
+    m64p_type          getType      () const { return m_param_type;  }
+    
+    void setDetails(m64p_type type, std::string name, const char* helpString)
+    {
+        m_param_type = type;
+        m_param_name = name;
+        if (helpString != NULL) m_help_string = helpString;
+    }
+    
+    void setEnabled(bool enabled) { m_enabled = enabled; }
 };
 
 class ConfigSection

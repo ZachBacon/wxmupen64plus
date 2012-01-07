@@ -88,7 +88,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                    buffer);
 #endif
 
-            wxString param_wxname(section->m_parameters[p]->m_param_name);
+            wxString param_wxname(section->m_parameters[p]->getName());
             
             // Move key mappings from wherever they are into a separate input section
             if (param_wxname.StartsWith("Kbd Mapping"))
@@ -98,7 +98,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                 ConfigParam* newp = new ConfigParam(section->m_parameters[p]);
                 assert(newp->ok());
                 inputSection->m_parameters.push_back(newp);
-                section->m_parameters[p]->m_enabled = false;
+                section->m_parameters[p]->setEnabled( false );
             }
             else if (param_wxname.StartsWith("Joy Mapping"))
             {
@@ -107,7 +107,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                 ConfigParam* newp = new ConfigParam(section->m_parameters[p]);
                 assert(newp->ok());
                 inputSection->m_parameters.push_back(newp);
-                section->m_parameters[p]->m_enabled = false;
+                section->m_parameters[p]->setEnabled( false );
             }
             else if (param_wxname == "PluginDir" || param_wxname == "ScreenshotPath" ||
                      param_wxname == "SaveStatePath" || param_wxname == "SharedDataPath")
