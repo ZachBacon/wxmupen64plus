@@ -351,7 +351,10 @@ void GamesPanel::initGLCanvas()
     wxCommandEvent evt(wxMUPEN_INITED_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
 	
-	m_canvas->SetFocus();
+    if (m_canvas != NULL)
+    {
+        m_canvas->SetFocus();
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
