@@ -87,10 +87,11 @@ def configure(ctx):
     ctx.find_program('g++', var='GPP', mandatory=True)
     ctx.check_cc(header_name="stdio.h", function_name='printf', msg='Checking C compiler works', errmsg="No")
     ctx.check_cxx(header_name="cstdio", function_name='printf', msg='Checking C++ compiler works', errmsg="No")
-    ctx.check_cc(header_name="m64p_frontend.h", includes=[api_path])
-    ctx.check_cc(header_name="m64p_config.h",   includes=[api_path])
-    ctx.check_cc(header_name="m64p_types.h",    includes=[api_path])
-    
+    ctx.check_cc(header_name="m64p_frontend.h",   includes=[api_path])
+    ctx.check_cc(header_name="m64p_config.h",     includes=[api_path])
+    ctx.check_cc(header_name="m64p_types.h",      includes=[api_path])
+    ctx.check_cc(header_name="../main/version.h", includes=[api_path])
+
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
     
     if os.name == 'nt':
@@ -99,6 +100,19 @@ def configure(ctx):
         ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --prefix=' + wxhome + ' ' + wxconfig_args + ' --libs core,base,gl,html', package='', uselib_store='wxWidgets')
     else:
         ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --libs core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
+
+    ctx.check_cc(compile_filename='test.c', execute=False, cflags=["-I"+api_path], msg="Checking mupen64plus is recent enough...", fragment=
+"""#include "../main/version.h"
+   #if FRONTEND_API_VERSION < 0x020001
+   #error Your mupen64plus build is too old, please upgrade
+   #endif
+   #if CONFIG_API_VERSION < 0x020000
+   #error Your mupen64plus build is too old, please upgrade
+   #endif
+   #if VIDEXT_API_VERSION < 0x020000
+   #error Your mupen64plus build is too old, please upgrade
+   #endif
+   int main(int argc, char** argv) {}""")
 
 # --------------------------------------------------------------------------------------------
 #                                            BUILD
