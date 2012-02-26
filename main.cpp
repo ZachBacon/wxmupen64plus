@@ -337,13 +337,14 @@ void MupenFrontendApp::shutdown()
     if (m_curr_panel != NULL)
     {
         m_curr_panel->commitNewValues(true);
+        m_curr_panel->removeMyselfFrom(m_sizer);
+        m_curr_panel = NULL;
     }
     
     if (m_frame != NULL)
     {
         m_frame->Destroy();
         m_frame = NULL;
-        m_curr_panel = NULL;
     }
 
     if (m_api != NULL)
