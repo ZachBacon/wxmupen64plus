@@ -169,6 +169,19 @@ m64p_error injectKeyEvent(/*bool*/ int pressed, int key);
 
 void osdNewMessage(const char* message);
 
+/** Debugging functions */
+
+m64p_error SetDebuggingCallbacks(void (*init)(void), void (*update)(unsigned int), void (*vi)(void));
+m64p_error SetRunState(int state);
+m64p_error DebuggerStep();
+
+unsigned char MemRead8(unsigned int address);
+unsigned int MemRead32(unsigned int address);
+void MemWrite32(unsigned int address, unsigned int value);
+
+void *GetRegister(m64p_dbg_cpu_data type);
+
+
 #ifdef __cplusplus
 }
 #endif

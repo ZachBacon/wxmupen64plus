@@ -928,3 +928,52 @@ void osdNewMessage(const char* message)
 {
     (*osd_new_message)(OSD_BOTTOM_CENTER, message);
 }
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error SetDebuggingCallbacks(void (*init)(void), void (*update)(unsigned int), void (*vi)(void))
+{
+    return (*DebugSetCallbacks)(init, update, vi);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error SetRunState(int state)
+{
+    return (*DebugSetRunState)(state);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error DebuggerStep()
+{
+    return (*DebugStep)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned char MemRead8(unsigned int address)
+{
+    return (*DebugMemRead8)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned int MemRead32(unsigned int address)
+{
+    return (*DebugMemRead32)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MemWrite32(unsigned int address, unsigned int value)
+{
+    (*DebugMemWrite32)(address, value);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void *GetRegister(m64p_dbg_cpu_data type)
+{
+    return(*DebugGetCPUDataPtr)(type);
+}

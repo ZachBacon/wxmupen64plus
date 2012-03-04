@@ -29,7 +29,6 @@
 #include "wxvidext.h"
 #include "main.h"
 
-#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <wx/stream.h>
@@ -873,7 +872,7 @@ std::string ConfigParam::getStringValue()
         throw std::runtime_error(errmsg);
     }
 
-    const int BUFFER_SIZE = 256;
+    const int BUFFER_SIZE = 2048; // TODO: Bad
     char buffer[BUFFER_SIZE];
 
     m64p_error result = getStringConfigParam(m_parent_section, m_param_name.c_str(),

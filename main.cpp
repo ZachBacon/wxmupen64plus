@@ -39,6 +39,7 @@
 #include "config.h"
 #include "main.h"
 #include "wxvidext.h"
+#include "debugger/debuggerframe.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -156,6 +157,7 @@ bool MupenFrontendApp::OnInit()
 
     SDL_Helper_Start();
 
+#define DATADIR "wxdata"
 #ifdef DATADIR
     datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else
@@ -219,6 +221,7 @@ bool MupenFrontendApp::OnInit()
 
     m_frame = new wxFrame(NULL, -1, "Mupen64Plus", wxDefaultPosition, wxSize(1024, 640));
     SetTopWindow(m_frame);
+
 
     wxInitAllImageHandlers();
     if (not makeToolbar(plugins, 0)) return false;
@@ -340,7 +343,10 @@ void MupenFrontendApp::shutdown()
         m_curr_panel->removeMyselfFrom(m_sizer);
         m_curr_panel = NULL;
     }
-
+    if (DebuggerFrame::Exists())
+    {
+        DebuggerFrame::Delete();
+    }
     if (m_frame != NULL)
     {
         m_frame->Destroy();

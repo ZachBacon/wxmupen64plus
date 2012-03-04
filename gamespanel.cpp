@@ -27,6 +27,7 @@
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "main.h"
 #include "wxvidext.h"
+#include "debugger/debuggerframe.h"
 
 #include "sdlkeypicker.h"
 #include <wx/sizer.h>
@@ -126,6 +127,7 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
 
     buttons->AddStretchSpacer();
 
+#define DATADIR "wxdata"
 #ifdef DATADIR
     wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else
@@ -459,15 +461,23 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
     }
 
     ptr_vector<ConfigSection>& config = wxGetApp().getConfig();
-    for (int n=0; n<config.size(); n++)
+    for (int n = 0, found_sections = 0; n < config.size() && found_sections != 3; n++)
     {
-        if (config[n]->m_section_name == "General")
+        if (not (found_sections & 0x1) && config[n]->m_section_name == "General")
         {
-
             m_width_param = config[n]->getParamWithName("ScreenWidth");
             m_height_param = config[n]->getParamWithName("ScreenHeight");
             m_fullscreen_param = config[n]->getParamWithName("Fullscreen");
-            break;
+            found_sections |= 0x1;
+        }
+        else if (not (found_sections & 0x2) && config[n]->m_section_name == "Core")
+        {
+            if(config[n]->getParamWithName("EnableDebugger")->getBoolValue() == true)
+            {
+                if(!DebuggerFrame::Exists())
+                    new DebuggerFrame;
+            }
+            found_sections |= 0x2;
         }
     }
 
