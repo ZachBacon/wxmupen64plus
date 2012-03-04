@@ -205,10 +205,10 @@ int Mupen64PlusPlus::loadPlugins()
     int plugins = PluginSearchLoad(getConfigUI());
 
     printf("\nLoading plugins from %s\n", g_PluginDir);
-    printf("    GFX <%s> : %s\n",   g_GfxPlugin,   (plugins & 0x1 != 0 ? "OK" : "/!\\ Could not load"));
-    printf("    Audio <%s> : %s\n", g_AudioPlugin, (plugins & 0x2 != 0 ? "OK" : "/!\\ Could not load"));
-    printf("    Input <%s> : %s\n", g_InputPlugin, (plugins & 0x4 != 0 ? "OK" : "/!\\ Could not load"));
-    printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    GFX <%s> : %s\n",   g_GfxPlugin,   ((plugins & 0x1) != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    Audio <%s> : %s\n", g_AudioPlugin, ((plugins & 0x2) != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    Input <%s> : %s\n", g_InputPlugin, ((plugins & 0x4) != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    RSP <%s> : %s\n",   g_RspPlugin,   ((plugins & 0x8) != 0 ? "OK" : "/!\\ Could not load"));
     printf("\n");
 
     if (plugins != 15 and m_defaultPluginPath != g_PluginDir)
@@ -221,10 +221,10 @@ int Mupen64PlusPlus::loadPlugins()
                m_defaultPluginPath.c_str());
 
         plugins = PluginSearchLoad(getConfigUI());
-        printf("    GFX <%s> : %s\n",   g_GfxPlugin,   (plugins & 0x1 != 0 ? "OK" : "/!\\ Could not load"));
-        printf("    Audio <%s> : %s\n", g_AudioPlugin, (plugins & 0x2 != 0 ? "OK" : "/!\\ Could not load"));
-        printf("    Input <%s> : %s\n", g_InputPlugin, (plugins & 0x4 != 0 ? "OK" : "/!\\ Could not load"));
-        printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    GFX <%s> : %s\n",   g_GfxPlugin,   ((plugins & 0x1) != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    Audio <%s> : %s\n", g_AudioPlugin, ((plugins & 0x2) != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    Input <%s> : %s\n", g_InputPlugin, ((plugins & 0x4) != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    RSP <%s> : %s\n",   g_RspPlugin,   ((plugins & 0x8) != 0 ? "OK" : "/!\\ Could not load"));
         printf("\n");
 
         if (plugins == 15)

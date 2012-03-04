@@ -29,6 +29,9 @@
 #if defined(WIN32)
 
   #include <windows.h>
+  #ifdef PATH_MAX
+  #undef PATH_MAX
+  #endif
   #define PATH_MAX 2048
   #define OSAL_DEFAULT_DYNLIB_FILENAME "mupen64plus.dll"
   #define OSAL_DIR_SEPARATOR           '\\'
