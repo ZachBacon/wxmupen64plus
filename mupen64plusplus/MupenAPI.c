@@ -258,7 +258,7 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     {
         Compatible = 1;
     }
-        
+
     /* exit if not compatible */
     if (Compatible == 0)
     {
@@ -278,10 +278,10 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
         CoreHandle = NULL;
         return M64ERR_INPUT_INVALID;
     }
-    
+
     int ConfigAPIVersion, DebugAPIVersion, VidextAPIVersion;
     (*CoreAPIVersionFunc)(&ConfigAPIVersion, &DebugAPIVersion, &VidextAPIVersion, NULL);
-    
+
     if ((ConfigAPIVersion & 0xffff0000) != (CONFIG_API_VERSION & 0xffff0000))
     {
         fprintf(stderr, "AttachCoreLib() Error: Emulator core '%s' incompatible; Config API major version "
@@ -372,7 +372,7 @@ m64p_error DetachCoreLib(void)
     if (CoreHandle == NULL)
         return M64ERR_INVALID_STATE;
 
-    // set the core function pointers to NULL 
+    // set the core function pointers to NULL
     CoreErrorMessage = NULL;
     CoreStartup = NULL;
     CoreShutdown = NULL;
@@ -788,15 +788,15 @@ m64p_error getRomHeader(const char* path, m64p_rom_header* out)
 {
     FILE* f;
     f = fopen(path, "rb");
-    
+
     if (!f) return M64ERR_FILES;
-    
+
     int count = fread(out, sizeof(m64p_rom_header), 1, f);
-    
+
     int error = (count != 1) || ferror(f);
-    
+
     fclose(f);
-    
+
     if (error != 0) return M64ERR_NO_MEMORY;
     else            return M64ERR_SUCCESS;
 }
@@ -878,7 +878,7 @@ m64p_error takeScreenshot()
 m64p_error attachPlugins()
 {
     int i;
-    
+
     // attach plugins to core
     for (i = 0; i < 4; i++)
     {
@@ -898,7 +898,7 @@ m64p_error detachPlugins()
 {
     assert(CoreDetachPlugin != NULL);
     int i;
-    
+
     // detach plugins from core and unload them
     for (i = 0; i < 4; i++)
     {
