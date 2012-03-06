@@ -51,7 +51,6 @@ class DebuggerFrame : public wxFrame
         void Close(wxCloseEvent &evt);
         void MenuClose(wxCommandEvent &evt);
         void AddPanel(wxCommandEvent &evt);
-        void RemovePanel(DebugPanel *panel);
         void ConsoleClosed(DebugConsole *console);
 
         void State(wxCommandEvent &evt);
@@ -83,7 +82,6 @@ class DebuggerFrame : public wxFrame
 
         DebugPanel *AddPanel(int type, wxString &name, int id = 0);
         DebugConsole *output;
-        std::set<DebugPanel *> panels;
         bool runtime_update;
         void UpdatePanels(bool vi = false);
 

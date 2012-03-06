@@ -134,7 +134,6 @@ RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent,
     cop0_tab = new RegisterTab(notebook, -1, 50);
     for(int i = 0; i < 25; i++)
     {
-        printf("%d\n", i);
         cop0_tab->Append(cop0_names[i], REGISTER_INT64);
     }
 

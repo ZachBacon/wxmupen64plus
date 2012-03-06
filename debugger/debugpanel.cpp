@@ -8,7 +8,6 @@ DebugPanel::DebugPanel(DebuggerFrame *parent_, int id) : wxPanel(parent_, id)
 
 DebugPanel::~DebugPanel()
 {
-    parent->RemovePanel(this);
 }
 
 void DebugPanel::Rename(wxCommandEvent &evt)

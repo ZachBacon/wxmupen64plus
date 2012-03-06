@@ -101,12 +101,6 @@ DebuggerFrame::~DebuggerFrame()
     g_debugger = 0;
 }
 
-void DebuggerFrame::RemovePanel(DebugPanel *panel)
-{
-    if (panels.erase(panel) == 0)
-        Print("Debug: Attempted to erase panel that did not exist");
-}
-
 DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
 {
     wxAuiPaneInfo info;
@@ -161,7 +155,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
         default:
             return 0;
     }
-    panels.insert(panel);
     aui->AddPane(panel, info);
     return panel;
 }
@@ -281,7 +274,7 @@ void DebuggerFrame::LoadConfig()
         SetSize(rect);
     }
     ConfigParam *perspective = config->getParamWithName("Layout");
-    if(!perspective)
+    if (!perspective)
     {
         config->addNewParam("Layout", "Layout of the debugger", "", M64TYPE_STRING);
         LoadAui("");
@@ -371,7 +364,7 @@ void DebuggerFrame::Pause()
 
 void DebuggerFrame::State(wxCommandEvent &evt)
 {
-    switch(evt.GetId())
+    switch (evt.GetId())
     {
         case state_run_id:
             Run();
@@ -408,19 +401,20 @@ void DebuggerFrame::MenuClose(wxCommandEvent &evt)
 
 void DebuggerFrame::UpdatePanels(bool vi)
 {
-    for (std::set<DebugPanel *>::iterator it = panels.begin(); it != panels.end(); it++)
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
-        (*it)->Update(vi);
+        ((DebugPanel *)(panes.Item(i).window))->Update(vi);
     }
 }
 
 void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
 {
-    switch(evt.GetId())
+    switch (evt.GetId())
     {
         case DEBUG_INIT:
         {
-            if(!inited)
+            if (!inited)
             {
                 LoadConfig();
                 Show();
@@ -430,7 +424,7 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         }
         break;
         case DEBUG_UPDATE:
-            if(run_on_boot)
+            if (run_on_boot)
             {
                 run_on_boot = false;
                 Run();
@@ -444,7 +438,7 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         break;
         case DEBUG_VI:
         {
-            if(runtime_update)
+            if (runtime_update)
                 UpdatePanels(true);
         }
         break;
