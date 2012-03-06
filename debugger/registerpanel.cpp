@@ -88,6 +88,8 @@ RegisterPanel::~RegisterPanel()
 {
 }
 
-void RegisterPanel::Update()
+void RegisterPanel::Update(bool vi)
 {
+    if(vi)
+        return;
 }

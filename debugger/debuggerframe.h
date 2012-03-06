@@ -85,7 +85,7 @@ class DebuggerFrame : public wxFrame
         DebugConsole *output;
         std::set<DebugPanel *> panels;
         bool runtime_update;
-        void UpdatePanels();
+        void UpdatePanels(bool vi = false);
 
         void CreateMenubar();
         wxMenuItem *run;

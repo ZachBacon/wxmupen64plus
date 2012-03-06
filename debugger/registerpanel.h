@@ -48,7 +48,7 @@ class RegisterPanel : public DebugPanel
         RegisterPanel(DebuggerFrame *parent, int id = -1);
         virtual ~RegisterPanel();
 
-        void Update();
+        void Update(bool vi);
 
     private:
         RegisterTab *gpr_tab;

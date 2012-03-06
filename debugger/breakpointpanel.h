@@ -11,7 +11,7 @@ class BreakpointPanel : public DebugPanel
         BreakpointPanel(DebuggerFrame *parent, int id = -1);
         virtual ~BreakpointPanel();
 
-        void Update();
+        void Update(bool vi);
         void RClickMenu(wxMouseEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
     private:

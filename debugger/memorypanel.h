@@ -62,7 +62,7 @@ class MemoryPanel : public DebugPanel
         MemoryPanel(DebuggerFrame *parent, int id = -1);
         virtual ~MemoryPanel();
 
-        void Update();
+        void Update(bool vi);
 
         void Select(int newpos);
         void Goto(wxCommandEvent &evt);

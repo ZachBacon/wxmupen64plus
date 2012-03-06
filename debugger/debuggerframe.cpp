@@ -406,11 +406,11 @@ void DebuggerFrame::MenuClose(wxCommandEvent &evt)
     Delete();
 }
 
-void DebuggerFrame::UpdatePanels()
+void DebuggerFrame::UpdatePanels(bool vi)
 {
     for (std::set<DebugPanel *>::iterator it = panels.begin(); it != panels.end(); it++)
     {
-        (*it)->Update();
+        (*it)->Update(vi);
     }
 }
 
@@ -445,7 +445,7 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         case DEBUG_VI:
         {
             if(runtime_update)
-                UpdatePanels();
+                UpdatePanels(true);
         }
         break;
         default:

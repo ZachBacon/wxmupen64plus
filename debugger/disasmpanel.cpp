@@ -10,6 +10,6 @@ DisasmPanel::~DisasmPanel()
 {
 }
 
-void DisasmPanel::Update()
+void DisasmPanel::Update(bool vi)
 {
 }

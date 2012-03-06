@@ -45,7 +45,7 @@ BreakpointPanel::~BreakpointPanel()
 
 }
 
-void BreakpointPanel::Update()
+void BreakpointPanel::Update(bool vi)
 {
 
 }

@@ -10,7 +10,7 @@ class DisasmPanel : public DebugPanel
         DisasmPanel(DebuggerFrame *parent, int id = -1);
         virtual ~DisasmPanel();
 
-        void Update();
+        void Update(bool vi);
 };
 
 #endif // DISASMPANEL_H

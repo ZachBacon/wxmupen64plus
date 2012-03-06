@@ -55,7 +55,7 @@ MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     offset_chooser->Bind(wxEVT_COMMAND_TEXT_ENTER, &MemoryPanel::Goto, this);
 }
 
-void MemoryPanel::Update()
+void MemoryPanel::Update(bool vi)
 {
     data_changed = true;
     memory->Update();
