@@ -3,20 +3,25 @@
 
 #include "debugpanel.h"
 #include <vector>
+#include <wx/scrolwin.h>
 
 class wxNotebook;
 class wxTextCtrl;
-class wxGridSizer;
+
+// After four hours of trying to get both sizer and scrolling stuff work with
+// the layout changing when it can fit another column, I just scrapped it all..
+// Might be less platform-independent :(
 
 enum RegisterType
 {
     REGISTER_INT64 = 1,
+    REGISTER_FLOAT
 };
 
 class SingleRegister : public wxPanel
 {
     public:
-        SingleRegister(wxWindow *parent, int id, const char *name, RegisterType type);
+        SingleRegister(wxWindow *parent, int id, const char *name, RegisterType type, wxPoint &pos, int reg_name_len);
         ~SingleRegister();
         uint64_t GetInt();
         double GetFloat();
@@ -29,16 +34,22 @@ class SingleRegister : public wxPanel
         RegisterType type;
 };
 
-class RegisterTab : public wxPanel
+class RegisterTab : public wxScrolledWindow
 {
     public:
-        RegisterTab(wxWindow *parent, int id);
+        RegisterTab(wxWindow *parent, int id, int reg_name_len);
         ~RegisterTab();
+
+        void Size(wxSizeEvent &evt);
 
         void Append(const char *name, RegisterType type);
 
     private:
-        wxGridSizer *sizer;
+        wxPoint CalcItemPos(int index);
+        void Reorder();
+        int cols;
+        int rows;
+        int reg_name_len;
         std::vector<SingleRegister *> registers;
 };
 
