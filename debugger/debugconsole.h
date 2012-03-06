@@ -23,6 +23,10 @@ class DebugConsole : public DebugPanel
         void CmdBreak(wxString &cmd);
         void CmdHelp(wxString &cmd);
         void CmdViBreak(wxString &cmd);
+        void CmdCls(wxString &cmd);
+
+        void RClickMenu(wxMouseEvent &evt);
+        void RClickEvent(wxCommandEvent &evt);
 
     private:
         static CommandMap *commands;

@@ -61,6 +61,9 @@ class DebuggerFrame : public wxFrame
         void Pause();
         void ViBreak();
 
+        DebugConsole *GetMainOutput() { return output; }
+        void SetMainOutput(DebugConsole *output_) { output = output_; }
+
         void NewBreakpoint(Breakpoint *data);
         void DeleteBreakpoint(Breakpoint *data);
         Breakpoint *FindBreakpoint(int id);

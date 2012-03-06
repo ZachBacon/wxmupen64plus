@@ -3,10 +3,17 @@
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
 #include <wx/hashmap.h>
+#include <wx/menu.h>
 
 typedef void(DebugConsole::*CmdFunc)(wxString &);
 WX_DECLARE_STRING_HASH_MAP(CmdFunc, CommandMap);
 CommandMap *DebugConsole::commands = 0;
+
+enum
+{
+    menu_setmain = 2,
+    menu_clear
+};
 
 void DebugConsole::InitCommands()
 {
@@ -25,6 +32,8 @@ void DebugConsole::InitCommands()
     (*commands)["ohmygodhelpmeplease"] = &DebugConsole::CmdHelp;
     (*commands)["vibreak"] = &DebugConsole::CmdViBreak;
     (*commands)["vi"] = &DebugConsole::CmdViBreak;
+    (*commands)["cls"] = &DebugConsole::CmdCls;
+    (*commands)["clear"] = &DebugConsole::CmdCls;
 }
 
 DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_, id)
@@ -38,7 +47,8 @@ DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_,
     sizer->Add(out, 1, wxEXPAND);
     sizer->Add(in, 0, wxEXPAND);
 
-    Bind(wxEVT_COMMAND_TEXT_ENTER, &DebugConsole::Command, this);
+    in->Bind(wxEVT_COMMAND_TEXT_ENTER, &DebugConsole::Command, this);
+    out->Bind(wxEVT_RIGHT_UP, &DebugConsole::RClickMenu, this);
 
     lines = 0;
 }
@@ -73,6 +83,12 @@ void DebugConsole::CmdViBreak(wxString &cmd)
     parent->ViBreak();
 }
 
+void DebugConsole::CmdCls(wxString &cmd)
+{
+    out->Clear();
+    lines = 0;
+}
+
 void DebugConsole::CmdHelp(wxString &cmd)
 {
     Print("break\tManipulates breakpoints");
@@ -80,13 +96,16 @@ void DebugConsole::CmdHelp(wxString &cmd)
     Print("play\tContinues execution");
     Print("pause\tPauses execution");
     Print("step\tExecutes one instruction");
-    Print("vibreak\tBreaks at the next vertical interrupt");
+    Print("cls\tClears the screen");
     Print("Type \"help <command>\" for detailed instructions.");
 }
 
 void DebugConsole::Command(wxCommandEvent &evt)
 {
     wxString cmd = in->GetValue();
+    if(cmd.empty())
+        return;
+
     cmd.MakeLower(); // Maybe shouldn't?
     wxString cmd_name = cmd.substr(0, cmd.find_first_of(' '));
     CommandMap::iterator it = commands->find(cmd_name);
@@ -113,3 +132,38 @@ void DebugConsole::Print(wxString msg)
 
     out->AppendText(msg);
 }
+
+void DebugConsole::RClickEvent(wxCommandEvent &evt)
+{
+    switch (evt.GetId())
+    {
+        case menu_clear:
+            out->Clear();
+            lines = 0;
+        break;
+        case menu_setmain:
+            parent->SetMainOutput(this);
+        break;
+        default:
+        break;
+    }
+}
+
+void DebugConsole::RClickMenu(wxMouseEvent &evt)
+{
+    wxMenu menu;
+    wxMenuItem *setmain, *clear;
+    if (parent->GetMainOutput() != this)
+    {
+        setmain = new wxMenuItem(&menu, menu_setmain, _("Set to main output")); // is "to" correct preposition here? D:
+        menu.Append(setmain);
+    }
+
+    clear = new wxMenuItem(&menu, menu_clear, _("Clear"));
+    menu.Append(clear);
+
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &DebugConsole::RClickEvent, this);
+
+    PopupMenu(&menu);
+}
+
