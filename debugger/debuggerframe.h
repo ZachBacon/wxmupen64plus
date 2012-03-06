@@ -57,6 +57,7 @@ class DebuggerFrame : public wxFrame
         void Run();
         void Step();
         void Pause();
+        void ViBreak();
 
         void NewBreakpoint(Breakpoint *data);
         void DeleteBreakpoint(Breakpoint *data);
@@ -83,6 +84,7 @@ class DebuggerFrame : public wxFrame
         DebugPanel *AddPanel(int type, wxString &name, int id = 0);
         DebugConsole *output;
         bool runtime_update;
+        bool vi_break;
         void UpdatePanels(bool vi = false);
 
         void CreateMenubar();
@@ -90,6 +92,7 @@ class DebuggerFrame : public wxFrame
         wxMenuItem *pause;
 
         bool inited;
+        bool running;
         void LoadConfig();
         bool LoadAui(const wxString &perspective);
         bool run_on_boot;

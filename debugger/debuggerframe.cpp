@@ -36,6 +36,7 @@ enum
     state_run_id,
     state_pause_id,
     state_step_id,
+    state_vibreak_id,
     last_state_id
 };
 
@@ -49,6 +50,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     run_on_boot = false;
     inited = false;
     runtime_update = true;
+    vi_break = false;
 
     SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
     g_debugger = this;
@@ -297,11 +299,13 @@ void DebuggerFrame::CreateMenubar()
     pause = new wxMenuItem(statemenu, state_pause_id, _("Pause\tF12"), wxEmptyString, wxITEM_CHECK);
     wxMenuItem *separator1 = new wxMenuItem(statemenu);
     wxMenuItem *step = new wxMenuItem(statemenu, state_step_id, _("Step\tF7"));
+    wxMenuItem *vibreak = new wxMenuItem(statemenu, state_vibreak_id, _("Next vertical interrupt"));
 
     statemenu->Append(run);
     statemenu->Append(pause);
     statemenu->Append(separator1);
     statemenu->Append(step);
+    statemenu->Append(vibreak);
 
     viewmenu->Append(console_panel_id, _("Console"));
     viewmenu->Append(break_panel_id, _("Breakpoints\tCtrl-B"));
@@ -347,6 +351,7 @@ void DebuggerFrame::Run()
     run->Check(true);
     pause->Check(false);
     SetRunState(2);
+    running = true;
     DebuggerStep();
 }
 
@@ -357,9 +362,13 @@ void DebuggerFrame::Step()
 
 void DebuggerFrame::Pause()
 {
-    pause->Check(true);
-    run->Check(false);
     SetRunState(0);
+}
+
+void DebuggerFrame::ViBreak()
+{
+    vi_break = true;
+    Run();
 }
 
 void DebuggerFrame::State(wxCommandEvent &evt)
@@ -374,6 +383,9 @@ void DebuggerFrame::State(wxCommandEvent &evt)
         break;
         case state_step_id:
             Step();
+        break;
+        case state_vibreak_id:
+            ViBreak();
         break;
         default:
         return;
@@ -424,6 +436,9 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         }
         break;
         case DEBUG_UPDATE:
+        {
+
+            vi_break = false;
             if (run_on_boot)
             {
                 run_on_boot = false;
@@ -431,14 +446,20 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
             }
             else
             {
+                pause->Check(true);
+                run->Check(false);
+                running = false;
                 Print(wxString::Format("Paused at %x", evt.GetInt()));
                 UpdatePanels();
                 Raise();
             }
+        }
         break;
         case DEBUG_VI:
         {
-            if (runtime_update)
+            if (vi_break)
+                Pause();
+            else if (runtime_update)
                 UpdatePanels(true);
         }
         break;

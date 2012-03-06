@@ -22,6 +22,7 @@ class DebugConsole : public DebugPanel
         void CmdStep(wxString &cmd);
         void CmdBreak(wxString &cmd);
         void CmdHelp(wxString &cmd);
+        void CmdViBreak(wxString &cmd);
 
     private:
         static CommandMap *commands;

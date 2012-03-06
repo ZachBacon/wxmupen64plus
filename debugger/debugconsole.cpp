@@ -23,6 +23,8 @@ void DebugConsole::InitCommands()
     (*commands)["h"] = &DebugConsole::CmdHelp;
     (*commands)["?"] = &DebugConsole::CmdHelp;
     (*commands)["ohmygodhelpmeplease"] = &DebugConsole::CmdHelp;
+    (*commands)["vibreak"] = &DebugConsole::CmdViBreak;
+    (*commands)["vi"] = &DebugConsole::CmdViBreak;
 }
 
 DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_, id)
@@ -66,6 +68,11 @@ void DebugConsole::CmdBreak(wxString &cmd)
 {
 }
 
+void DebugConsole::CmdViBreak(wxString &cmd)
+{
+    parent->ViBreak();
+}
+
 void DebugConsole::CmdHelp(wxString &cmd)
 {
     Print("break\tManipulates breakpoints");
@@ -73,6 +80,7 @@ void DebugConsole::CmdHelp(wxString &cmd)
     Print("play\tContinues execution");
     Print("pause\tPauses execution");
     Print("step\tExecutes one instruction");
+    Print("vibreak\tBreaks at the next vertical interrupt");
     Print("Type \"help <command>\" for detailed instructions.");
 }
 
