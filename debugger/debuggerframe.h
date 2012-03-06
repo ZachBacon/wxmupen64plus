@@ -50,10 +50,12 @@ class DebuggerFrame : public wxFrame
 
         void Close(wxCloseEvent &evt);
         void MenuClose(wxCommandEvent &evt);
-        void AddPanel(wxCommandEvent &evt);
+        void MenuAddPanel(wxCommandEvent &evt);
+        void MenuState(wxCommandEvent &evt);
+        void MenuOption(wxCommandEvent &evt);
+
         void ConsoleClosed(DebugConsole *console);
 
-        void State(wxCommandEvent &evt);
         void Run();
         void Step();
         void Pause();
@@ -83,19 +85,22 @@ class DebuggerFrame : public wxFrame
 
         DebugPanel *AddPanel(int type, wxString &name, int id = 0);
         DebugConsole *output;
-        bool runtime_update;
         bool vi_break;
+        bool inited;
+        bool running;
         void UpdatePanels(bool vi = false);
 
         void CreateMenubar();
         wxMenuItem *run;
         wxMenuItem *pause;
 
-        bool inited;
-        bool running;
         void LoadConfig();
         bool LoadAui(const wxString &perspective);
-        bool run_on_boot;
+        bool runtime_update;
+        char run_on_boot; // 0 = nope; 1 = yea; 2 = yea, done
+
+        wxMenuItem *run_on_boot_menu;
+        wxMenuItem *runtime_update_menu;
 
         wxAuiManager *aui;
         ConfigSection *config;

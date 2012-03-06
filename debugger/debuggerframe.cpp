@@ -37,7 +37,10 @@ enum
     state_pause_id,
     state_step_id,
     state_vibreak_id,
-    last_state_id
+    last_state_id,
+    run_on_boot_opt_id,
+    runtime_update_opt_id,
+    last_opt_id
 };
 
 DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, id, _("Debugger"))
@@ -47,9 +50,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
 
     output = 0;
     next_id = 0;
-    run_on_boot = false;
     inited = false;
-    runtime_update = true;
     vi_break = false;
 
     SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
@@ -59,28 +60,10 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
 
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuClose, this, wxID_CLOSE);
     Bind(wxEVT_CLOSE_WINDOW, &DebuggerFrame::Close, this);
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::AddPanel, this, break_panel_id, last_panel_id - 1);
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::State, this, state_run_id, last_state_id - 1);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuAddPanel, this, break_panel_id, last_panel_id - 1);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuState, this, state_run_id, last_state_id - 1);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuOption, this, run_on_boot_opt_id, last_opt_id - 1);
     Bind(wxMUPEN_DEBUG_EVENT, wxCommandEventHandler(DebuggerFrame::ProcessCallback), this, 1, 3);
-}
-
-void DebuggerFrame::SaveConfig()
-{
-    ptr_vector<ConfigSection>& config = wxGetApp().getConfig();
-    for (int n = 0; n < config.size(); n++)
-    {
-        if (config[n]->m_section_name == "UI-wx-debugger")
-        {
-            ConfigParam *perspective = config[n]->getParamWithName("Layout");
-            wxString perspective_string = aui->SavePerspective();
-            perspective->setStringValue((const char *)perspective_string.c_str());
-
-            char buf[32];
-            wxRect rect = GetRect();
-            sprintf(buf, "%d,%d,%d,%d", rect.x, rect.y, rect.width, rect.height);
-            config[n]->getParamWithName("Window")->setStringValue(buf);
-        }
-    }
 }
 
 void DebuggerFrame::Delete()
@@ -198,7 +181,7 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_)
     return true;
 }
 
-void DebuggerFrame::AddPanel(wxCommandEvent &evt)
+void DebuggerFrame::MenuAddPanel(wxCommandEvent &evt)
 {
     int type = evt.GetId();
     wxString name;
@@ -231,10 +214,35 @@ void DebuggerFrame::AddPanel(wxCommandEvent &evt)
     aui->Update();
 }
 
+
+void DebuggerFrame::SaveConfig()
+{
+    ptr_vector<ConfigSection>& config = wxGetApp().getConfig();
+    for (int n = 0; n < config.size(); n++)
+    {
+        if (config[n]->m_section_name == "UI-wx-debugger")
+        {
+            ConfigParam *perspective = config[n]->getParamWithName("Layout");
+            wxString perspective_string = aui->SavePerspective();
+            perspective->setStringValue((const char *)perspective_string.c_str());
+
+            char buf[32];
+            wxRect rect = GetRect();
+            sprintf(buf, "%d,%d,%d,%d", rect.x, rect.y, rect.width, rect.height);
+            config[n]->getParamWithName("Window")->setStringValue(buf);
+
+            config[n]->getParamWithName("RunOnBoot")->setBoolValue(run_on_boot != 0);
+            config[n]->getParamWithName("RuntimeUpdate")->setBoolValue(runtime_update);
+        }
+    }
+}
+
 void DebuggerFrame::LoadConfig()
 {
     config = 0;
     unsigned int warnings = 0;
+    ConfigParam *param;
+
     ptr_vector<ConfigSection>& conf = wxGetApp().getConfig();
     for (int n = 0; n < conf.size(); n++)
     {
@@ -258,8 +266,8 @@ void DebuggerFrame::LoadConfig()
         conf.push_back(config);
     }
 
-    ConfigParam *window_rect = config->getParamWithName("Window");
-    if (!window_rect)
+    param = config->getParamWithName("Window");
+    if (!param)
     {
         char buf[32];
         wxRect rect = GetRect();
@@ -269,21 +277,42 @@ void DebuggerFrame::LoadConfig()
     else
     {
         wxRect rect;
-        // Can't do just "value = window_rect->getStringValue().c_str()", since the string would be destructed before sscanf
-        std::string str = window_rect->getStringValue();
+        // Can't do just "value = param->getStringValue().c_str()", since the string would be destructed before sscanf
+        std::string str = param->getStringValue();
         const char *value = str.c_str();
         sscanf(value, "%d,%d,%d,%d", &rect.x, &rect.y, &rect.width, &rect.height);
         SetSize(rect);
     }
-    ConfigParam *perspective = config->getParamWithName("Layout");
-    if (!perspective)
+
+    param = config->getParamWithName("RunOnBoot");
+    if (!param)
+        run_on_boot = false;
+    else // I just don't like casting bool to a number and vice versa
+    {
+        if(param->getBoolValue())
+            run_on_boot = 1;
+        else
+            run_on_boot = 0;
+    }
+    run_on_boot_menu->Check(run_on_boot == 1);
+
+    param = config->getParamWithName("RuntimeUpdate");
+    if (!param)
+        runtime_update = true;
+    else
+        runtime_update = param->getBoolValue();
+    runtime_update_menu->Check(runtime_update);
+
+
+    param = config->getParamWithName("Layout");
+    if (!param)
     {
         config->addNewParam("Layout", "Layout of the debugger", "", M64TYPE_STRING);
         LoadAui("");
     }
     else
     {
-        LoadAui(perspective->getStringValue());
+        LoadAui(param->getStringValue());
     }
     if (warnings & 0x1)
         Print("WARNING: Dynamic recompiler limits debugging features, please use interpreter");
@@ -291,7 +320,7 @@ void DebuggerFrame::LoadConfig()
 
 void DebuggerFrame::CreateMenubar()
 {
-    wxMenu *filemenu = new wxMenu, *viewmenu = new wxMenu, *statemenu = new wxMenu;
+    wxMenu *filemenu = new wxMenu, *viewmenu = new wxMenu, *statemenu = new wxMenu, *optmenu = new wxMenu;
 
     filemenu->Append(wxID_CLOSE, _("&Close\tCtrl-Q"));
 
@@ -300,6 +329,9 @@ void DebuggerFrame::CreateMenubar()
     wxMenuItem *separator1 = new wxMenuItem(statemenu);
     wxMenuItem *step = new wxMenuItem(statemenu, state_step_id, _("Step\tF7"));
     wxMenuItem *vibreak = new wxMenuItem(statemenu, state_vibreak_id, _("Next vertical interrupt"));
+
+    run_on_boot_menu = new wxMenuItem(optmenu, run_on_boot_opt_id, _("Run on boot"), wxEmptyString, wxITEM_CHECK);
+    runtime_update_menu = new wxMenuItem(optmenu, runtime_update_opt_id, _("Update values while running"), wxEmptyString, wxITEM_CHECK);
 
     statemenu->Append(run);
     statemenu->Append(pause);
@@ -313,16 +345,67 @@ void DebuggerFrame::CreateMenubar()
     viewmenu->Append(disasm_panel_id, _("Disassembly\tCtrl-D"));
     viewmenu->Append(memory_panel_id, _("Memory\tCtrl-M"));
 
+    optmenu->Append(runtime_update_menu);
+    optmenu->Append(runtime_update_menu);
+
     wxMenuBar *menubar = new wxMenuBar;
     menubar->Append(filemenu, _("File"));
     menubar->Append(statemenu, _("State"));
     menubar->Append(viewmenu, _("View"));
+    menubar->Append(optmenu, _("Options"));
 
     // Game starts as paused by default, this might be overridden by run_on_boot though
     pause->Check(true);
     run->Check(false);
 
     SetMenuBar(menubar);
+}
+
+void DebuggerFrame::MenuState(wxCommandEvent &evt)
+{
+    switch (evt.GetId())
+    {
+        case state_run_id:
+            Run();
+        break;
+        case state_pause_id:
+            Pause();
+        break;
+        case state_step_id:
+            Step();
+        break;
+        case state_vibreak_id:
+            ViBreak();
+        break;
+        default:
+        return;
+    }
+}
+
+void DebuggerFrame::MenuOption(wxCommandEvent &evt)
+{
+    switch (evt.GetId())
+    {
+        case run_on_boot_opt_id:
+            if (run_on_boot != 0)
+            {
+                run_on_boot = 0;
+            }
+            else
+            {
+                run_on_boot = 2;
+            }
+        break;
+        case runtime_update_opt_id:
+            if (runtime_update)
+                runtime_update = false;
+            else
+                runtime_update = true;
+
+        break;
+        default:
+        break;
+    }
 }
 
 void DebuggerFrame::NewBreakpoint(Breakpoint *data)
@@ -371,26 +454,6 @@ void DebuggerFrame::ViBreak()
     Run();
 }
 
-void DebuggerFrame::State(wxCommandEvent &evt)
-{
-    switch (evt.GetId())
-    {
-        case state_run_id:
-            Run();
-        break;
-        case state_pause_id:
-            Pause();
-        break;
-        case state_step_id:
-            Step();
-        break;
-        case state_vibreak_id:
-            ViBreak();
-        break;
-        default:
-        return;
-    }
-}
 
 void DebuggerFrame::ConsoleClosed(DebugConsole *console)
 {
@@ -439,9 +502,9 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         {
 
             vi_break = false;
-            if (run_on_boot)
+            if (run_on_boot == 1)
             {
-                run_on_boot = false;
+                run_on_boot = 2;
                 Run();
             }
             else
@@ -483,7 +546,7 @@ void DebuggerFrame::DebuggerUpdate(unsigned int pc)
 
 void DebuggerFrame::DebuggerVi()
 {
-    if(!g_debugger)
+    if (!g_debugger)
         return;
     wxCommandEvent evt(wxMUPEN_DEBUG_EVENT, DEBUG_VI);
     g_debugger->AddPendingEvent(evt);
@@ -491,6 +554,8 @@ void DebuggerFrame::DebuggerVi()
 
 void DebuggerFrame::Reset()
 {
+    if (run_on_boot == 2)
+        run_on_boot = 1;
     // TODO--
 }
 
