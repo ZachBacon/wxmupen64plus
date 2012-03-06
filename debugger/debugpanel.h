@@ -4,6 +4,7 @@
 #include <wx/panel.h>
 
 class DebuggerFrame;
+class DebugConsole;
 
 class DebugPanel : public wxPanel
 {
@@ -16,6 +17,7 @@ class DebugPanel : public wxPanel
 
     protected:
         DebuggerFrame *parent;
+        DebugConsole *output;
 };
 
 #endif // DEBUGPANEL_H
