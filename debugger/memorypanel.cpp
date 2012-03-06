@@ -61,7 +61,6 @@ void MemoryPanel::Update(bool vi)
     memory->Update();
 }
 
-
 void MemoryPanel::SetPosition(uint32_t offset, int size)
 {
     if (current_position != offset)
@@ -104,6 +103,7 @@ MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id,
     cols = 0;
     render_buffer = 0;
     offset = 0;
+    offsets_changed = true;
     selected = -1;
     Bind(wxEVT_PAINT, &MemoryWindow::PaintEvent, this);
     Bind(wxEVT_SIZE, &MemoryWindow::Resize, this);
