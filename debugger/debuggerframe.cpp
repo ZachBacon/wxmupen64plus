@@ -286,7 +286,11 @@ void DebuggerFrame::LoadConfig()
 
     param = config->getParamWithName("RunOnBoot");
     if (!param)
+    {
         run_on_boot = false;
+        config->addNewParam("RunOnBoot", "Runs the game when it is started", false, M64TYPE_BOOL);
+    }
+
     else // I just don't like casting bool to a number and vice versa
     {
         if(param->getBoolValue())
@@ -298,7 +302,10 @@ void DebuggerFrame::LoadConfig()
 
     param = config->getParamWithName("RuntimeUpdate");
     if (!param)
+    {
         runtime_update = true;
+        config->addNewParam("RuntimeUpdate", "Updates values while running", true, M64TYPE_BOOL);
+    }
     else
         runtime_update = param->getBoolValue();
     runtime_update_menu->Check(runtime_update);
@@ -345,7 +352,7 @@ void DebuggerFrame::CreateMenubar()
     viewmenu->Append(disasm_panel_id, _("Disassembly\tCtrl-D"));
     viewmenu->Append(memory_panel_id, _("Memory\tCtrl-M"));
 
-    optmenu->Append(runtime_update_menu);
+    optmenu->Append(run_on_boot_menu);
     optmenu->Append(runtime_update_menu);
 
     wxMenuBar *menubar = new wxMenuBar;
