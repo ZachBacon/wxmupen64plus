@@ -14,6 +14,7 @@ class DebugPanel : public wxPanel
 
         virtual void Update(bool vi) {}
         void Rename(wxCommandEvent &evt);
+        void Print(wxString &msg);
 
     protected:
         DebuggerFrame *parent;

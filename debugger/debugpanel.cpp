@@ -1,5 +1,6 @@
 #include "debugpanel.h"
 #include "debuggerframe.h"
+#include "debugconsole.h"
 
 DebugPanel::DebugPanel(DebuggerFrame *parent_, int id) : wxPanel(parent_, id)
 {
@@ -16,7 +17,7 @@ void DebugPanel::Rename(wxCommandEvent &evt)
 
 }
 
-void DebugPanel::Print(wxString msg)
+void DebugPanel::Print(wxString &msg)
 {
     if (output)
         output->Print(msg);
