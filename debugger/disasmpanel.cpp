@@ -6,7 +6,10 @@
 #include <wx/button.h>
 #include <wx/textctrl.h>
 #include <wx/scrolbar.h>
+#include <wx/stattext.h>
+#include <wx/statline.h>
 
+#include "debuggerframe.h"
 #include "../mupen64plusplus/MupenAPI.h"
 
 #ifdef DrawText
@@ -38,10 +41,20 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     scroll_thumbpos = scrollbar_thumb_defpos;
 
     wxPanel *subpanel = new wxPanel(this, -1);
-    subpanel->SetMaxSize(wxSize(50, -1));
     go_address = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
     go_address->SetMaxLength(10);
+    go_address->SetMinSize(wxSize(70, -1));
     go_button = new wxButton(subpanel, -1, _("Go"));
+    wxStaticText *pc_text = new wxStaticText(subpanel, -1, _("PC"));
+    pc_display = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+    pc_display->SetMinSize(wxSize(70, -1));
+    pc_go = new wxButton(subpanel, -1, _("Go to PC"));
+    wxStaticLine *separator_line = new wxStaticLine(subpanel, -1);
+
+    subsizer->Add(pc_text, 0, wxEXPAND);
+    subsizer->Add(pc_display, 0, wxEXPAND);
+    subsizer->Add(pc_go, 0, wxEXPAND);
+    subsizer->Add(separator_line, 0, wxEXPAND | wxALL, 5);
     subsizer->Add(go_address, 0, wxEXPAND);
     subsizer->Add(go_button, 0, wxEXPAND);
     subpanel->SetSizer(subsizer);
@@ -53,6 +66,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 
     go_address->Bind(wxEVT_COMMAND_TEXT_ENTER, &DisasmPanel::Goto, this);
     go_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Goto, this);
+    pc_go->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::GotoPc, this);
+
     scrollbar->Bind(wxEVT_SCROLL_THUMBRELEASE, &DisasmPanel::Scrolled, this);
     scrollbar->Bind(wxEVT_SCROLL_TOP, &DisasmPanel::Scrolled, this);
     scrollbar->Bind(wxEVT_SCROLL_BOTTOM, &DisasmPanel::Scrolled, this);
@@ -69,7 +84,22 @@ DisasmPanel::~DisasmPanel()
 
 void DisasmPanel::Update(bool vi)
 {
-    code->Render(true);
+    if (!vi)
+    {
+        char buf[16];
+        int pc = parent->GetPc();
+        code->SetPc(pc);
+        sprintf(buf, "%X", pc);
+        pc_display->SetValue(buf);
+        go_address->SetValue(buf);
+
+//        int diff = (int)(code->GetPos() - address) / 4;
+//        if (abs(diff) > lines / 2)
+//
+//        Goto(pc);
+    }
+    //else // Goto(pc) renders
+        code->Render(true);
 }
 
 void DisasmPanel::Goto(wxCommandEvent &evt)
@@ -77,11 +107,21 @@ void DisasmPanel::Goto(wxCommandEvent &evt)
     Goto(strtoul(go_address->GetValue(), 0, 16));
 }
 
+void DisasmPanel::GotoPc(wxCommandEvent &evt)
+{
+    go_address->SetValue(pc_display->GetValue());
+    Goto(strtoul(pc_display->GetValue(), 0, 16));
+}
+
 void DisasmPanel::Goto(uint32_t new_address)
 {
+    int lines = code->GetLines();
+    new_address -= lines * 2;
+    new_address &= 0xfffffffc;
     if (new_address == address)
         return;
     address = new_address;
+
     code->Goto(address);
 }
 
@@ -93,11 +133,11 @@ void DisasmPanel::Scrolled(wxScrollEvent &evt)
         int line_change = (pos - scroll_thumbpos) * scroll_multiplier;
         scroll_thumbpos = pos;
         if (line_change > 0 && (uint32_t)(address + line_change) < address)
-            Goto((0 - code->GetLines() * 4));
+            Goto(0 - code->GetLines() * 2);
         else if (line_change < 0 && (uint32_t)(address + line_change) > address)
-            Goto(0);
+            Goto(0 + code->GetLines() * 2);
         else
-            Goto(address + line_change * 4);
+            Goto(address + line_change * 4 + code->GetLines() * 2);
     }
     if (evt.GetEventType() != wxEVT_SCROLL_THUMBTRACK)
     {
@@ -108,6 +148,7 @@ void DisasmPanel::Scrolled(wxScrollEvent &evt)
 
 const char **DisasmPanel::RequestData(int lines)
 {
+    uint32_t pos = code->GetPos();
     if (data_lines < lines)
     {
         delete[] data;
@@ -121,14 +162,14 @@ const char **DisasmPanel::RequestData(int lines)
     {
         char op[64], args[64];
         data[i] = data_string_pos;
-        if (!MemIsValid(address + i * 4))
+        if (!MemIsValid(pos + i * 4))
         {
             strcpy(data_string_pos, "(Invalid)");
             data_string_pos += strlen("(Invalid)") + 1;
         }
         else
         {
-            DecodeOpcode(address + i * 4, op, args);
+            DecodeOpcode(pos + i * 4, op, args);
             data_string_pos += sprintf(data_string_pos, "%s  %s", op, args) + 1;
         }
     }
@@ -143,6 +184,8 @@ DisasmWindow::DisasmWindow(DisasmPanel *parent_, int id) : wxWindow(parent_, id,
     render_buffer = 0;
     lines = 0;
     address = 0;
+    pc = 0x1; // Misaligned, so it won't be drawn
+    drawn_pc = 0x1;
 
     Bind(wxEVT_SIZE, &DisasmWindow::Resize, this);
     Bind(wxEVT_PAINT, &DisasmWindow::Paint, this);
@@ -189,8 +232,9 @@ void DisasmWindow::Render(bool same_address)
     wxColour bg_colour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 
     dc.SetFont(*wxNORMAL_FONT);
-    dc.SetPen(wxPen(bg_colour));
-    dc.SetBackground(wxBrush(bg_colour));
+    dc.SetPen(*wxTRANSPARENT_PEN);
+    wxBrush bg(bg_colour);
+    dc.SetBackground(bg);
 
     if (!same_address)
         dc.Clear();
@@ -199,14 +243,28 @@ void DisasmWindow::Render(bool same_address)
 
     for (int i = 0; i < lines; i++)
     {
-        if (!same_address)
+        char buf[16];
+        if (address + i * 4 == pc)
         {
-            char buf[16];
             sprintf(buf, "%X", address + i * 4);
+            dc.SetBrush(*wxCYAN_BRUSH);
+            dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
             dc.DrawText(buf, address_start_x, line_start_y + i * line_height);
+            dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
+            dc.SetBrush(bg);
         }
-        dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
+        else
+        {
+            if (!same_address || address + i * 4 == drawn_pc)
+            {
+                sprintf(buf, "%X", address + i * 4);
+                dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
+                dc.DrawText(buf, address_start_x, line_start_y + i * line_height);
+            }
+            dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
+        }
     }
+    drawn_pc = pc;
     dc.SelectObject(wxNullBitmap);
 
     wxClientDC clientdc(this);

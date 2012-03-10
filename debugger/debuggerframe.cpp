@@ -519,7 +519,8 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
                 pause->Check(true);
                 run->Check(false);
                 running = false;
-                Print(wxString::Format("Paused at %x", evt.GetInt()));
+                pc = evt.GetInt();
+                Print(wxString::Format("Paused at %x", pc));
                 UpdatePanels();
                 Raise();
             }

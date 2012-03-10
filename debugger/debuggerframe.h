@@ -61,6 +61,8 @@ class DebuggerFrame : public wxFrame
         void Pause();
         void ViBreak();
 
+        uint32_t GetPc() { return pc; }
+
         DebugConsole *GetMainOutput() { return output; }
         void SetMainOutput(DebugConsole *output_) { output = output_; }
 
@@ -91,6 +93,7 @@ class DebuggerFrame : public wxFrame
         bool vi_break;
         bool inited;
         bool running;
+        uint32_t pc;
         void UpdatePanels(bool vi = false);
 
         void CreateMenubar();
