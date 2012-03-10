@@ -161,18 +161,19 @@ void MemoryWindow::Resize(wxSizeEvent &evt)
     int new_rows = (size.GetHeight() - data_start_y) / data_inc_y;
     if (!new_cols)
         return;
-    if (cols == new_cols && rows == new_rows)
-        return;
-
-    cols = new_cols;
-    rows = new_rows;
-    display_size = rows * cols;
-    data = parent->RequestData(cols * rows);
+    if (cols != new_cols || rows != new_rows)
+    {
+        cols = new_cols;
+        rows = new_rows;
+        display_size = rows * cols;
+        data = parent->RequestData(cols * rows);
+    }
     delete render_buffer;
     render_buffer = new wxBitmap(size);
     wxMemoryDC dc(*render_buffer);
     dc.SetBackground(*wxWHITE_BRUSH);
     dc.Clear();
+    offsets_changed = true;
 
     Draw();
     return;
