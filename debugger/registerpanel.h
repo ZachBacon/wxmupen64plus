@@ -66,9 +66,14 @@ class RegisterPanel : public DebugPanel
         virtual ~RegisterPanel();
 
         void Update(bool vi);
-        void UpdateGpr();
 
     private:
+        void UpdateGpr();
+        void UpdateCop0();
+        void UpdateCop1();
+
+        bool show_reserved;
+
         RegisterTab *gpr_tab;
         RegisterTab *cop0_tab;
         RegisterTab *cop1_tab;

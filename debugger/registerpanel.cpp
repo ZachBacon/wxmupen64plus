@@ -55,8 +55,8 @@ SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, Regis
     else
     {
         value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
-        value->SetSize(70, -1);
-        SetSize(70 + reg_name_len, 28);
+        value->SetSize(150, -1);
+        SetSize(150 + reg_name_len, 28);
     }
 }
 
@@ -66,13 +66,18 @@ SingleRegister::~SingleRegister()
 
 void SingleRegister::SetInt(uint64_t new_value)
 {
-    value->SetValue(wxString::Format("%08X", (uint32_t)(new_value >> 32)));
-    value2->SetValue(wxString::Format("%08X", (uint32_t)(new_value & 0xffffffff)));
+    if (type == REGISTER_INT64)
+    {
+        value->SetValue(wxString::Format("%08X", (uint32_t)(new_value >> 32)));
+        value2->SetValue(wxString::Format("%08X", (uint32_t)(new_value & 0xffffffff)));
+    }
+    else
+        value->SetValue(wxString::Format("%08X", (uint32_t)(new_value)));
 }
 
 void SingleRegister::SetFloat(double new_value)
 {
-    value->SetValue(wxString::Format("%f", new_value));
+    value->SetValue(wxString::FromCDouble(new_value));
 }
 
 uint64_t SingleRegister::GetInt()
@@ -162,6 +167,8 @@ void RegisterTab::Append(const char *name, RegisterType type)
 
 RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
+    show_reserved = false;
+
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     notebook = new wxNotebook(this, -1);
 
@@ -205,10 +212,38 @@ void RegisterPanel::UpdateGpr()
         gpr_tab->SetInt(i, data[i]);
 }
 
+void RegisterPanel::UpdateCop0()
+{
+    uint32_t *data = (uint32_t *)GetRegister(M64P_CPU_REG_COP0);
+    if (!show_reserved)
+    {
+        for (int i = 0; i < 7; i++)
+            cop0_tab->SetInt(i, data[i]);
+        for (int i = 8; i < 21; i++)
+            cop0_tab->SetInt(i - 1, data[i]);
+        for (int i = 26; i < 31; i++)
+            cop0_tab->SetInt(i - 6, data[i]);
+    }
+    else
+    {
+        for (int i = 0; i < 32; i++)
+            cop0_tab->SetInt(i, data[i]);
+    }
+}
+
+void RegisterPanel::UpdateCop1()
+{
+    double *data = (double *)GetRegister(M64P_CPU_REG_COP1_DOUBLE_PTR);
+    for (int i = 0; i < 32; i++)
+        cop1_tab->SetFloat(i, data[i]);
+}
+
 void RegisterPanel::Update(bool vi)
 {
-    if(vi)
+    if (vi)
         return;
 
     UpdateGpr();
+    UpdateCop0();
+    UpdateCop1();
 }
