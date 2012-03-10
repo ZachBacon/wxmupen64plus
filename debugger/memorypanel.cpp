@@ -92,8 +92,9 @@ uint8_t *MemoryPanel::RequestData(int size, int relative_offset)
 
 MemoryPanel::~MemoryPanel()
 {
-
 }
+
+/// ------------------------------------------------------------------------------
 
 MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
 {
@@ -113,7 +114,7 @@ MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id,
 
 MemoryWindow::~MemoryWindow()
 {
-
+    delete render_buffer;
 }
 
 void MemoryWindow::Goto(uint32_t pos)

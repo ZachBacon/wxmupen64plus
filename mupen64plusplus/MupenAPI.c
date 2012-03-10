@@ -952,6 +952,16 @@ m64p_error DebuggerStep()
 
 // -----------------------------------------------------------------------------------------------------------
 
+int MemIsValid(unsigned int address)
+{
+    int flags = (*DebugMemGetMemInfo)(M64P_DBG_MEM_FLAGS, address);
+    if (flags & 0x1 || flags & 0x2) // The api headers were lacking
+        return 1;
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 unsigned char MemRead8(unsigned int address)
 {
     return (*DebugMemRead8)(address);
@@ -975,5 +985,12 @@ void MemWrite32(unsigned int address, unsigned int value)
 
 void *GetRegister(m64p_dbg_cpu_data type)
 {
-    return(*DebugGetCPUDataPtr)(type);
+    return (*DebugGetCPUDataPtr)(type);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void DecodeOpcode(unsigned int addr, char *op, char *args)
+{
+    (*DebugDecodeOp)(MemRead32(addr), op, args, addr);
 }
