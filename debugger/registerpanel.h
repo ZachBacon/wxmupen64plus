@@ -15,6 +15,7 @@ class wxTextCtrl;
 enum RegisterType
 {
     REGISTER_INT64 = 1,
+    REGISTER_INT32,
     REGISTER_FLOAT
 };
 
@@ -31,18 +32,22 @@ class SingleRegister : public wxPanel
 
     private:
         wxTextCtrl *value;
+        wxTextCtrl *value2;
         RegisterType type;
 };
 
 class RegisterTab : public wxScrolledWindow
 {
     public:
-        RegisterTab(wxWindow *parent, int id, int reg_name_len);
+        RegisterTab(wxWindow *parent, int id, int reg_name_len, int reg_basewidth);
         ~RegisterTab();
 
         void Size(wxSizeEvent &evt);
 
         void Append(const char *name, RegisterType type);
+
+        void SetInt(int index, uint64_t value);
+        void SetFloat(int index, double value);
 
     private:
         wxPoint CalcItemPos(int index);
@@ -50,6 +55,7 @@ class RegisterTab : public wxScrolledWindow
         int cols;
         int rows;
         int reg_name_len;
+        int reg_basewidth;
         std::vector<SingleRegister *> registers;
 };
 
@@ -60,6 +66,7 @@ class RegisterPanel : public DebugPanel
         virtual ~RegisterPanel();
 
         void Update(bool vi);
+        void UpdateGpr();
 
     private:
         RegisterTab *gpr_tab;

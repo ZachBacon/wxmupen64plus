@@ -1,12 +1,21 @@
 #include "registerpanel.h"
+
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
 #include <wx/notebook.h>
 
+#include "../mupen64plusplus/MupenAPI.h"
+
 // These are practically wanted (default..) width for the register text controls
 #define singlereg_height 22
-#define singlereg_basewidth 110
+
+enum
+{
+    gpr_page = 0,
+    cop0_page,
+    cop1_page
+};
 
 const char *gpr_names[] =
 {
@@ -24,12 +33,31 @@ const char *cop0_names[] =
 
 SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, RegisterType type_, wxPoint &pos, int reg_name_len) : wxPanel(parent, id, pos)
 {
-    wxStaticText *text = new wxStaticText(this, -1, name, wxPoint(0, 1));
-    value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len + 0, 1));
-
-    SetSize(singlereg_basewidth + reg_name_len, 28);
-
     type = type_;
+
+    wxStaticText *text = new wxStaticText(this, -1, name, wxPoint(0, 1));
+
+    if (type == REGISTER_INT64 || type == REGISTER_INT32)
+    {
+        value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
+        value->SetSize(60, -1);
+        if (type == REGISTER_INT64)
+        {
+            value2 = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len + 62, 1));
+            value2->SetSize(60, -1);
+            SetSize(130 + reg_name_len, 28);
+        }
+        else
+        {
+            SetSize(65 + reg_name_len, 28);
+        }
+    }
+    else
+    {
+        value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
+        value->SetSize(70, -1);
+        SetSize(70 + reg_name_len, 28);
+    }
 }
 
 SingleRegister::~SingleRegister()
@@ -38,7 +66,8 @@ SingleRegister::~SingleRegister()
 
 void SingleRegister::SetInt(uint64_t new_value)
 {
-    value->SetValue(wxString::Format("%X%X", new_value >> 32, new_value & 0xffffffff));
+    value->SetValue(wxString::Format("%08X", (uint32_t)(new_value >> 32)));
+    value2->SetValue(wxString::Format("%08X", (uint32_t)(new_value & 0xffffffff)));
 }
 
 void SingleRegister::SetFloat(double new_value)
@@ -60,11 +89,12 @@ double SingleRegister::GetFloat()
 
 
 
-RegisterTab::RegisterTab(wxWindow *parent, int id, int reg_name_len_) : wxScrolledWindow(parent, id)
+RegisterTab::RegisterTab(wxWindow *parent, int id, int reg_name_len_, int reg_basewidth_) : wxScrolledWindow(parent, id)
 {
     rows = 1;
     cols = 1;
     reg_name_len = reg_name_len_;
+    reg_basewidth = reg_basewidth_;
     Bind(wxEVT_SIZE, &RegisterTab::Size, this);
     SetScrollbars(50, singlereg_height, 1, 1);
 }
@@ -73,12 +103,22 @@ RegisterTab::~RegisterTab()
 {
 }
 
+void RegisterTab::SetInt(int index, uint64_t value)
+{
+    registers[index]->SetInt(value);
+}
+
+void RegisterTab::SetFloat(int index, double value)
+{
+    registers[index]->SetFloat(value);
+}
+
 void RegisterTab::Size(wxSizeEvent &evt)
 {
     evt.Skip();
 
     wxSize size = evt.GetSize();
-    int new_cols = size.x / (singlereg_basewidth + reg_name_len);
+    int new_cols = size.x / (reg_basewidth + reg_name_len);
     if(!new_cols)
         new_cols = 1;
     if(new_cols == cols)
@@ -100,7 +140,7 @@ wxPoint RegisterTab::CalcItemPos(int index)
 {
     int col = index / rows, row = index % rows;
     int scrolled = GetViewStart().y;
-    return wxPoint(5 + col * (singlereg_basewidth + reg_name_len), (row - scrolled) * singlereg_height);
+    return wxPoint(5 + col * (reg_basewidth + reg_name_len), (row - scrolled) * singlereg_height);
 }
 
 void RegisterTab::Reorder()
@@ -125,19 +165,19 @@ RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent,
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     notebook = new wxNotebook(this, -1);
 
-    gpr_tab = new RegisterTab(notebook, -1, 20);
+    gpr_tab = new RegisterTab(notebook, -1, 20, 130);
     for(int i = 0; i < 32; i++)
     {
         gpr_tab->Append(gpr_names[i], REGISTER_INT64);
     }
 
-    cop0_tab = new RegisterTab(notebook, -1, 50);
+    cop0_tab = new RegisterTab(notebook, -1, 50, 80);
     for(int i = 0; i < 25; i++)
     {
-        cop0_tab->Append(cop0_names[i], REGISTER_INT64);
+        cop0_tab->Append(cop0_names[i], REGISTER_INT32);
     }
 
-    cop1_tab = new RegisterTab(notebook, -1, 20);
+    cop1_tab = new RegisterTab(notebook, -1, 20, 150);
     for(int i = 0; i < 32; i++)
     {
         char buf[8];
@@ -145,9 +185,9 @@ RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent,
         cop1_tab->Append(buf, REGISTER_FLOAT);
     }
 
-    notebook->InsertPage(0, gpr_tab, _("GPR"));
-    notebook->InsertPage(1, cop0_tab, _("COP0"));
-    notebook->InsertPage(2, cop1_tab, _("COP1"));
+    notebook->InsertPage(gpr_page, gpr_tab, _("GPR"));
+    notebook->InsertPage(cop0_page, cop0_tab, _("COP0"));
+    notebook->InsertPage(cop1_page, cop1_tab, _("COP1"));
 
     sizer->Add(notebook, 1, wxEXPAND);
 
@@ -158,8 +198,17 @@ RegisterPanel::~RegisterPanel()
 {
 }
 
+void RegisterPanel::UpdateGpr()
+{
+    uint64_t *data = (uint64_t *)GetRegister(M64P_CPU_REG_REG);
+    for (int i = 0; i < 32; i++)
+        gpr_tab->SetInt(i, data[i]);
+}
+
 void RegisterPanel::Update(bool vi)
 {
     if(vi)
         return;
+
+    UpdateGpr();
 }
