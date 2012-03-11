@@ -71,6 +71,7 @@ SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, Regis
     value->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
     value->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
     text->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
+    Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
 }
 
 SingleRegister::~SingleRegister()
