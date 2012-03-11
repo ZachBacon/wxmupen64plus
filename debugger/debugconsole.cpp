@@ -5,6 +5,7 @@
 #include <wx/hashmap.h>
 #include <wx/menu.h>
 
+#include "../mupen64plusplus/MupenAPI.h"
 
 typedef void(DebugConsole::*CmdFunc)(wxString &);
 struct Cmd

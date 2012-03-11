@@ -4,17 +4,25 @@
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
 #include <wx/notebook.h>
+#include <wx/menu.h>
 
 #include "../mupen64plusplus/MupenAPI.h"
 
 // These are practically wanted (default..) width for the register text controls
 #define singlereg_height 22
 
+wxDEFINE_EVENT(REGVAL_CHANGE_EVT, RegChangeEvent);
+
 enum
 {
     gpr_page = 0,
     cop0_page,
     cop1_page
+};
+
+enum
+{
+    menu_reset = 1
 };
 
 const char *gpr_names[] =
@@ -45,6 +53,8 @@ SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, Regis
         {
             value2 = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len + 62, 1));
             value2->SetSize(60, -1);
+            value2->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
+            value2->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
             SetSize(130 + reg_name_len, 28);
         }
         else
@@ -58,14 +68,77 @@ SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, Regis
         value->SetSize(150, -1);
         SetSize(150 + reg_name_len, 28);
     }
+    value->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
+    value->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
+    text->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
 }
 
 SingleRegister::~SingleRegister()
 {
 }
 
+void SingleRegister::RClickEvent(wxCommandEvent &evt)
+{
+    switch (evt.GetId())
+    {
+        case menu_reset:
+            ResetValue();
+        break;
+        default:
+        break;
+    }
+}
+
+void SingleRegister::RClickMenu(wxMouseEvent &evt)
+{
+    wxMenu menu;
+    wxMenuItem *reset;
+
+    reset = new wxMenuItem(&menu, menu_reset, _("Reset value"));
+    menu.Append(reset);
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &SingleRegister::RClickEvent, this);
+    PopupMenu(&menu);
+}
+
+void SingleRegister::ValueChanged(wxCommandEvent &evt)
+{
+    if (setting_value)
+        return;
+    ValueChanged();
+}
+
+void SingleRegister::ValueChanged()
+{
+    RegChangeEvent evt(GetId());
+    switch (type)
+    {
+        case REGISTER_INT64:
+        {
+            uint64_t val = (uint64_t)(strtoul(value->GetValue(), 0, 16)) << 32;
+            val |= strtoul(value2->GetValue(), 0, 16);
+            evt.value = val;
+        }
+        break;
+        case REGISTER_INT32:
+            evt.value = strtoul(value->GetValue(), 0, 16);
+        break;
+        case REGISTER_FLOAT:
+        {
+            double val;
+            value->GetValue().ToCDouble(&val);
+            evt.value = val;
+        }
+        break;
+        default:
+        break;
+    }
+    ProcessEvent(evt);
+}
+
 void SingleRegister::SetInt(uint64_t new_value)
 {
+    setting_value = true;
+    original_value = new_value;
     if (type == REGISTER_INT64)
     {
         value->SetValue(wxString::Format("%08X", (uint32_t)(new_value >> 32)));
@@ -73,11 +146,35 @@ void SingleRegister::SetInt(uint64_t new_value)
     }
     else
         value->SetValue(wxString::Format("%08X", (uint32_t)(new_value)));
+    setting_value = false;
 }
 
 void SingleRegister::SetFloat(double new_value)
 {
+    setting_value = true;
+    original_value = new_value;
     value->SetValue(wxString::FromCDouble(new_value));
+    setting_value = false;
+}
+
+void SingleRegister::ResetValue()
+{
+    switch (type)
+    {
+        case REGISTER_INT64:
+            value2->SetValue(wxString::Format("%08X", (uint32_t)(original_value.As<uint64_t>() & 0xffffffff)));
+            value->SetValue(wxString::Format("%08X", (uint32_t)(original_value.As<uint64_t>() >> 32)));
+        break;
+        case REGISTER_INT32:
+            value->SetValue(wxString::Format("%08X", (uint32_t)(original_value.As<uint32_t>())));
+        break;
+        case REGISTER_FLOAT:
+            value->SetValue(wxString::FromCDouble(original_value.As<double>()));
+        break;
+        default:
+        break;
+    }
+    ValueChanged();
 }
 
 uint64_t SingleRegister::GetInt()
@@ -92,16 +189,90 @@ double SingleRegister::GetFloat()
 
 /// ----------------------------------------------
 
-
-
-RegisterTab::RegisterTab(wxWindow *parent, int id, int reg_name_len_, int reg_basewidth_) : wxScrolledWindow(parent, id)
+RegisterTab::RegisterTab(wxWindow *parent, int id, RegisterGroup type_) : wxScrolledWindow(parent, id)
 {
     rows = 1;
     cols = 1;
-    reg_name_len = reg_name_len_;
-    reg_basewidth = reg_basewidth_;
+    InitRegisters(type_);
+
     Bind(wxEVT_SIZE, &RegisterTab::Size, this);
     SetScrollbars(50, singlereg_height, 1, 1);
+}
+
+void RegisterTab::InitRegisters(RegisterGroup type_)
+{
+    type = type_;
+    switch (type)
+    {
+        case REGISTER_GPR:
+            reg_name_len = 20;
+            reg_basewidth = 130;
+            raw_registers.v = GetRegister(M64P_CPU_REG_REG);
+            for (int i = 0; i < 32; i++)
+            {
+                Append(gpr_names[i], REGISTER_INT64);
+            }
+        break;
+        case REGISTER_COP0:
+            show_reserved = false;
+            reg_name_len = 50;
+            reg_basewidth = 80;
+            raw_registers.v = GetRegister(M64P_CPU_REG_COP0);
+            for (int i = 0; i < 7; i++)
+                Append(cop0_names[i], REGISTER_INT32, i + 1);
+            for (int i = 8; i < 21; i++)
+                Append(cop0_names[i - 1], REGISTER_INT32, i + 1);
+            for (int i = 26; i < 31; i++)
+                Append(cop0_names[i - 6], REGISTER_INT32, i + 1);
+
+        break;
+        case REGISTER_COP1:
+            reg_name_len = 20;
+            reg_basewidth = 150;
+            raw_registers.v = GetRegister(M64P_CPU_REG_COP1_DOUBLE_PTR);
+            for (int i = 0; i < 32; i++)
+            {
+                char buf[8];
+                sprintf(buf, "F%d", i);
+                Append(buf, REGISTER_FLOAT);
+            }
+        break;
+        default:
+        break;
+    }
+}
+
+void RegisterTab::Update()
+{
+    switch (type)
+    {
+        case REGISTER_GPR:
+            for (int i = 0; i < 32; i++)
+                SetInt(i, raw_registers.i64[i]);
+        break;
+        case REGISTER_COP0:
+            if (!show_reserved)
+            {
+                for (int i = 0; i < 7; i++)
+                    SetInt(i, raw_registers.i32[i]);
+                for (int i = 8; i < 21; i++)
+                    SetInt(i - 1, raw_registers.i32[i]);
+                for (int i = 26; i < 31; i++)
+                    SetInt(i - 6, raw_registers.i32[i]);
+            }
+            else
+            {
+                for (int i = 0; i < 32; i++)
+                    SetInt(i, raw_registers.i32[i]);
+            }
+        break;
+        case REGISTER_COP1:
+            for (int i = 0; i < 32; i++)
+                SetFloat(i, raw_registers.f[i]);
+        break;
+        default:
+        break;
+    }
 }
 
 RegisterTab::~RegisterTab()
@@ -124,15 +295,15 @@ void RegisterTab::Size(wxSizeEvent &evt)
 
     wxSize size = evt.GetSize();
     int new_cols = size.x / (reg_basewidth + reg_name_len);
-    if(!new_cols)
+    if (!new_cols)
         new_cols = 1;
-    if(new_cols == cols)
+    if (new_cols == cols)
         return;
 
     int entries = registers.size();
     cols = new_cols;
     rows = entries / cols;
-    if(entries % cols)
+    if (entries % cols)
         rows += 1;
 
     SetVirtualSize(0, 5 + singlereg_height * (rows - 1));
@@ -150,47 +321,51 @@ wxPoint RegisterTab::CalcItemPos(int index)
 
 void RegisterTab::Reorder()
 {
-    for(uint32_t i = 0; i < registers.size(); i++)
+    for (uint32_t i = 0; i < registers.size(); i++)
     {
         registers[i]->SetPosition(CalcItemPos(i));
     }
 }
 
-void RegisterTab::Append(const char *name, RegisterType type)
+void RegisterTab::Append(const char *name, RegisterType type, int id)
 {
     wxPoint pos = CalcItemPos(registers.size());
-    SingleRegister *reg = new SingleRegister(this, -1, name, type, pos, reg_name_len);
+    if (id == -1)
+        id = registers.size() + 1;
+    SingleRegister *reg = new SingleRegister(this, id, name, type, pos, reg_name_len);
+    reg->Bind(REGVAL_CHANGE_EVT, &RegisterTab::ValueChanged, this);
     registers.push_back(reg);
+}
+
+void RegisterTab::ValueChanged(RegChangeEvent &evt)
+{
+    int reg = evt.GetId() - 1;
+    switch (type)
+    {
+        case REGISTER_GPR:
+            raw_registers.i64[reg] = evt.value.As<uint64_t>();
+        break;
+        case REGISTER_COP0:
+            raw_registers.i32[reg] = evt.value.As<uint32_t>();
+        break;
+        case REGISTER_COP1:
+            raw_registers.f[reg] = evt.value.As<double>();
+        break;
+        default:
+        break;
+    }
 }
 
 /// ----------------------------------------------
 
 RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
-    show_reserved = false;
-
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     notebook = new wxNotebook(this, -1);
 
-    gpr_tab = new RegisterTab(notebook, -1, 20, 130);
-    for(int i = 0; i < 32; i++)
-    {
-        gpr_tab->Append(gpr_names[i], REGISTER_INT64);
-    }
-
-    cop0_tab = new RegisterTab(notebook, -1, 50, 80);
-    for(int i = 0; i < 25; i++)
-    {
-        cop0_tab->Append(cop0_names[i], REGISTER_INT32);
-    }
-
-    cop1_tab = new RegisterTab(notebook, -1, 20, 150);
-    for(int i = 0; i < 32; i++)
-    {
-        char buf[8];
-        sprintf(buf, "F%d", i);
-        cop1_tab->Append(buf, REGISTER_FLOAT);
-    }
+    gpr_tab = new RegisterTab(notebook, -1, REGISTER_GPR);
+    cop0_tab = new RegisterTab(notebook, -1, REGISTER_COP0);
+    cop1_tab = new RegisterTab(notebook, -1, REGISTER_COP1);
 
     notebook->InsertPage(gpr_page, gpr_tab, _("GPR"));
     notebook->InsertPage(cop0_page, cop0_tab, _("COP0"));
@@ -205,45 +380,12 @@ RegisterPanel::~RegisterPanel()
 {
 }
 
-void RegisterPanel::UpdateGpr()
-{
-    uint64_t *data = (uint64_t *)GetRegister(M64P_CPU_REG_REG);
-    for (int i = 0; i < 32; i++)
-        gpr_tab->SetInt(i, data[i]);
-}
-
-void RegisterPanel::UpdateCop0()
-{
-    uint32_t *data = (uint32_t *)GetRegister(M64P_CPU_REG_COP0);
-    if (!show_reserved)
-    {
-        for (int i = 0; i < 7; i++)
-            cop0_tab->SetInt(i, data[i]);
-        for (int i = 8; i < 21; i++)
-            cop0_tab->SetInt(i - 1, data[i]);
-        for (int i = 26; i < 31; i++)
-            cop0_tab->SetInt(i - 6, data[i]);
-    }
-    else
-    {
-        for (int i = 0; i < 32; i++)
-            cop0_tab->SetInt(i, data[i]);
-    }
-}
-
-void RegisterPanel::UpdateCop1()
-{
-    double *data = (double *)GetRegister(M64P_CPU_REG_COP1_DOUBLE_PTR);
-    for (int i = 0; i < 32; i++)
-        cop1_tab->SetFloat(i, data[i]);
-}
-
 void RegisterPanel::Update(bool vi)
 {
     if (vi)
         return;
 
-    UpdateGpr();
-    UpdateCop0();
-    UpdateCop1();
+    gpr_tab->Update();
+    cop0_tab->Update();
+    cop1_tab->Update();
 }
