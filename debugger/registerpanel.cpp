@@ -150,7 +150,7 @@ void SingleRegister::SetInt(uint64_t new_value)
     setting_value = false;
 }
 
-void SingleRegister::SetFloat(double new_value)
+void SingleRegister::SetFloat(float new_value)
 {
     setting_value = true;
     original_value = new_value;
@@ -170,7 +170,7 @@ void SingleRegister::ResetValue()
             value->SetValue(wxString::Format("%08X", (uint32_t)(original_value.As<uint32_t>())));
         break;
         case REGISTER_FLOAT:
-            value->SetValue(wxString::FromCDouble(original_value.As<double>()));
+            value->SetValue(wxString::FromCDouble(original_value.As<float>()));
         break;
         default:
         break;
@@ -230,7 +230,7 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
         case REGISTER_COP1:
             reg_name_len = 20;
             reg_basewidth = 150;
-            raw_registers.v = GetRegister(M64P_CPU_REG_COP1_DOUBLE_PTR);
+            raw_registers.v = GetRegister(M64P_CPU_REG_COP1_SIMPLE_PTR);
             for (int i = 0; i < 32; i++)
             {
                 char buf[8];
@@ -269,7 +269,7 @@ void RegisterTab::Update()
         break;
         case REGISTER_COP1:
             for (int i = 0; i < 32; i++)
-                SetFloat(i, raw_registers.f[i]);
+                SetFloat(i, *(raw_registers.fp[i]));
         break;
         default:
         break;
@@ -285,7 +285,7 @@ void RegisterTab::SetInt(int index, uint64_t value)
     registers[index]->SetInt(value);
 }
 
-void RegisterTab::SetFloat(int index, double value)
+void RegisterTab::SetFloat(int index, float value)
 {
     registers[index]->SetFloat(value);
 }
@@ -350,7 +350,7 @@ void RegisterTab::ValueChanged(RegChangeEvent &evt)
             raw_registers.i32[reg] = evt.value.As<uint32_t>();
         break;
         case REGISTER_COP1:
-            raw_registers.f[reg] = evt.value.As<double>();
+            *(raw_registers.fp[reg]) = evt.value.As<float>();
         break;
         default:
         break;

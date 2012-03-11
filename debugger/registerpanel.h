@@ -48,7 +48,7 @@ class SingleRegister : public wxPanel
         double GetFloat();
 
         void SetInt(uint64_t value);
-        void SetFloat(double value);
+        void SetFloat(float value);
         void ResetValue();
         void ValueChanged(wxCommandEvent &evt);
         void ValueChanged();
@@ -76,7 +76,7 @@ class RegisterTab : public wxScrolledWindow
         void ValueChanged(RegChangeEvent &evt);
 
         void SetInt(int index, uint64_t value);
-        void SetFloat(int index, double value);
+        void SetFloat(int index, float value);
 
         void Update();
 
@@ -88,7 +88,7 @@ class RegisterTab : public wxScrolledWindow
         {
             uint64_t *i64;
             uint32_t *i32;
-            double *f;
+            float **fp;
             void *v;
         } raw_registers;
 
