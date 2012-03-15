@@ -94,6 +94,12 @@ MemoryPanel::~MemoryPanel()
 {
 }
 
+void MemoryPanel::SetValue(int pos, int value)
+{
+    data[pos] = value;
+    MemWrite8(current_position + pos, value);
+}
+
 /// ------------------------------------------------------------------------------
 
 MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
@@ -129,6 +135,7 @@ void MemoryWindow::Goto(uint32_t pos)
 
 void MemoryWindow::MouseSelect(wxMouseEvent &evt)
 {
+    editing = false;
     evt.Skip();
     wxPoint pos = evt.GetPosition(), last = GetValuePosition(display_size - 1);
     last.x += value_border + value_width;
@@ -179,25 +186,20 @@ void MemoryWindow::Resize(wxSizeEvent &evt)
     return;
 }
 
-void MemoryWindow::Deselect(wxDC *dc)
+void MemoryWindow::Deselect()
 {
     if (selected != -1)
     {
-        if (!dc)
-        {
-            wxClientDC newdc(this);
-            DrawValue(&newdc, selected, wxWHITE_BRUSH);
-        }
-        else
-            DrawValue(dc, selected, wxWHITE_BRUSH);
+        wxMemoryDC dc(*render_buffer);
+        DrawValue(&dc, selected, wxWHITE_BRUSH);
+        wxClientDC clientdc(this);
+        DrawValue(&clientdc, selected, wxWHITE_BRUSH);
+        selected = -1;
     }
-
-    selected = -1;
 }
 
 void MemoryWindow::Select(int pos)
 {
-    bool full_redraw = false;
     if (pos < 0)
     {
         int offset_change = (pos - cols) / cols * cols;
@@ -209,7 +211,6 @@ void MemoryWindow::Select(int pos)
         offset += offset_change;
         data = parent->RequestData(display_size, offset_change);
         pos = (cols + pos % cols) % cols;
-        full_redraw = true;
     }
     else if (pos >= display_size)
     {
@@ -221,22 +222,27 @@ void MemoryWindow::Select(int pos)
         offset += offset_change;
         data = parent->RequestData(display_size, offset_change);
         pos = pos % cols + cols * (rows - 1);
-        full_redraw = true;
     }
 
-    wxClientDC dc(this);
-    if (!full_redraw)
+    selected = pos;
+    Draw();
+}
+
+void MemoryWindow::Input(int value)
+{
+    if (selected == -1)
+        return;
+    if (editing)
     {
-        Deselect(&dc);
-        dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-        wxBrush select_bg(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
-        DrawValue(&dc, pos, &select_bg);
-        selected = pos;
+        editing = false;
+        parent->SetValue(selected, (new_value << 4) | value);
+        Select(selected + 1);
     }
     else
     {
-        selected = pos;
-        Render(&dc);
+        editing = true;
+        new_value = value;
+        Draw();
     }
 }
 
@@ -244,26 +250,37 @@ void MemoryWindow::KeyDown(wxKeyEvent &evt)
 {
     if (selected == -1)
         return;
-    switch (evt.GetKeyCode())
-    {
-        case WXK_LEFT:
-            Select(selected - 1);
-        break;
-//        case WXK_RETURN: // nah
-//        case WXK_NUMPAD_ENTER:
-        case WXK_RIGHT:
-            Select(selected + 1);
-        break;
-        case WXK_UP:
-            Select(selected - cols);
-        break;
-        case WXK_DOWN:
-            Select(selected + cols);
-        break;
 
-        default:
-            evt.Skip();
-        break;
+    int code = evt.GetKeyCode();
+    if (code >= '0' && code <= '9')
+        Input(code - '0');
+    else if (code >= 'a' && code <= 'f')
+        Input(code - 'a' + 0xa);
+    else if (code >= 'A' && code <= 'F')
+        Input(code - 'A' + 0xa);
+    else
+    {
+        switch (code)
+        {
+            case WXK_LEFT:
+                Select(selected - 1);
+            break;
+    //        case WXK_RETURN: // nah
+    //        case WXK_NUMPAD_ENTER:
+            case WXK_RIGHT:
+                Select(selected + 1);
+            break;
+            case WXK_UP:
+                Select(selected - cols);
+            break;
+            case WXK_DOWN:
+                Select(selected + cols);
+            break;
+
+            default:
+                evt.Skip();
+            break;
+        }
     }
 }
 
@@ -289,7 +306,7 @@ wxPoint MemoryWindow::GetValuePosition(int index)
     return ret;
 }
 
-void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg)
+void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg, const char *value)
 {
     wxPoint point = GetValuePosition(pos);
     if (bg)
@@ -299,8 +316,13 @@ void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg)
         dc->DrawRectangle(point.x - value_border / 2, point.y + value_border / 2, value_width + value_border * 2, value_height + value_border * 2);
     }
     char buf[4];
-    sprintf(buf, "%02X", data[pos]);
-    dc->DrawText(buf, point);
+    if (!value)
+    {
+        sprintf(buf, "%02X", data[pos]);
+        dc->DrawText(buf, point);
+    }
+    else
+        dc->DrawText(value, point);
 }
 
 void MemoryWindow::RenderValues(wxDC *dc)
@@ -308,7 +330,7 @@ void MemoryWindow::RenderValues(wxDC *dc)
     dc->SetPen(*wxTRANSPARENT_PEN);
     dc->SetBrush(*wxWHITE_BRUSH);
     wxPoint last = GetValuePosition(display_size - 1);
-    dc->DrawRectangle(data_start_x, data_start_y, last.x + value_border + value_width, last.y + value_border + value_height);
+    dc->DrawRectangle(data_start_x - value_border / 2, data_start_y, last.x + value_border * 2 + value_width, last.y + value_border + value_height);
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
@@ -352,7 +374,14 @@ void MemoryWindow::Render(wxDC *dc)
     {
         dc->SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
         wxBrush select_bg(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
-        DrawValue(dc, selected, &select_bg);
+        if (editing)
+        {
+            char buf[4];
+            sprintf(buf, "%X_", new_value);
+            DrawValue(dc, selected, &select_bg, buf);
+        }
+        else
+            DrawValue(dc, selected, &select_bg);
     }
 }
 

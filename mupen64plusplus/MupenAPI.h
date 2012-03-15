@@ -179,6 +179,7 @@ int MemIsValid(unsigned int address);
 
 unsigned char MemRead8(unsigned int address);
 unsigned int MemRead32(unsigned int address);
+void MemWrite8(unsigned int address, unsigned char value);
 void MemWrite32(unsigned int address, unsigned int value);
 
 void *GetRegister(m64p_dbg_cpu_data type);

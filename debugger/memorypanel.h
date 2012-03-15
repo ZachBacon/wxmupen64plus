@@ -22,12 +22,14 @@ class MemoryWindow : public wxWindow
         void PaintEvent(wxPaintEvent &evt);
         void Draw();
 
+        void Input(int value);
+
         void Resize(wxSizeEvent &evt);
         int GetRows() { return rows; }
         int GetCols() { return cols; }
 
         void Select(int pos);
-        void Deselect(wxDC *dc = 0);
+        void Deselect();
         void Goto(uint32_t offset);
 
         void Update();
@@ -36,12 +38,12 @@ class MemoryWindow : public wxWindow
 
     private:
         wxBitmap *render_buffer;
-        uint8_t currentvalue;
+        uint8_t new_value;
         bool editing;
         void Render(wxDC *dc);
         void RenderOffsets(wxDC *dc);
         void RenderValues(wxDC *dc);
-        void DrawValue(wxDC *dc, int pos, const wxBrush *bg = 0);
+        void DrawValue(wxDC *dc, int pos, const wxBrush *bg = 0, const char *value = 0);
         bool offsets_changed;
 
         wxPoint GetValuePosition(int index);
@@ -65,6 +67,7 @@ class MemoryPanel : public DebugPanel
         void Update(bool vi);
 
         void Select(int newpos);
+        void SetValue(int pos, int value);
         void Goto(wxCommandEvent &evt);
 
         uint8_t *RequestData(int size, int relative_offset = 0);
