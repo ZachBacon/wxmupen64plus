@@ -255,6 +255,66 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                     openGLRenderSetting->m_choices.push_back( ConfigParamChoice(_("OGL Fragment Program"), 8) );
                 }
             }
+            else if (wxString(section->m_section_name).Contains("Glide64"))
+            {
+                ConfigParam* filteringSetting = section->getParamWithName("filtering");
+                if (filteringSetting != NULL)
+                {
+                    filteringSetting->m_choices.push_back( ConfigParamChoice(_("None"), 0) );
+                    filteringSetting->m_choices.push_back( ConfigParamChoice(_("Force Bilinear"), 1) );
+                    filteringSetting->m_choices.push_back( ConfigParamChoice(_("Force Point-sampled"), 2) );
+                }
+                
+                ConfigParam* wfmode = section->getParamWithName("wfmode");
+                if (wfmode != NULL)
+                {
+                    wfmode->setHelpString(_("Wireframe mode"));
+                    wfmode->m_choices.push_back( ConfigParamChoice(_("Normal Colors"), 0) );
+                    wfmode->m_choices.push_back( ConfigParamChoice(_("Vertex Colors"), 1) );
+                    wfmode->m_choices.push_back( ConfigParamChoice(_("Red Only"), 2) );
+                }
+                
+                ConfigParam* swapmode = section->getParamWithName("swapmode");
+                if (swapmode != NULL)
+                {
+                    swapmode->setHelpString(_("Buffer Swapping Method"));
+                    swapmode->m_choices.push_back( ConfigParamChoice(_("Old"), 0) );
+                    swapmode->m_choices.push_back( ConfigParamChoice(_("New"), 1) );
+                    swapmode->m_choices.push_back( ConfigParamChoice(_("Hybrid"), 2) );
+                }
+                
+                ConfigParam* lodmode = section->getParamWithName("lodmode");
+                if (lodmode != NULL)
+                {
+                    lodmode->setHelpString(_("LOD Calculation"));
+                    lodmode->m_choices.push_back( ConfigParamChoice(_("Off"), 0) );
+                    lodmode->m_choices.push_back( ConfigParamChoice(_("Fast"), 1) );
+                    lodmode->m_choices.push_back( ConfigParamChoice(_("Precise"), 2) );
+                }
+                
+                ConfigParam* show_fps = section->getParamWithName("show_fps");
+                if (show_fps != NULL)
+                {
+                    show_fps->setHelpString(_("Show FPS"));
+                    // TODO: allow combinable bitmasks
+                    show_fps->m_choices.push_back( ConfigParamChoice(_("Disabled"), 0) );
+                    show_fps->m_choices.push_back( ConfigParamChoice(_("FPS Counter"), 1) );
+                    show_fps->m_choices.push_back( ConfigParamChoice(_("VI/s Counter"), 2) );
+                    show_fps->m_choices.push_back( ConfigParamChoice(_("% Speed"), 4) );
+                    show_fps->m_choices.push_back( ConfigParamChoice(_("FPS Transparent"), 8) );
+                }
+                
+                ConfigParam* tex_filter = section->getParamWithName("tex_filter");
+                if (tex_filter != NULL)
+                {
+                    tex_filter->setHelpString(_("Texture Filter"));
+                    tex_filter->m_choices.push_back( ConfigParamChoice(_("Disabled"), 0) );
+                    tex_filter->m_choices.push_back( ConfigParamChoice(_("Blur edges"), 1) );
+                    tex_filter->m_choices.push_back( ConfigParamChoice(_("Super 2xSAI"), 2) );
+                    tex_filter->m_choices.push_back( ConfigParamChoice(_("Hq2x"), 3) );
+                    tex_filter->m_choices.push_back( ConfigParamChoice(_("Hq4x"), 4) );
+                }
+            }
         }
         else if (section->m_section_name == "Audio-SDL")
         {

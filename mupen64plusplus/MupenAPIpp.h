@@ -236,6 +236,11 @@ public:
         if (helpString != NULL) m_help_string = helpString;
     }
     
+    void setHelpString(const wxString helpString)
+    {
+        m_help_string = helpString;
+    }
+    
     void setEnabled(bool enabled) { m_enabled = enabled; }
     
     void setCommentString(wxString comment)
