@@ -51,13 +51,13 @@
 
 const bool g_Verbose = false;
 
+const int VERSION_MAJOR = 0;
+const int VERSION_MINOR = 3;
+
 const char* DEFAULT_VIDEO_PLUGIN = "mupen64plus-video-rice";
 const char* DEFAULT_AUDIO_PLUGIN = "mupen64plus-audio-sdl";
 const char* DEFAULT_INPUT_PLUGIN = "mupen64plus-input-sdl";
 const char* DEFAULT_RSP_PLUGIN   = "mupen64plus-rsp-hle";
-
-const int VERSION_MAJOR = 0;
-const int VERSION_MINOR = 2;
 
 bool osd_logging = false;
 
