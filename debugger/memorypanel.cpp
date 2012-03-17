@@ -5,7 +5,9 @@
 #include <wx/dcmemory.h>
 #include <wx/textctrl.h>
 #include <wx/button.h>
+#include <wx/menu.h>
 
+#include "debuggerframe.h"
 #include "colors.h"
 #include "breakpoint.h"
 #include "../mupen64plusplus/MupenAPI.h"
@@ -26,6 +28,17 @@
 #define value_height 10 // Actual height of 1 byte (about)
 #define value_border_w 4
 #define value_border_h 2
+
+enum
+{
+    read_break_1 = 1,
+    read_break_2,
+    read_break_4,
+    write_break_1,
+    write_break_2,
+    write_break_4,
+    remove_break
+};
 
 MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
@@ -103,6 +116,11 @@ void MemoryPanel::SetValue(int pos, int value)
     MemWrite8(current_position + pos, value);
 }
 
+void MemoryPanel::RefreshPanels()
+{
+    parent->RefreshPanels();
+}
+
 /// ------------------------------------------------------------------------------
 
 MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
@@ -119,6 +137,7 @@ MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id,
     Bind(wxEVT_SIZE, &MemoryWindow::Resize, this);
     Bind(wxEVT_CHAR, &MemoryWindow::KeyDown, this);
     Bind(wxEVT_LEFT_DOWN, &MemoryWindow::MouseSelect, this);
+    Bind(wxEVT_RIGHT_UP, &MemoryWindow::RClickMenu, this);
 }
 
 MemoryWindow::~MemoryWindow()
@@ -163,6 +182,104 @@ void MemoryWindow::MouseSelect(wxMouseEvent &evt)
        Select(row * cols + col);
     else
         Deselect();
+}
+
+void MemoryWindow::RClickMenu(wxMouseEvent &evt)
+{
+    MouseSelect(evt);
+    if (selected != -1)
+    {
+        wxMenu menu;
+        if (!Breakpoint::Find(offset + selected))
+        {
+            wxMenuItem *rb1, *rb2, *rb4, *wb1, *wb2, *wb4;
+            rb1 = new wxMenuItem(&menu, read_break_1, _("Read breakpoint (1 byte)"));
+            menu.Append(rb1);
+            if ((offset + selected) % 2 == 0)
+            {
+                rb2 = new wxMenuItem(&menu, read_break_2, _("Read breakpoint (2 bytes)"));
+                menu.Append(rb2);
+            }
+            if ((offset + selected) % 4 == 0)
+            {
+                rb4 = new wxMenuItem(&menu, read_break_4, _("Read breakpoint (4 bytes)"));
+                menu.Append(rb4);
+            }
+            wb1 = new wxMenuItem(&menu, write_break_1, _("Write breakpoint (1 byte)"));
+            menu.Append(wb1);
+            if ((offset + selected) % 2 == 0)
+            {
+                wb2 = new wxMenuItem(&menu, write_break_2, _("Write breakpoint (2 bytes)"));
+                menu.Append(wb2);
+            }
+            if ((offset + selected) % 4 == 0)
+            {
+                wb4 = new wxMenuItem(&menu, write_break_4, _("Write breakpoint (4 bytes)"));
+                menu.Append(wb4);
+            }
+        }
+        else
+        {
+            wxMenuItem *rem;
+            rem = new wxMenuItem(&menu, remove_break, _("Remove Breakpoint"));
+            menu.Append(rem);
+        }
+        menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &MemoryWindow::RClickEvent, this);
+        PopupMenu(&menu);
+    }
+}
+
+void MemoryWindow::RClickEvent(wxCommandEvent &evt)
+{
+    int id = evt.GetId();
+    if (id == remove_break)
+    {
+        delete Breakpoint::Find(offset + selected);
+        Draw();
+    }
+    else
+    {
+        Breakpoint *bpt = new Breakpoint;
+        int address = offset + selected, length, type;
+        switch (id)
+        {
+            case read_break_1:
+                type = BREAK_TYPE_READ;
+                length = 1;
+            break;
+            case read_break_2:
+                type = BREAK_TYPE_READ;
+                length = 2;
+            break;
+            case read_break_4:
+                type = BREAK_TYPE_READ;
+                length = 4;
+            break;
+            case write_break_1:
+                type = BREAK_TYPE_WRITE;
+                length = 1;
+            break;
+            case write_break_2:
+                type = BREAK_TYPE_WRITE;
+                length = 2;
+            break;
+            case write_break_4:
+                type = BREAK_TYPE_WRITE;
+                length = 4;
+            break;
+            default:
+            break;
+        }
+        wxString name;
+        if (type == BREAK_TYPE_READ)
+            name.Printf("Read (%X)", length);
+        else
+            name.Printf("Write (%X)", length);
+        bpt->Update(name, address, length, type);
+        bpt->Add();
+        Breakpoint::SetChanged(true);
+        parent->RefreshPanels();
+    }
 }
 
 void MemoryWindow::Resize(wxSizeEvent &evt)

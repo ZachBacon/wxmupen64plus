@@ -19,6 +19,8 @@ class MemoryWindow : public wxWindow
 
         void KeyDown(wxKeyEvent &evt);
         void MouseSelect(wxMouseEvent &evt);
+        void RClickMenu(wxMouseEvent &evt);
+        void RClickEvent(wxCommandEvent &evt);
         void PaintEvent(wxPaintEvent &evt);
         void Draw();
 
@@ -69,6 +71,8 @@ class MemoryPanel : public DebugPanel
         void Select(int newpos);
         void SetValue(int pos, int value);
         void Goto(wxCommandEvent &evt);
+
+        void RefreshPanels();
 
         uint8_t *RequestData(int size, int relative_offset = 0);
     private:
