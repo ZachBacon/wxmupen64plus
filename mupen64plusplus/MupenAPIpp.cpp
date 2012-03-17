@@ -110,10 +110,10 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
     if (result != M64ERR_SUCCESS)
     {
         mplog_warning("MupenApiPP", "Cannot retrieve video extension from config, will use platform defaults\n");
-#ifdef __WXGTK__
-        m_use_video_extension = false;
-#else
+#ifdef __WXMAC__
         m_use_video_extension = true;
+#else
+        m_use_video_extension = false;
 #endif
     }
     else
@@ -130,10 +130,10 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         else
         {
             mplog_warning("MupenApiPP", "Unknown video extension in config, will use platform defaults\n");
-#ifdef __WXGTK__
-            m_use_video_extension = false;
+#ifdef __WXMAC__
+        m_use_video_extension = true;
 #else
-            m_use_video_extension = true;
+        m_use_video_extension = false;
 #endif
         }
     }
