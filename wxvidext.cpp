@@ -777,7 +777,7 @@ void cleanupEvents()
             }
             printf("END}\n");
              * */
-            pressed_keys.erase(it);
+            pressed_keys.erase(it++);
         }
     }
 }
