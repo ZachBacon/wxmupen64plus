@@ -89,7 +89,8 @@ static m64p_error PluginLoadTry(const char *filepath, int MapIndex)
     rval = (*PluginStartup)(CoreHandle, g_PluginMap[MapIndex].name, DebugCallback);  /* DebugCallback is in main.c */
     if (rval != M64ERR_SUCCESS)
     {
-        mplog_error("Plugin", "ERROR: %s plugin library '%s' failed to start.\n", g_PluginMap[MapIndex].name, filepath);
+        mplog_error("Plugin", "ERROR: %s plugin library '%s' failed to start. Error code : %i\n",
+                    g_PluginMap[MapIndex].name, filepath, rval);
         osal_dynlib_close(handle);
         return rval;
     }
