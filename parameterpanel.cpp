@@ -469,11 +469,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
         ctrl->SetClientData( curr );
         m_parameter_widgets.push_back(ctrl);
         
-        if (curr->m_need_restart)
+        if (curr->hasCommentString())
         {
             sizer->AddSpacer(1);
             wxStaticText* effect_label = new wxStaticText(this, wxID_ANY,
-                                                          _("* Changes to this parameter will be only effective after restarting Mupen64Plus"));
+                                                          curr->getCommentString());
             effect_label->SetFont( wxFont(wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT,
                                           wxFONTSTYLE_ITALIC, wxFONTWEIGHT_NORMAL) );
             sizer->Add( effect_label );

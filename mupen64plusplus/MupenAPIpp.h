@@ -109,8 +109,9 @@ public:
     /** Only set if m_special_type is PLUGIN_FILE. */
     m64p_plugin_type m_plugin_type; 
 
-    /** Set to true if this parameter will only take effect on restart */
-    bool m_need_restart;
+    /** A comment string to add under this parameter */
+    bool m_has_comment_string;
+    wxString m_comment_string;
 
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     /*
@@ -130,7 +131,7 @@ public:
     ConfigParam(m64p_handle section, SpecialParamType type = NOTHING_SPECIAL)
     {
         m_enabled = true;
-        m_need_restart = false;
+        m_has_comment_string = false;
         m_parent_section = section;
         m_special_type = type;
         m_magic_number = 0xC001C001;
@@ -142,7 +143,8 @@ public:
     void copyFrom(const ConfigParam& other)
     {
         m_enabled = other.m_enabled;
-        m_need_restart = other.m_need_restart;
+        m_has_comment_string = other.m_has_comment_string;
+        m_comment_string = other.m_comment_string;
         m_parent_section = other.m_parent_section;
         m_special_type = other.m_special_type;
         m_choices = other.m_choices;
@@ -235,6 +237,15 @@ public:
     }
     
     void setEnabled(bool enabled) { m_enabled = enabled; }
+    
+    void setCommentString(wxString comment)
+    {
+        m_comment_string = comment;
+        m_has_comment_string = true;
+    }
+    
+    bool hasCommentString() const { return m_has_comment_string; }
+    wxString getCommentString() const { return m_comment_string; }
 };
 
 class ConfigSection

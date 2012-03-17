@@ -119,7 +119,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                 ConfigParam* param = section->m_parameters[p];
                 param->m_choices.push_back( ConfigParamChoice(_("Internal"), std::string("internal") ) );
                 param->m_choices.push_back( ConfigParamChoice(_("External"), std::string("external") ) );
-                param->m_need_restart = true;
+                param->setCommentString(_("* Changes to this parameter will be only effective after restarting Mupen64Plus"));
             }
             else if (param_wxname == "R4300Emulator")
             {
@@ -132,6 +132,12 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
         
         if (wxString(section->m_section_name).StartsWith("Video"))
         {
+            ConfigParam* screenH = section->getParamWithName("ScreenHeight");
+            if (screenH != NULL)
+            {
+                screenH->setCommentString(_("* Size parameters are only used if external video is used. If you use one-window-mupen,\nsimply resize the window. This setting can be changed in the 'Plugins' section."));
+            }
+            
             if (wxString(section->m_section_name).Contains("Rice"))
             {
                 ConfigParam* frameBufferSetting = section->getParamWithName("FrameBufferSetting");
