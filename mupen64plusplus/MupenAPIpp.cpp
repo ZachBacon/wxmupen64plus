@@ -252,6 +252,11 @@ ptr_vector<ConfigSection>* g_config_sections = NULL;
 
 void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type ParamType)
 {
+    // 'Version' parameters are internal to mupen
+    if (strcmp(ParamName, "version") == 0 or strcmp(ParamName, "Version") == 0) {
+        return;
+    }
+    
     m64p_handle* section = (m64p_handle*)sectionHandle;
 
     ConfigParam* param = new ConfigParam(*section);
