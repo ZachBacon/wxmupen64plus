@@ -10,6 +10,8 @@
 #include <wx/statline.h>
 
 #include "debuggerframe.h"
+#include "breakpoint.h"
+#include "colors.h"
 #include "../mupen64plusplus/MupenAPI.h"
 
 #ifdef DrawText
@@ -18,6 +20,7 @@
 
 #define line_start_y 1
 #define address_start_x 5
+#define address_width 60
 #define opcode_start_x address_start_x + 70
 #define comment_start_x opcode_start_x + 500
 #define line_height 10
@@ -277,25 +280,31 @@ void DisasmWindow::Render(bool same_address)
     for (int i = 0; i < lines; i++)
     {
         char buf[16];
+        sprintf(buf, "%X", address + i * 4);
+        Breakpoint *bpt = Breakpoint::Find(address + i *4);
         if (address + i * 4 == pc)
         {
-            sprintf(buf, "%X", address + i * 4);
+
             dc.SetBrush(*wxCYAN_BRUSH);
             dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
-            dc.DrawText(buf, address_start_x, line_start_y + i * line_height);
-            dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
             dc.SetBrush(bg);
         }
         else
         {
             if (!same_address || address + i * 4 == drawn_pc)
-            {
-                sprintf(buf, "%X", address + i * 4);
                 dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
-                dc.DrawText(buf, address_start_x, line_start_y + i * line_height);
-            }
-            dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
         }
+        if (bpt)
+        {
+            if (bpt->GetType() & BREAK_TYPE_EXECUTE)
+            {
+                dc.SetBrush(g_brush_execute);
+                dc.DrawRectangle(0, line_start_y + i * line_height + 2, address_width, line_height);
+                dc.SetBrush(bg);
+            }
+        }
+        dc.DrawText(buf, address_start_x, line_start_y + i * line_height);
+        dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
     }
     drawn_pc = pc;
     dc.SelectObject(wxNullBitmap);
