@@ -133,6 +133,8 @@ void MemoryWindow::Goto(uint32_t pos)
     offsets_changed = true;
     data = parent->RequestData(cols * rows, pos - offset);
     offset = pos;
+    if (!MemIsValid(offset + selected))
+        Deselect();
     Draw();
 }
 
@@ -194,6 +196,7 @@ void MemoryWindow::Deselect()
     if (selected != -1)
     {
         wxMemoryDC dc(*render_buffer);
+        dc.SetFont(*wxNORMAL_FONT);
         DrawValue(&dc, selected, wxWHITE_BRUSH);
         wxClientDC clientdc(this);
         DrawValue(&clientdc, selected, wxWHITE_BRUSH);
@@ -203,6 +206,8 @@ void MemoryWindow::Deselect()
 
 void MemoryWindow::Select(int pos)
 {
+    if (!MemIsValid(offset + pos))
+        return;
     if (pos < 0)
     {
         int offset_change = (pos - cols) / cols * cols;
@@ -367,7 +372,9 @@ void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg, const char *v
         }
     }
     char buf[4];
-    if (!value)
+    if (!MemIsValid(offset + pos))
+        value = "--";
+    else if (!value)
     {
         sprintf(buf, "%02X", data[pos]);
         value = buf;
