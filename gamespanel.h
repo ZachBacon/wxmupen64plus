@@ -24,6 +24,7 @@
 
 #include <wx/panel.h>
 #include <vector>
+#include <wx/dataview.h>
 
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "parameterpanel.h"
@@ -42,7 +43,7 @@ DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_CLEANUP_GL_CANVAS, -1);
 
 class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateListener
 {
-    wxListCtrl* m_item_list;
+    wxDataViewListCtrl* m_item_list;
     wxDirPickerCtrl* m_dir_picker;
     ConfigParam* m_gamesPathParam;
     wxBoxSizer* m_list_sizer;
@@ -110,7 +111,7 @@ public:
     void onPlay(wxCommandEvent& evt);
     void onPause(wxCommandEvent& evt);
     void onStop(wxCommandEvent& evt);
-    void onColClick(wxListEvent& evt);
+    //void onColClick(wxListEvent& evt);
     void wanderingFocus(wxFocusEvent& evt);
 	
     void loadRom(wxString name, wxString pathAndFile);

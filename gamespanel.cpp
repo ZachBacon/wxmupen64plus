@@ -187,10 +187,35 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
 
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                           wxFileDirPickerEventHandler(GamesPanel::onPathChange), NULL, this);
-        
-    m_item_list = new wxListCtrl(m_center_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                                 wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES);
+    
+    m_item_list = new wxDataViewListCtrl(m_center_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                                         wxDV_ROW_LINES | wxDV_HORIZ_RULES);
     m_list_sizer->Add(m_item_list, 1, wxALL | wxEXPAND, 5);
+    
+    
+    wxArrayString columns;              std::vector<int> sizes;
+    columns.Add( _("File Name") );      sizes.push_back( 350 );
+    columns.Add( _("Internal Name") );  sizes.push_back( 275 );
+    //columns.Add( _("Good Name") );      sizes.push_back( 225 );
+    columns.Add( _("Country") );        sizes.push_back( 100 );
+    //columns.Add( _("Size") );        sizes.push_back( 75 );
+    
+    
+    const int count = columns.Count();
+    for (int n=0; n<count; n++)
+    {
+        /*
+        wxListItem col;
+        col.SetId(n);
+        col.SetText( columns[n] );
+        col.SetWidth( sizes[n] );
+        m_item_list->InsertColumn(n, col);
+        */
+        m_item_list->AppendColumn(new wxDataViewColumn(columns[n], new wxDataViewTextRenderer(), n,
+                                  sizes[n], wxALIGN_LEFT,
+                                  wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE ));
+    }
+    
     
     populateList();
     
@@ -220,8 +245,10 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     m_pause_button->Disable();
     m_stop_button->Disable();
     
+    /*
     m_item_list->Connect(m_item_list->GetId(), wxEVT_COMMAND_LIST_COL_CLICK,
                          wxListEventHandler(GamesPanel::onColClick), NULL, this);
+    */
     
     Connect(wxID_ANY, wxMUPEN_STATE_CHANGE,
             wxCommandEventHandler(GamesPanel::onMupenStateChangeEvt), NULL, this);
@@ -243,26 +270,9 @@ GamesPanel::~GamesPanel()
 void GamesPanel::populateList()
 {
     wxString path = m_dir_picker->GetPath();
-    m_item_list->ClearAll();
-        
+    m_item_list->DeleteAllItems();
+    
     if (path.IsEmpty()) return;
-    
-    wxArrayString columns;              std::vector<int> sizes;
-    columns.Add( _("File Name") );      sizes.push_back( 300 );
-    columns.Add( _("Internal Name") );  sizes.push_back( 225 );
-    //columns.Add( _("Good Name") );      sizes.push_back( 225 );
-    columns.Add( _("Country") );        sizes.push_back( 75 );
-    //columns.Add( _("Size") );        sizes.push_back( 75 );
-    
-    const int count = columns.Count();
-    for (int n=0; n<count; n++)
-    {
-        wxListItem col;
-        col.SetId(n);
-        col.SetText( columns[n] );
-        col.SetWidth( sizes[n] );
-        m_item_list->InsertColumn(n, col);
-    }
     
     m_roms = getRomsInDir(path);
     
@@ -270,16 +280,17 @@ void GamesPanel::populateList()
     for (int n=0; n<item_amount; n++)
     {
         RomInfo& curritem = m_roms[n];
-                
+        
+        /*
         wxListItem item;
         item.SetId(n);
         item.SetText( curritem.m_file_name );
-        
+        */
         Mupen64PlusPlus::RomInfo info;
         
-        long id = m_item_list->InsertItem( item );
+        //long id = m_item_list->InsertItem( item );
         
-        if (id != -1)
+        //if (id != -1)
         {
             std::map<wxString, Mupen64PlusPlus::RomInfo>::iterator elem = g_cache.find(curritem.m_full_path);
             if (elem != g_cache.end())
@@ -304,6 +315,7 @@ void GamesPanel::populateList()
             curritem.m_country = info.country;
             curritem.m_internal_name = info.name;
         
+        /*
             // set value in first column
             m_item_list->SetItem(id, COLUMN_FILE, curritem.m_file_name);
             
@@ -317,10 +329,17 @@ void GamesPanel::populateList()
             m_item_list->SetItem(id, COLUMN_COUNTRY, info.country);
             
             m_item_list->SetItemData(id, id);
+            */
+            
+            wxVector< wxVariant > values;
+            values.push_back( wxVariant(curritem.m_file_name) );
+            values.push_back( wxVariant(curritem.m_internal_name) );
+            values.push_back( wxVariant(curritem.m_country) );
+            m_item_list->AppendItem(values);
         }
     } // end for
     
-    m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
+    //m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -384,7 +403,7 @@ void GamesPanel::cleanGLCanvas()
 }
 
 // -----------------------------------------------------------------------------------------------------------
-
+#if 0
 void GamesPanel::onColClick(wxListEvent& evt)
 {
     if (m_curr_col != evt.GetColumn())
@@ -393,6 +412,7 @@ void GamesPanel::onColClick(wxListEvent& evt)
         m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
     }  
 }
+#endif
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -505,18 +525,21 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         }
     }
     
-    long item = m_item_list->GetNextItem(-1,
-                                        wxLIST_NEXT_ALL,
-                                        wxLIST_STATE_SELECTED);
+    //long item = m_item_list->GetNextItem(-1,
+    //                                    wxLIST_NEXT_ALL,
+    //                                    wxLIST_STATE_SELECTED);
     
-    if (item == -1)
+    int item = m_item_list->GetSelectedRow();
+    
+    if (item == wxNOT_FOUND)
     {
         wxMessageBox( _("No game is selected, cannot start emulation") );
         return;
     }
     
-    wxString file = path + wxFileName::GetPathSeparator() + m_item_list->GetItemText(item);
-    loadRom(m_item_list->GetItemText(item), file);
+    wxString romfile = m_item_list->GetTextValue(item, 0);
+    wxString file = path + wxFileName::GetPathSeparator() + romfile; //m_item_list->GetItemText(item);
+    loadRom(romfile, file);
 }
 
 // -----------------------------------------------------------------------------------------------------------
