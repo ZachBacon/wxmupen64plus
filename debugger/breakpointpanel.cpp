@@ -103,7 +103,7 @@ class BreakpointDialog : public wxDialog
             Clear();
             name_textctrl->SetValue(bpt->GetName());
             addr_textctrl->SetValue(wxString::Format("%08X", bpt->GetAddress()));
-            length_textctrl->SetValue(wxString::Format("%08X", bpt->GetLength()));
+            length_textctrl->SetValue(wxString::Format("%X", bpt->GetLength()));
             char type = bpt->GetType();
             if (type & BREAK_TYPE_EXECUTE)
                 exec_cbox->SetValue(true);
