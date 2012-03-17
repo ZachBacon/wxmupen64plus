@@ -756,6 +756,8 @@ void cleanupEvents()
     }
 #endif
 	
+    std::set<int> toRemove;
+    
     for (it=pressed_keys.begin(); it!=pressed_keys.end(); it++)
     {
         #if defined(__WXOSX__)
@@ -777,8 +779,13 @@ void cleanupEvents()
             }
             printf("END}\n");
              * */
-            pressed_keys.erase(it++);
+            toRemove.insert(*it);
         }
+    }
+    
+    for (it=toRemove.begin(); it!=toRemove.end(); it++)
+    {
+        pressed_keys.erase(*it);
     }
 }
 
