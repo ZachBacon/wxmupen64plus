@@ -49,6 +49,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     pc_display = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
     pc_display->SetMinSize(wxSize(70, -1));
     pc_go = new wxButton(subpanel, -1, _("Go to PC"));
+    run = new wxButton(subpanel, -1, _("Run"));
+    pause = new wxButton(subpanel, -1, _("Pause"));
     step = new wxButton(subpanel, -1, _("Step"));
     wxStaticLine *separator_line = new wxStaticLine(subpanel, -1);
     wxStaticLine *separator_line2 = new wxStaticLine(subpanel, -1);
@@ -60,6 +62,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     subsizer->Add(go_address, 0, wxEXPAND);
     subsizer->Add(go_button, 0, wxEXPAND);
     subsizer->Add(separator_line2, 0, wxEXPAND | wxALL, 5);
+    subsizer->Add(run, 0, wxEXPAND);
+    subsizer->Add(pause, 0, wxEXPAND);
     subsizer->Add(step, 0, wxEXPAND);
     subpanel->SetSizer(subsizer);
 
@@ -71,6 +75,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     go_address->Bind(wxEVT_COMMAND_TEXT_ENTER, &DisasmPanel::Goto, this);
     go_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Goto, this);
     pc_go->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::GotoPc, this);
+    run->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Run, this);
+    pause->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Pause, this);
     step->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Step, this);
 
     scrollbar->Bind(wxEVT_SCROLL_THUMBRELEASE, &DisasmPanel::Scrolled, this);
@@ -91,6 +97,8 @@ void DisasmPanel::Update(bool vi)
 {
     if (!vi)
     {
+        run->Enable(true);
+        pause->Enable(false);
         char buf[16];
         int pc = parent->GetPc();
         code->SetPc(pc);
@@ -104,8 +112,22 @@ void DisasmPanel::Update(bool vi)
 //        Goto(pc);
     }
     else
+    {
         code->SetPc(0x1);
+        run->Enable(false);
+        pause->Enable(true);
+    }
     code->Render(true);
+}
+
+void DisasmPanel::Run(wxCommandEvent &evt)
+{
+    parent->Run();
+}
+
+void DisasmPanel::Pause(wxCommandEvent &evt)
+{
+    parent->Pause();
 }
 
 void DisasmPanel::Step(wxCommandEvent &evt)

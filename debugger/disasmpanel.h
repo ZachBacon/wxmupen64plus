@@ -20,6 +20,8 @@ class DisasmPanel : public DebugPanel
         const char **RequestData(int lines);
 
         void Scrolled(wxScrollEvent &evt);
+        void Run(wxCommandEvent &evt);
+        void Pause(wxCommandEvent &evt);
         void Step(wxCommandEvent &evt);
         void Goto(wxCommandEvent &evt);
         void GotoPc(wxCommandEvent &evt);
@@ -38,6 +40,8 @@ class DisasmPanel : public DebugPanel
         wxTextCtrl *go_address;
         wxButton *go_button;
         wxButton *pc_go;
+        wxButton *run;
+        wxButton *pause;
         wxButton *step;
         wxTextCtrl *pc_display;
 
