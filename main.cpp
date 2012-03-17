@@ -147,6 +147,7 @@ bool MupenFrontendApp::OnInit()
     m_curr_panel     = NULL;
     m_gamesPathParam = NULL;
     m_api            = NULL;
+    setlocale(LC_ALL, "C");
 
     printf(" __  __                         __   _  _   ____  _             \n");
     printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");

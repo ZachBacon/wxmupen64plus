@@ -10,6 +10,7 @@
 #include "debugconsole.h"
 #include "registerpanel.h"
 #include "../mupen64plusplus/MupenAPI.h"
+#include "breakpoint.h"
 
 extern ptr_ConfigOpenSection PtrConfigOpenSection; // lazy
 
@@ -52,6 +53,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     next_id = 0;
     inited = false;
     vi_break = false;
+    vi_count = 0;
 
     SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
     g_debugger = this;
@@ -488,6 +490,15 @@ void DebuggerFrame::UpdatePanels(bool vi)
     {
         ((DebugPanel *)(panes.Item(i).window))->Update(vi);
     }
+    Breakpoint::SetChanged(false);
+}
+
+void DebuggerFrame::RefreshPanels()
+{
+    if (running)
+        UpdatePanels(true);
+    else
+        UpdatePanels(false);
 }
 
 void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
@@ -507,7 +518,6 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         break;
         case DEBUG_UPDATE:
         {
-
             vi_break = false;
             if (run_on_boot == 1)
             {
@@ -528,9 +538,11 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
         break;
         case DEBUG_VI:
         {
+            vi_count++;
             if (vi_break)
                 Pause();
-            else if (runtime_update)
+            // Update only at every 10th vi, decreases the unnecessary flickering with default wx controls
+            else if (runtime_update && (vi_count % 10) == 0)
                 UpdatePanels(true);
         }
         break;

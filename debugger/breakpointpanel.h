@@ -4,6 +4,7 @@
 #include "debugpanel.h"
 class wxListCtrl;
 class DebuggerFrame;
+class wxListEvent;
 
 class BreakpointPanel : public DebugPanel
 {
@@ -13,6 +14,7 @@ class BreakpointPanel : public DebugPanel
 
         void Update(bool vi);
         void RClickMenu(wxMouseEvent &evt);
+        void RClickItem(wxListEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
     private:
         int current_item;

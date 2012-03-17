@@ -11,30 +11,7 @@ DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_DEBUG_EVENT, -1);
 
 class DebugConsole;
 class DebugPanel;
-
-enum BreakpointStatus
-{
-    BREAK_STATUS_UNKNOWN = 0,
-    BREAK_STATUS_ACTIVE,
-    BREAK_STATUS_DISABLED,
-    BREAK_STATUS_WATCH
-};
-
-
-#define BREAK_TYPE_EXECUTE 0x1
-#define BREAK_TYPE_READ 0x2
-#define BREAK_TYPE_WRITE 0x4
-#define BREAK_TYPE_ALL BREAK_TYPE_EXECUTE | BREAK_TYPE_READ | BREAK_TYPE_WRITE
-
-
-struct Breakpoint
-{
-    wxString name;
-    int id;
-    uint32_t offset;
-    char status;
-    char type;
-};
+class Breakpoint;
 
 // This code assumes that there won't be multiple DebuggerFrames,
 // as it makes implementing debug callbacks a lot easier..
@@ -60,6 +37,7 @@ class DebuggerFrame : public wxFrame
         void Step();
         void Pause();
         void ViBreak();
+        void RefreshPanels();
 
         uint32_t GetPc() { return pc; }
 
@@ -91,6 +69,7 @@ class DebuggerFrame : public wxFrame
         DebugPanel *AddPanel(int type, wxString &name, int id = 0);
         DebugConsole *output;
         bool vi_break;
+        char vi_count;
         bool inited;
         bool running;
         uint32_t pc;
