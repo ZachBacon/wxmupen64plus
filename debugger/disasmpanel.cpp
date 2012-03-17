@@ -103,8 +103,9 @@ void DisasmPanel::Update(bool vi)
 //
 //        Goto(pc);
     }
-    //else // Goto(pc) renders
-        code->Render(true);
+    else
+        code->SetPc(0x1);
+    code->Render(true);
 }
 
 void DisasmPanel::Step(wxCommandEvent &evt)
