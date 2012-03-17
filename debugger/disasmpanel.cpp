@@ -49,7 +49,9 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     pc_display = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
     pc_display->SetMinSize(wxSize(70, -1));
     pc_go = new wxButton(subpanel, -1, _("Go to PC"));
+    step = new wxButton(subpanel, -1, _("Step"));
     wxStaticLine *separator_line = new wxStaticLine(subpanel, -1);
+    wxStaticLine *separator_line2 = new wxStaticLine(subpanel, -1);
 
     subsizer->Add(pc_text, 0, wxEXPAND);
     subsizer->Add(pc_display, 0, wxEXPAND);
@@ -57,6 +59,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     subsizer->Add(separator_line, 0, wxEXPAND | wxALL, 5);
     subsizer->Add(go_address, 0, wxEXPAND);
     subsizer->Add(go_button, 0, wxEXPAND);
+    subsizer->Add(separator_line2, 0, wxEXPAND | wxALL, 5);
+    subsizer->Add(step, 0, wxEXPAND);
     subpanel->SetSizer(subsizer);
 
     sizer->Add(code, 1, wxEXPAND);
@@ -67,6 +71,7 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     go_address->Bind(wxEVT_COMMAND_TEXT_ENTER, &DisasmPanel::Goto, this);
     go_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Goto, this);
     pc_go->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::GotoPc, this);
+    step->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Step, this);
 
     scrollbar->Bind(wxEVT_SCROLL_THUMBRELEASE, &DisasmPanel::Scrolled, this);
     scrollbar->Bind(wxEVT_SCROLL_TOP, &DisasmPanel::Scrolled, this);
@@ -100,6 +105,11 @@ void DisasmPanel::Update(bool vi)
     }
     //else // Goto(pc) renders
         code->Render(true);
+}
+
+void DisasmPanel::Step(wxCommandEvent &evt)
+{
+    parent->Step();
 }
 
 void DisasmPanel::Goto(wxCommandEvent &evt)
