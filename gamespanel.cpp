@@ -188,29 +188,18 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                           wxFileDirPickerEventHandler(GamesPanel::onPathChange), NULL, this);
     
-    m_item_list = new wxDataViewListCtrl(m_center_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                                         wxDV_ROW_LINES | wxDV_HORIZ_RULES);
+    m_item_list = new wxDataViewListCtrl(m_center_panel, wxID_ANY);
     m_list_sizer->Add(m_item_list, 1, wxALL | wxEXPAND, 5);
     
     
     wxArrayString columns;              std::vector<int> sizes;
-    columns.Add( _("File Name") );      sizes.push_back( 350 );
-    columns.Add( _("Internal Name") );  sizes.push_back( 275 );
-    //columns.Add( _("Good Name") );      sizes.push_back( 225 );
+    columns.Add( _("File Name") );      sizes.push_back( 380 );
+    columns.Add( _("Internal Name") );  sizes.push_back( 250 );
     columns.Add( _("Country") );        sizes.push_back( 100 );
-    //columns.Add( _("Size") );        sizes.push_back( 75 );
-    
     
     const int count = columns.Count();
     for (int n=0; n<count; n++)
     {
-        /*
-        wxListItem col;
-        col.SetId(n);
-        col.SetText( columns[n] );
-        col.SetWidth( sizes[n] );
-        m_item_list->InsertColumn(n, col);
-        */
         m_item_list->AppendColumn(new wxDataViewColumn(columns[n], new wxDataViewTextRenderer(), n,
                                   sizes[n], wxALIGN_LEFT,
                                   wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE ));
@@ -218,15 +207,6 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     
     
     populateList();
-    
-    /*
-    m_status = new wxStaticText(this, wxID_ANY, _("Emulation is stopped"));
-    buttons->Add(m_status, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
-    
-    wxBitmap icon_cart(datadir + "mupen64cart.png", wxBITMAP_TYPE_PNG);  
-    wxStaticBitmap* icon = new wxStaticBitmap(this, wxID_ANY, icon_cart);
-    buttons->Add(icon, 0, wxALL, 5);
-    */
     
     m_center_panel->SetSizer(m_list_sizer);
     
