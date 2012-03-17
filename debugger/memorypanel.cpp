@@ -140,7 +140,6 @@ void MemoryWindow::Goto(uint32_t pos)
 
 void MemoryWindow::MouseSelect(wxMouseEvent &evt)
 {
-    editing = false;
     evt.Skip();
     wxPoint pos = evt.GetPosition(), last = GetValuePosition(display_size - 1);
     last.x += value_border_w + value_width;
@@ -193,6 +192,7 @@ void MemoryWindow::Resize(wxSizeEvent &evt)
 
 void MemoryWindow::Deselect()
 {
+    editing = false;
     if (selected != -1)
     {
         wxMemoryDC dc(*render_buffer);
@@ -206,6 +206,7 @@ void MemoryWindow::Deselect()
 
 void MemoryWindow::Select(int pos)
 {
+    editing = false;
     if (!MemIsValid(offset + pos))
         return;
     if (pos < 0)
