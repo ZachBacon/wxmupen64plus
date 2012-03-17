@@ -243,7 +243,7 @@ bool MupenFrontendApp::OnInit()
     
     m_frame->SetSizer(m_sizer);
     
-    m_frame->Centre();
+    m_frame->Maximize();
     m_frame->Show();
     
     m_frame->Connect(wxEVT_CLOSE_WINDOW, wxCloseEventHandler(MupenFrontendApp::onClose), NULL, this);
