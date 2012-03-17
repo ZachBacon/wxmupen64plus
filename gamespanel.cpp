@@ -463,7 +463,6 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
     {
         if (config[n]->m_section_name == "General")
         {
-            
             m_width_param = config[n]->getParamWithName("ScreenWidth");
             m_height_param = config[n]->getParamWithName("ScreenHeight");
             m_fullscreen_param = config[n]->getParamWithName("Fullscreen");            
@@ -504,10 +503,6 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
             }
         }
     }
-    
-    //long item = m_item_list->GetNextItem(-1,
-    //                                    wxLIST_NEXT_ALL,
-    //                                    wxLIST_STATE_SELECTED);
     
     int item = m_item_list->GetSelectedRow();
     

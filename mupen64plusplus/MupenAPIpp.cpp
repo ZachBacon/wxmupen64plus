@@ -39,7 +39,11 @@
 #include <wx/progdlg.h>
 #include <wx/thread.h>
 #include <wx/log.h>
+#include <wx/zstream.h>
 #include <SDL.h>
+#include <memory> 
+
+#include "ownerptr.h"
 
 void Mupen64PlusPlus::StateCallback(void *Context, m64p_core_param param_type, int new_value)
 {
@@ -303,30 +307,35 @@ void Mupen64PlusPlus::getConfigContents(ptr_vector<ConfigSection>* out)
 
 // -----------------------------------------------------------------------------------------------------------
 
-void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressDialog* dialog)
+class FileContentsReader
 {
-    // SDL_Quit();
-    printf("==== load rom ====\n");
+    int total;
+    OwnerPtr<wxMemoryOutputStream> memoryImage;
+    char* rom_buf;
     
-    wxFFileInputStream input(filename);
-    if (not input.IsOk() or not input.CanRead())
-    {
-        throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" +
-                                  filename + "'").ToStdString());
-    }
-    
-    wxFile thefile;
-    if (not thefile.Open(filename))
-    {
-        throw std::runtime_error((const char*)wxString::Format(_("Cannot open file %s"), filename.c_str()).utf8_str());
-    }
-    const int rom_size = thefile.Length() + 1024*2 /* in case the OS reports the size inaccurately */;
-    char* rom_buf = new char[rom_size];
-    wxMemoryOutputStream memoryImage(rom_buf, rom_size);
 
-    int total = 0;
-
+    /** Read uncompressed file */
+    void readNormal(wxString filename, wxProgressDialog* dialog)
     {
+        rom_buf = NULL;
+        total = 0;
+        wxFFileInputStream input(filename);
+        
+        if (not input.IsOk() or not input.CanRead())
+        {
+            throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" +
+                                      filename + "'").ToStdString());
+        }
+        
+        wxFile thefile;
+        if (not thefile.Open(filename))
+        {
+            throw std::runtime_error((const char*)wxString::Format(_("Cannot open file %s"), filename.c_str()).utf8_str());
+        }
+        const int rom_size = thefile.Length() + 1024*2 /* in case the OS reports the size inaccurately */;
+        rom_buf = new char[rom_size];
+        memoryImage = new wxMemoryOutputStream(rom_buf, rom_size);
+
         const int BUFFER_SIZE = 1024*20;
         char buffer[BUFFER_SIZE];
         size_t size;
@@ -349,9 +358,9 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
                 }
             }
             
-            memoryImage.Write(buffer, size);
+            memoryImage->Write(buffer, size);
             
-            if (memoryImage.LastWrite() != size)
+            if (memoryImage->LastWrite() != size)
             {
                 delete[] rom_buf;
                 throw std::runtime_error("Memory stream full");
@@ -360,12 +369,118 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
         while (size > 0 and not input.Eof() and input.IsOk() and input.CanRead());
     }
     
-    wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
+    /** Read compressed file */
+    void readZipped(wxString filename, wxProgressDialog* dialog)
+    {
+        rom_buf = NULL;
+        total = 0;
+        wxFFileInputStream input(filename);
+        if (not input.IsOk() or not input.CanRead())
+        {
+            throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" +
+                                      filename + "'").ToStdString());
+        }
+        
+        wxFile thefile;
+        if (not thefile.Open(filename))
+        {
+            throw std::runtime_error((const char*)wxString::Format(_("Cannot open file %s"), filename.c_str()).utf8_str());
+        }
+        const int compressed_size = thefile.Length();
+        
+        wxZlibInputStream dezipper(input);
+        
+        memoryImage = new wxMemoryOutputStream();
+
+        const int BUFFER_SIZE = 1024*20;
+        char buffer[BUFFER_SIZE];
+        size_t size;
+        int t = 0;
+        
+        //printf("Will read ROM\n");
+        do
+        {
+            size = dezipper.Read(buffer, BUFFER_SIZE).LastRead();
+            
+            total += size;
+            t++;
+            if (t > 100)
+            {
+                t = 0;
+                dialog->Pulse();
+                //printf("Read %i, total %i (%i MB)\n", (int)size, total, total/(1024*1024));
+                if (dialog != NULL)
+                {
+                    dialog->Update(int(std::min(1.0f, float(input.TellI())/float(compressed_size))*80.0f));
+                }
+            }
+            
+            memoryImage->Write(buffer, size);
+        }
+        while (size > 0 and not dezipper.Eof() and dezipper.IsOk() and dezipper.CanRead());
+    }
     
+public:
+    FileContentsReader(bool compressed, wxString filename, wxProgressDialog* dialog)
+    {
+        if (compressed) readZipped(filename, dialog);
+        else            readNormal(filename, dialog);
+    }
+    
+    ~FileContentsReader()
+    {
+        if (rom_buf != NULL) delete[] rom_buf;
+    }
+    
+    wxMemoryOutputStream* getBuffer()
+    {
+        return memoryImage.raw_ptr;
+    }
+    
+    int getByteCount() const
+    {
+        return total;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------
+
+void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressDialog* dialog)
+{
+    printf("==== load rom ====\n");
+    
+    // ---- check if ROM is compressed
+    m64p_rom_header header;
+    m64p_error result = getRomHeader(filename.utf8_str(), &header);
+    if (result != M64ERR_SUCCESS)
+    {
+        std::string errmsg = "Reading ROM header failed with error : ";
+        errmsg = errmsg + getErrorMessage(result);
+        throw std::runtime_error(errmsg);
+    }
+    bool is_gzip = false;
+    bool is_zip = false;
+    if (header.init_PI_BSB_DOM1_LAT_REG == 31 and
+        header.init_PI_BSB_DOM1_PGS_REG == 139)
+    {
+        is_gzip = true;
+    }
+    else if (header.init_PI_BSB_DOM1_LAT_REG == 4 and
+             header.init_PI_BSB_DOM1_PGS_REG == 3 and
+             header.init_PI_BSB_DOM1_PWD_REG == 75 and
+             header.init_PI_BSB_DOM1_PGS_REG2 == 80)
+    {
+        is_zip = true;
+    }
+    // -------------------------------
+    
+    FileContentsReader fcr(is_zip or is_gzip, filename, dialog);
+    int total = fcr.getByteCount();
+
+    wxMemoryOutputStream* fileContentsStream = fcr.getBuffer();
+    wxStreamBuffer* buffer = fileContentsStream->GetOutputStreamBuffer();
     m_curr_rom_size = buffer->GetBufferSize();
-    m64p_error result = ::openRom(total, buffer->GetBufferStart());
-    
-    delete[] rom_buf;
+    result = ::openRom(total, buffer->GetBufferStart());
     
     if (dialog != NULL) dialog->Update(90);
     
