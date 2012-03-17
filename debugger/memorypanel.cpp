@@ -6,6 +6,8 @@
 #include <wx/textctrl.h>
 #include <wx/button.h>
 
+#include "colors.h"
+#include "breakpoint.h"
 #include "../mupen64plusplus/MupenAPI.h"
 #ifdef DrawText
 #undef DrawText // windows api ftw
@@ -20,9 +22,10 @@
 #define data_add_inc_x 6 // Additional spacing after 4 bytes
 #define data_inc_y 12 // Height reserved for 1 byte
 #define data_clip_cols 4 // Should be multiple of 4
-#define value_width 10 // Actual width of 1 byte (about)
-#define value_height 8 // Actual height of 1 byte (about)
-#define value_border 2
+#define value_width 12 // Actual width of 1 byte (about)
+#define value_height 10 // Actual height of 1 byte (about)
+#define value_border_w 4
+#define value_border_h 2
 
 MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
@@ -138,23 +141,23 @@ void MemoryWindow::MouseSelect(wxMouseEvent &evt)
     editing = false;
     evt.Skip();
     wxPoint pos = evt.GetPosition(), last = GetValuePosition(display_size - 1);
-    last.x += value_border + value_width;
-    last.y += value_border + value_height;
+    last.x += value_border_w + value_width;
+    last.y += value_border_h + value_height;
     if (pos.x < data_start_x || pos.x > last.x || pos.y < data_start_y || pos.y > last.y)
     {
         Deselect();
         return;
     }
 
-    pos.x -= data_start_x;
-    pos.y -= data_start_y;
+    pos.x -= data_start_x - value_border_w / 2;
+    pos.y -= data_start_y - value_border_h / 2;
     int row = pos.y / data_inc_y;
     int x_incs = pos.x / (data_add_inc_x + data_inc_x * 4);
     int col = x_incs * 4;
     pos.x -= x_incs * (data_add_inc_x + data_inc_x * 4);
     col += pos.x / data_inc_x;
     last = GetValuePosition(row * cols + col);
-    wxRect value_rect(last.x - value_border, last.y - value_border, last.x + value_border + value_width, last.y + value_border + value_height);
+    wxRect value_rect(last.x - value_border_w, last.y - value_border_h, last.x + value_border_w + value_width, last.y + value_border_h + value_height);
     if (value_rect.Contains(evt.GetPosition()))
        Select(row * cols + col);
     else
@@ -313,16 +316,63 @@ void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg, const char *v
     {
         dc->SetPen(*wxTRANSPARENT_PEN);
         dc->SetBrush(*bg);
-        dc->DrawRectangle(point.x - value_border / 2, point.y + value_border / 2, value_width + value_border * 2, value_height + value_border * 2);
+        dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
+    }
+    else if (Breakpoint *bpt = Breakpoint::Find(offset + pos))
+    {
+        dc->SetPen(*wxTRANSPARENT_PEN);
+        int type = bpt->GetType(), count = 0;
+        if (!bpt->IsEnabled())
+        {
+            dc->SetBrush(g_brush_disabled);
+            dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
+        }
+        else if (type == BREAK_TYPE_ALL) // A special case to keep the color order always as exec-read-write
+        {
+            dc->SetBrush(g_brush_execute);
+            dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
+            dc->SetBrush(g_brush_write);
+            dc->DrawRectangle(point.x + value_width / 2, point.y + value_border_h / 2, (value_width + value_border_w) / 2, value_height + value_border_h);
+            dc->SetBrush(g_brush_read);
+            dc->DrawRectangle(point.x + (value_width + value_border_w) / 4, point.y + value_border_h / 2, // Yeah, / 4. It just works better..
+                               (value_width + value_border_w) / 3, value_height + value_border_h);
+        }
+        else
+        {
+            if (type & BREAK_TYPE_EXECUTE)
+            {
+                dc->SetBrush(g_brush_execute);
+                dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
+                count++;
+            }
+            if (type & BREAK_TYPE_READ)
+            {
+                dc->SetBrush(g_brush_read);
+                if (!count)
+                    dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
+                else
+                    dc->DrawRectangle(point.x + value_width / 2, point.y + value_border_h / 2,
+                                      (value_width + value_border_w) / 2, value_height + value_border_h);
+                count++;
+            }
+            if (type & BREAK_TYPE_WRITE)
+            {
+                dc->SetBrush(g_brush_write);
+                if (!count)
+                    dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
+                else
+                    dc->DrawRectangle(point.x + value_width / 2, point.y + value_border_h / 2,
+                                      (value_width + value_border_w) / 2, value_height + value_border_h);
+            }
+        }
     }
     char buf[4];
     if (!value)
     {
         sprintf(buf, "%02X", data[pos]);
-        dc->DrawText(buf, point);
+        value = buf;
     }
-    else
-        dc->DrawText(value, point);
+    dc->DrawText(value, point);
 }
 
 void MemoryWindow::RenderValues(wxDC *dc)
@@ -330,7 +380,7 @@ void MemoryWindow::RenderValues(wxDC *dc)
     dc->SetPen(*wxTRANSPARENT_PEN);
     dc->SetBrush(*wxWHITE_BRUSH);
     wxPoint last = GetValuePosition(display_size - 1);
-    dc->DrawRectangle(data_start_x - value_border / 2, data_start_y, last.x + value_border * 2 + value_width, last.y + value_border + value_height);
+    dc->DrawRectangle(data_start_x - value_border_w / 2, data_start_y - value_border_h / 2, last.x + value_border_w * 2 + value_width, last.y + value_border_h + value_height);
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
