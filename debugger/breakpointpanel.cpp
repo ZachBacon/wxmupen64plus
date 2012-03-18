@@ -158,6 +158,8 @@ BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(par
 
     list->Bind(wxEVT_RIGHT_UP, &BreakpointPanel::RClickMenu, this);
     list->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &BreakpointPanel::RClickItem, this);
+
+    CreateList();
 }
 
 BreakpointPanel::~BreakpointPanel()
