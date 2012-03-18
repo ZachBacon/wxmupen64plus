@@ -650,9 +650,9 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
         out.country = getCountryName(countrycode);
         
         if (header.init_PI_BSB_DOM1_LAT_REG == 128 and
-             header.init_PI_BSB_DOM1_PGS_REG == 55 and
-             header.init_PI_BSB_DOM1_PWD_REG == 18 and
-             header.init_PI_BSB_DOM1_PGS_REG2 == 64)
+            header.init_PI_BSB_DOM1_PGS_REG == 55 and
+            header.init_PI_BSB_DOM1_PWD_REG == 18 and
+            header.init_PI_BSB_DOM1_PGS_REG2 == 64)
         {
              out.name = header.Name;
         }

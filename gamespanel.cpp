@@ -44,6 +44,7 @@
 #include <wx/frame.h>
 #include <wx/glcanvas.h>
 #include <wx/display.h>
+#include <wx/dataview.h>
 
 #include <stdexcept>
 #include <map>
@@ -191,7 +192,6 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     m_item_list = new wxDataViewListCtrl(m_center_panel, wxID_ANY);
     m_list_sizer->Add(m_item_list, 1, wxALL | wxEXPAND, 5);
     
-    
     wxArrayString columns;              std::vector<int> sizes;
     columns.Add( _("File Name") );      sizes.push_back( 380 );
     columns.Add( _("Internal Name") );  sizes.push_back( 250 );
@@ -204,7 +204,6 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
                                   sizes[n], wxALIGN_LEFT,
                                   wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE ));
     }
-    
     
     populateList();
     
@@ -224,11 +223,6 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
                            wxCommandEventHandler(GamesPanel::onStop), NULL, this);
     m_pause_button->Disable();
     m_stop_button->Disable();
-    
-    /*
-    m_item_list->Connect(m_item_list->GetId(), wxEVT_COMMAND_LIST_COL_CLICK,
-                         wxListEventHandler(GamesPanel::onColClick), NULL, this);
-    */
     
     Connect(wxID_ANY, wxMUPEN_STATE_CHANGE,
             wxCommandEventHandler(GamesPanel::onMupenStateChangeEvt), NULL, this);
@@ -261,62 +255,37 @@ void GamesPanel::populateList()
     {
         RomInfo& curritem = m_roms[n];
         
-        /*
-        wxListItem item;
-        item.SetId(n);
-        item.SetText( curritem.m_file_name );
-        */
         Mupen64PlusPlus::RomInfo info;
         
-        //long id = m_item_list->InsertItem( item );
-        
-        //if (id != -1)
+
+        std::map<wxString, Mupen64PlusPlus::RomInfo>::iterator elem = g_cache.find(curritem.m_full_path);
+        if (elem != g_cache.end())
         {
-            std::map<wxString, Mupen64PlusPlus::RomInfo>::iterator elem = g_cache.find(curritem.m_full_path);
-            if (elem != g_cache.end())
-            {
-                // Element found in cache, great
-                info = g_cache[curritem.m_full_path];
-            }
-            else
-            {
-                try
-                {
-                    info = m_api->getRomInfo(curritem.m_full_path.utf8_str());
-                }
-                catch (std::runtime_error& ex)
-                {
-                    mplog_error("GamesPanel", "Failed to load rom %s : %s",
-                                (const char*)curritem.m_full_path.utf8_str(),
-                                ex.what());
-                }
-            }
-            
-            curritem.m_country = info.country;
-            curritem.m_internal_name = info.name;
-        
-        /*
-            // set value in first column
-            m_item_list->SetItem(id, COLUMN_FILE, curritem.m_file_name);
-            
-            // set value in second column
-            m_item_list->SetItem(id, COLUMN_NAME, info.name);
-            
-            // set value in third column
-            //m_item_list->SetItem(id, 2, info.goodname);
-            
-            // set value in fourth column
-            m_item_list->SetItem(id, COLUMN_COUNTRY, info.country);
-            
-            m_item_list->SetItemData(id, id);
-            */
-            
-            wxVector< wxVariant > values;
-            values.push_back( wxVariant(curritem.m_file_name) );
-            values.push_back( wxVariant(curritem.m_internal_name) );
-            values.push_back( wxVariant(curritem.m_country) );
-            m_item_list->AppendItem(values);
+            // Element found in cache, great
+            info = g_cache[curritem.m_full_path];
         }
+        else
+        {
+            try
+            {
+                info = m_api->getRomInfo(curritem.m_full_path.utf8_str());
+            }
+            catch (std::runtime_error& ex)
+            {
+                mplog_error("GamesPanel", "Failed to load rom %s : %s",
+                            (const char*)curritem.m_full_path.utf8_str(),
+                            ex.what());
+            }
+        }
+        
+        curritem.m_country = info.country;
+        curritem.m_internal_name = info.name;
+        
+        wxVector< wxVariant > values;
+        values.push_back( wxVariant(curritem.m_file_name) );
+        values.push_back( wxVariant(curritem.m_internal_name) );
+        values.push_back( wxVariant(curritem.m_country) );
+        m_item_list->AppendItem(values);
     } // end for
     
     //m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
@@ -381,18 +350,6 @@ void GamesPanel::cleanGLCanvas()
     }
     Refresh();
 }
-
-// -----------------------------------------------------------------------------------------------------------
-#if 0
-void GamesPanel::onColClick(wxListEvent& evt)
-{
-    if (m_curr_col != evt.GetColumn())
-    {
-        m_curr_col = evt.GetColumn();
-        m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
-    }  
-}
-#endif
 
 // -----------------------------------------------------------------------------------------------------------
 

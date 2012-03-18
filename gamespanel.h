@@ -111,7 +111,6 @@ public:
     void onPlay(wxCommandEvent& evt);
     void onPause(wxCommandEvent& evt);
     void onStop(wxCommandEvent& evt);
-    //void onColClick(wxListEvent& evt);
     void wanderingFocus(wxFocusEvent& evt);
 	
     void loadRom(wxString name, wxString pathAndFile);
