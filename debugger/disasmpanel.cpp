@@ -324,7 +324,7 @@ void DisasmWindow::Render(bool same_address)
         uint32_t current_address = address + i * 4;
         bool current_line_selected = false;//, current_line_breakpoint = false;
         char buf[16];
-        sprintf(buf, "%X", current_address);
+        sprintf(buf, "%08X", current_address);
         Breakpoint *bpt = Breakpoint::Find(current_address);
         if (current_address == pc)
         {
