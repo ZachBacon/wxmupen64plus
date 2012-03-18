@@ -16,7 +16,12 @@ class BreakpointPanel : public DebugPanel
         void RClickMenu(wxMouseEvent &evt);
         void RClickItem(wxListEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
+
     private:
+        void CreateList();
+        void UpdateValues();
+        void GenerateFilterMenu(wxMenu *menu);
+        int filter;
         int current_item;
         wxListCtrl *list;
 };

@@ -12,6 +12,13 @@
 #include "breakpoint.h"
 #include "../mupen64plusplus/MupenAPI.h"
 
+#define BREAK_FILTER_DISABLED 0x1
+#define BREAK_FILTER_ENABLED 0x2
+#define BREAK_FILTER_EXEC 0x4
+#define BREAK_FILTER_READ 0x8
+#define BREAK_FILTER_WRITE 0x10
+#define BREAK_FILTER_ALL 0x1f
+
 enum
 {
     break_add = 2,
@@ -19,7 +26,12 @@ enum
     break_disable,
     break_enable,
     break_edit,
-    break_last,
+    break_f_disabled,
+    break_f_enabled,
+    break_f_exec,
+    break_f_read,
+    break_f_write,
+    break_last
 };
 
 
@@ -132,6 +144,8 @@ class BreakpointDialog : public wxDialog
 
 BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
+    filter = BREAK_FILTER_ALL;
+
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     list = new wxListCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_VRULES);
     sizer->Add(list, 1, wxEXPAND);
@@ -151,37 +165,60 @@ BreakpointPanel::~BreakpointPanel()
 
 }
 
-void BreakpointPanel::Update(bool vi)
+void BreakpointPanel::CreateList()
 {
-    if (Breakpoint::IsChanged())
+    const std::unordered_set<Breakpoint *> *breakpoints = Breakpoint::GetAllBreakpoints();
+    if (!breakpoints)
+        return;
+    list->DeleteAllItems();
+    int i = 0;
+    for (auto it = breakpoints->begin(); it != breakpoints->end(); it++, i++)
     {
-        const std::unordered_set<Breakpoint *> *breakpoints = Breakpoint::GetAllBreakpoints();
-        if (!breakpoints)
-            return;
-        list->DeleteAllItems();
-        int i = 0;
-        for (auto it = breakpoints->begin(); it != breakpoints->end(); it++, i++)
-        {
-            Breakpoint *bpt = *it;
-            wxListItem item;
-            item.SetId(i);
-            item.SetText(bpt->GetName());
-            item.SetData(bpt);
-            long id = list->InsertItem(item);
+        Breakpoint *bpt = *it;
+        bool enabled = bpt->IsEnabled(), passfilter = false;
+        int type = bpt->GetType();
+        if ((!enabled && !(filter & BREAK_FILTER_DISABLED)) || (enabled && !(filter & BREAK_FILTER_ENABLED)))
+            continue;
+        if ((type & BREAK_TYPE_EXECUTE) && (filter & BREAK_FILTER_EXEC))
+            passfilter = true;
+        if ((type & BREAK_TYPE_READ) && (filter & BREAK_FILTER_READ))
+            passfilter = true;
+        if ((type & BREAK_TYPE_WRITE) && (filter & BREAK_FILTER_WRITE))
+            passfilter = true;
+        if (!passfilter)
+            continue;
 
-            list->SetItem(id, 0, bpt->GetName());
-            list->SetItem(id, 1, wxString::Format("%08X:%X", bpt->GetAddress(), bpt->GetLength()));
-            if (bpt->IsEnabled())
-                list->SetItem(id, 3, _("Enabled"));
-            else
-                list->SetItem(id, 3, _("Disabled"));
-        }
+        wxListItem item;
+        item.SetId(i);
+        item.SetText(bpt->GetName());
+        item.SetData(bpt);
+        long id = list->InsertItem(item);
+
+        list->SetItem(id, 0, bpt->GetName());
+        list->SetItem(id, 1, wxString::Format("%08X:%X", bpt->GetAddress(), bpt->GetLength()));
+        if (bpt->IsEnabled())
+            list->SetItem(id, 3, _("Enabled"));
+        else
+            list->SetItem(id, 3, _("Disabled"));
     }
+    UpdateValues();
+}
+
+void BreakpointPanel::UpdateValues()
+{
     for (int i = 0; i < list->GetItemCount(); i++)
     {
         const Breakpoint *bpt = (const Breakpoint *)list->GetItemData(i);
         list->SetItem(i, 2, wxString::Format("%08X", MemRead32(bpt->GetAddress())));
     }
+}
+
+void BreakpointPanel::Update(bool vi)
+{
+    if (Breakpoint::IsChanged())
+        CreateList();
+    else
+        UpdateValues();
 }
 
 void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
@@ -288,13 +325,58 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
             parent->RefreshPanels();
         }
         break;
+        case break_f_disabled:
+            filter ^= BREAK_FILTER_DISABLED;
+            CreateList();
+        break;
+        case break_f_enabled:
+            filter ^= BREAK_FILTER_ENABLED;
+            CreateList();
+        break;
+        case break_f_exec:
+            filter ^= BREAK_FILTER_EXEC;
+            CreateList();
+        break;
+        case break_f_read:
+            filter ^= BREAK_FILTER_READ;
+            CreateList();
+        break;
+        case break_f_write:
+            filter ^= BREAK_FILTER_WRITE;
+            CreateList();
+        break;
     }
+}
+
+void BreakpointPanel::GenerateFilterMenu(wxMenu *menu)
+{
+    wxMenuItem *f_disabled, *f_enabled, *f_exec, *f_read, *f_write;
+
+    f_disabled = new wxMenuItem(menu, break_f_disabled, _("Disabled"), wxEmptyString, wxITEM_CHECK);
+    menu->Append(f_disabled);
+    f_disabled->Check(filter & BREAK_FILTER_DISABLED);
+
+    f_enabled = new wxMenuItem(menu, break_f_enabled, _("Enabled"), wxEmptyString, wxITEM_CHECK);
+    menu->Append(f_enabled);
+    f_enabled->Check(filter & BREAK_FILTER_ENABLED);
+
+    f_exec = new wxMenuItem(menu, break_f_exec, _("Execute"), wxEmptyString, wxITEM_CHECK);
+    menu->Append(f_exec);
+    f_exec->Check(filter & BREAK_FILTER_EXEC);
+
+    f_read = new wxMenuItem(menu, break_f_read, _("Read"), wxEmptyString, wxITEM_CHECK);
+    menu->Append(f_read);
+    f_read->Check(filter & BREAK_FILTER_READ);
+
+    f_write = new wxMenuItem(menu, break_f_write, _("Write"), wxEmptyString, wxITEM_CHECK);
+    menu->Append(f_write);
+    f_write->Check(filter & BREAK_FILTER_WRITE);
 }
 
 void BreakpointPanel::RClickItem(wxListEvent &evt)
 {
-    wxMenu menu;
-    wxMenuItem *add, *edit, *remove, *disable, *enable;
+    wxMenu menu, filter;
+    wxMenuItem *add, *edit, *remove, *disable, *enable, *separator;
     add = new wxMenuItem(&menu, break_add, _("New.."));
     menu.Append(add);
     if (list->GetSelectedItemCount() == 1)
@@ -309,6 +391,12 @@ void BreakpointPanel::RClickItem(wxListEvent &evt)
     remove = new wxMenuItem(&menu, break_delete, _("Delete"));
     menu.Append(remove);
 
+    separator = new wxMenuItem(&menu);
+    menu.Append(separator);
+
+    GenerateFilterMenu(&filter);
+    menu.AppendSubMenu(&filter, _("Show"));
+
     menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &BreakpointPanel::RClickEvent, this, break_add, break_last - 1);
 
     PopupMenu(&menu);
@@ -316,10 +404,15 @@ void BreakpointPanel::RClickItem(wxListEvent &evt)
 
 void BreakpointPanel::RClickMenu(wxMouseEvent &evt)
 {
-    wxMenu menu;
-    wxMenuItem *add;
+    wxMenu menu, filter;
+    wxMenuItem *add, *separator;
     add = new wxMenuItem(&menu, break_add, _("New.."));
     menu.Append(add);
+    separator = new wxMenuItem(&menu);
+    menu.Append(separator);
+
+    GenerateFilterMenu(&filter);
+    menu.AppendSubMenu(&filter, _("Show"));
 
     menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &BreakpointPanel::RClickEvent, this, break_add, break_last - 1);
 
