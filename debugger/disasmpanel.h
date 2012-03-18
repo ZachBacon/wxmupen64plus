@@ -58,7 +58,9 @@ class DisasmWindow : public wxWindow
         void Resize(wxSizeEvent &evt);
         void Render(bool same_address = false);
         void Paint(wxPaintEvent &evt);
+        void MouseClick(wxMouseEvent &evt);
 
+        void Select(uint32_t address, bool add);
         void Goto(uint32_t addr);
         void SetPc(uint32_t pc_) { pc = pc_; }
 
@@ -69,6 +71,8 @@ class DisasmWindow : public wxWindow
         uint32_t address;
         uint32_t pc;
         uint32_t drawn_pc;
+        uint32_t select_start;
+        uint32_t select_end;
         int lines;
         const char **data;
 

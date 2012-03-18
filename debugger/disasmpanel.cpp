@@ -222,14 +222,43 @@ DisasmWindow::DisasmWindow(DisasmPanel *parent_, int id) : wxWindow(parent_, id,
     address = 0;
     pc = 0x1; // Misaligned, so it won't be drawn
     drawn_pc = 0x1;
+    select_start = 0x1;
+    select_end = 0x1;
 
     Bind(wxEVT_SIZE, &DisasmWindow::Resize, this);
     Bind(wxEVT_PAINT, &DisasmWindow::Paint, this);
+    Bind(wxEVT_LEFT_DOWN, &DisasmWindow::MouseClick, this);
 }
 
 DisasmWindow::~DisasmWindow()
 {
     delete render_buffer;
+}
+
+void DisasmWindow::Select(uint32_t address, bool add)
+{
+    if (!add)
+    {
+        select_start = address;
+        select_end = address;
+    }
+    else
+    {
+        if (address < select_start)
+            select_start = address;
+        else
+            select_end = address;
+    }
+    Render();
+}
+
+void DisasmWindow::MouseClick(wxMouseEvent &evt)
+{
+    wxPoint pos = evt.GetPosition();
+    if (pos.y < line_start_y)
+        return;
+    int row = (pos.y - line_start_y) / line_height;
+    Select(address + row * 4, wxGetKeyState(WXK_SHIFT));
 }
 
 void DisasmWindow::Goto(uint32_t addr)
@@ -277,21 +306,30 @@ void DisasmWindow::Render(bool same_address)
     else
         dc.DrawRectangle(opcode_start_x, line_start_y, comment_start_x - opcode_start_x, line_height * lines);
 
+    dc.SetTextForeground(g_color_text_default);
     for (int i = 0; i < lines; i++)
     {
+        uint32_t current_address = address + i * 4;
+        bool current_line_selected = false, current_line_breakpoint = false;
         char buf[16];
-        sprintf(buf, "%X", address + i * 4);
-        Breakpoint *bpt = Breakpoint::Find(address + i *4);
-        if (address + i * 4 == pc)
+        sprintf(buf, "%X", current_address);
+        Breakpoint *bpt = Breakpoint::Find(current_address);
+        if (current_address == pc)
         {
-
             dc.SetBrush(*wxCYAN_BRUSH);
             dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
             dc.SetBrush(bg);
         }
+        else if (current_address >= select_start && current_address <= select_end)
+        {
+            dc.SetBrush(g_brush_selected);
+            dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
+            dc.SetBrush(bg);
+            current_line_selected = true;
+        }
         else
         {
-            if (!same_address || address + i * 4 == drawn_pc)
+            if (!same_address || current_address == drawn_pc)
                 dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
         }
         if (bpt)
@@ -301,10 +339,15 @@ void DisasmWindow::Render(bool same_address)
                 dc.SetBrush(g_brush_execute);
                 dc.DrawRectangle(0, line_start_y + i * line_height + 2, address_width, line_height);
                 dc.SetBrush(bg);
+                current_line_breakpoint = true;
             }
         }
+        if (current_line_selected) // I'm not sure what looks better, having always same text on break color or having it change if line is selected
+            dc.SetTextForeground(g_color_text_selected); // Also not sure about the pc line color
         dc.DrawText(buf, address_start_x, line_start_y + i * line_height);
         dc.DrawText(data[i], opcode_start_x, line_start_y + i * line_height);
+        if (current_line_selected)
+            dc.SetTextForeground(g_color_text_default);
     }
     drawn_pc = pc;
     dc.SelectObject(wxNullBitmap);
