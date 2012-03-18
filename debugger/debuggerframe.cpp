@@ -324,8 +324,6 @@ void DebuggerFrame::PaneTitleEvent(wxCommandEvent &evt)
     if (evt.GetId() == pane_rename_id)
     {
         wxAuiPaneInfo &info = aui->GetPane(selectedpane);
-        if(info.IsOk())
-            Print("ok");
         SimpleTextEntryDialog dlg(this, -1, _("Rename"), info.caption);
         if (dlg.ShowModal() == wxID_OK)
         {
