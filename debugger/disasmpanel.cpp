@@ -237,7 +237,7 @@ DisasmWindow::~DisasmWindow()
 
 void DisasmWindow::Select(uint32_t address, bool add)
 {
-    if (!add)
+    if (!add || select_start == 0x1)
     {
         select_start = address;
         select_end = address;
@@ -248,6 +248,18 @@ void DisasmWindow::Select(uint32_t address, bool add)
             select_start = address;
         else
             select_end = address;
+    }
+    if (!MemIsValid(select_start) && !MemIsValid(select_end))
+    {
+        select_start = 0x1;
+        select_end = 0x1;
+    }
+    else
+    {
+        while (!MemIsValid(select_start))
+            select_start += 4;
+        while (!MemIsValid(select_end))
+            select_end -= 4;
     }
     Render();
 }
@@ -310,7 +322,7 @@ void DisasmWindow::Render(bool same_address)
     for (int i = 0; i < lines; i++)
     {
         uint32_t current_address = address + i * 4;
-        bool current_line_selected = false, current_line_breakpoint = false;
+        bool current_line_selected = false;//, current_line_breakpoint = false;
         char buf[16];
         sprintf(buf, "%X", current_address);
         Breakpoint *bpt = Breakpoint::Find(current_address);
@@ -339,7 +351,7 @@ void DisasmWindow::Render(bool same_address)
                 dc.SetBrush(g_brush_execute);
                 dc.DrawRectangle(0, line_start_y + i * line_height + 2, address_width, line_height);
                 dc.SetBrush(bg);
-                current_line_breakpoint = true;
+                //current_line_breakpoint = true;
             }
         }
         if (current_line_selected) // I'm not sure what looks better, having always same text on break color or having it change if line is selected
