@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=wxMupen64Plus Combo
-AppVerName=wxMupen64Plus 0.2 (Combo)
-VersionInfoVersion=0.2
+AppVerName=wxMupen64Plus 0.3 (Combo)
+VersionInfoVersion=0.3
 AppPublisher=
 AppPublisherURL=https://bitbucket.org/auria/wxmupen64plus
 AppSupportURL=
@@ -20,7 +20,7 @@ WindowVisible=no
 AppCopyright=Copyright Auria
 OutputBaseFilename=wxMupen64PlusSetup
 UninstallDisplayIcon={app}\wxmupen64plus.exe
-LicenseFile=WinRuntime\License.txt
+LicenseFile=License.txt
 DisableStartupPrompt=yes
 ChangesAssociations=yes
 
@@ -30,7 +30,15 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "WinRuntime\*"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.bmp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.ttf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.ini"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.cht"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\*.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\wxMupen64Plus"; Filename: "{app}\wxmupen64plus.exe"
