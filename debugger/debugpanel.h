@@ -13,7 +13,6 @@ class DebugPanel : public wxPanel
         virtual ~DebugPanel();
 
         virtual void Update(bool vi) {}
-        void Rename(wxCommandEvent &evt);
         void Print(wxString &msg);
 
     protected:

@@ -2,7 +2,11 @@
 
 #include <wx/menu.h>
 #include <wx/panel.h>
+#include <wx/dialog.h>
+#include <wx/textctrl.h>
+#include <wx/button.h>
 #include <stdexcept>
+
 
 #include "breakpointpanel.h"
 #include "disasmpanel.h"
@@ -16,6 +20,7 @@ extern ptr_ConfigOpenSection PtrConfigOpenSection; // lazy
 
 DebuggerFrame *DebuggerFrame::g_debugger = 0;
 m64p_handle DebuggerFrame::debugger_config = 0;
+wxPoint DebuggerFrame::g_aui_pos = wxDefaultPosition;
 
 enum
 {
@@ -41,7 +46,54 @@ enum
     last_state_id,
     run_on_boot_opt_id,
     runtime_update_opt_id,
-    last_opt_id
+    last_opt_id,
+    pane_rename_id,
+};
+
+
+class SimpleTextEntryDialog : public wxDialog
+{
+    public:
+        SimpleTextEntryDialog(wxWindow *parent, int id, const wxString &title, const wxString &defaultvalue) : wxDialog(parent, id, title)
+        {
+            wxPanel *panel = new wxPanel(this, -1), *buttonpanel = new wxPanel(panel, -1);
+            wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL), *btnsizer = new wxBoxSizer(wxHORIZONTAL);
+            value = new wxTextCtrl(panel, -1, defaultvalue, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+            wxButton *ok = new wxButton(buttonpanel, wxID_OK, _("Ok"));
+            wxButton *cancel = new wxButton(buttonpanel, wxID_CANCEL, _("Cancel"));
+
+            sizer->Add(value, 0, wxEXPAND | wxALL, 3);
+            sizer->Add(buttonpanel);
+            btnsizer->Add(ok, 0, wxEXPAND | wxLEFT | wxBOTTOM | wxRIGHT, 3);
+            btnsizer->Add(cancel, 0, wxEXPAND | wxBOTTOM | wxRIGHT, 3);
+
+            panel->SetSizer(sizer);
+            buttonpanel->SetSizer(btnsizer);
+            wxSize fittingsize = sizer->ComputeFittingWindowSize(this);
+            value->SetSize(fittingsize.x - 6, -1); // This prevents bug with SelectAll scrolling unnecessarily
+            value->SelectAll();
+            value->SetFocus();
+            SetSize(fittingsize);
+
+            value->Bind(wxEVT_CHAR, &SimpleTextEntryDialog::Ok, this);
+        }
+        void Ok(wxKeyEvent &evt)
+        {
+            int key = evt.GetKeyCode();
+            if (key == WXK_RETURN || key == WXK_NUMPAD_ENTER)
+                EndModal(wxID_OK);
+            else
+                evt.Skip();
+        }
+        wxString GetValue()
+        {
+            return value->GetValue();
+        }
+        ~SimpleTextEntryDialog()
+        {
+        }
+    private:
+        wxTextCtrl *value;
 };
 
 DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, id, _("Debugger"))
@@ -66,6 +118,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuState, this, state_run_id, last_state_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuOption, this, run_on_boot_opt_id, last_opt_id - 1);
     Bind(wxMUPEN_DEBUG_EVENT, wxCommandEventHandler(DebuggerFrame::ProcessCallback), this, 1, 3);
+    Bind(wxEVT_RIGHT_UP, &DebuggerFrame::PaneTitleRClick, this);
 }
 
 void DebuggerFrame::Delete()
@@ -150,6 +203,20 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_)
 {
     wxString perspective = perspective_;
     aui = new wxAuiManager(this);
+
+    // I couldn't figure out a better way to do this
+    // Maybe this should've just been hardcoded
+    if (!g_aui_pos.IsFullySpecified())
+    {
+        wxPanel testpanel(this, -1);
+        aui->AddPane(&testpanel, wxTOP);
+        aui->Update();
+        wxAuiPaneInfo &info = aui->GetPane(&testpanel);
+        g_aui_pos.x = info.rect.x;
+        g_aui_pos.y = info.rect.y;
+        aui->DetachPane(&testpanel);
+    }
+
     size_t pos = perspective.find("name=", 0), name_end, id_end;
     int id;
     wxString name;
@@ -216,6 +283,57 @@ void DebuggerFrame::MenuAddPanel(wxCommandEvent &evt)
     aui->Update();
 }
 
+DebugPanel *DebuggerFrame::PaneTitleHitTest(const wxPoint &pos)
+{
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    uint32_t count = panes.GetCount();
+    for (uint32_t i = 0; i < count; i++)
+    {
+        wxAuiPaneInfo &info = panes.Item(i);
+        if (info.IsFloating())
+            continue;
+        wxRect panetitle_rect, pane_rect = info.rect;
+        panetitle_rect = pane_rect;
+        panetitle_rect.x = pane_rect.x - g_aui_pos.x;
+        panetitle_rect.y = pane_rect.y - g_aui_pos.y;
+        panetitle_rect.width = pane_rect.width + g_aui_pos.x * 2;
+        panetitle_rect.height = g_aui_pos.y;
+        if (panetitle_rect.Contains(pos))
+            return (DebugPanel *)info.window;
+    }
+    return 0;
+}
+
+void DebuggerFrame::PaneTitleRClick(wxMouseEvent &evt)
+{
+    selectedpane = PaneTitleHitTest(evt.GetPosition());
+    if (!selectedpane)
+        return;
+
+    wxMenu menu;
+    wxMenuItem *rename;
+    rename = new wxMenuItem(&menu, pane_rename_id, _("Rename.."));
+    menu.Append(rename);
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::PaneTitleEvent, this);
+    PopupMenu(&menu);
+}
+
+
+void DebuggerFrame::PaneTitleEvent(wxCommandEvent &evt)
+{
+    if (evt.GetId() == pane_rename_id)
+    {
+        wxAuiPaneInfo &info = aui->GetPane(selectedpane);
+        if(info.IsOk())
+            Print("ok");
+        SimpleTextEntryDialog dlg(this, -1, _("Rename"), info.caption);
+        if (dlg.ShowModal() == wxID_OK)
+        {
+            info.Caption(dlg.GetValue());
+            aui->Update();
+        }
+    }
+}
 
 void DebuggerFrame::SaveConfig()
 {
@@ -437,7 +555,6 @@ Breakpoint *DebuggerFrame::FindBreakpoint(wxString name)
     return 0;
 }
 
-
 void DebuggerFrame::Run()
 {
     run->Check(true);
@@ -462,7 +579,6 @@ void DebuggerFrame::ViBreak()
     vi_break = true;
     Run();
 }
-
 
 void DebuggerFrame::ConsoleClosed(DebugConsole *console)
 {

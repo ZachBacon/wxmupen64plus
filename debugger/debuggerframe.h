@@ -30,6 +30,8 @@ class DebuggerFrame : public wxFrame
         void MenuAddPanel(wxCommandEvent &evt);
         void MenuState(wxCommandEvent &evt);
         void MenuOption(wxCommandEvent &evt);
+        void PaneTitleRClick(wxMouseEvent &evt);
+        void PaneTitleEvent(wxCommandEvent &evt);
 
         void ConsoleClosed(DebugConsole *console);
 
@@ -64,6 +66,8 @@ class DebuggerFrame : public wxFrame
         static DebuggerFrame *g_debugger;
         static m64p_handle debugger_config;
 
+        static wxPoint g_aui_pos;
+
         int next_id;
 
         DebugPanel *AddPanel(int type, wxString &name, int id = 0);
@@ -74,6 +78,9 @@ class DebuggerFrame : public wxFrame
         bool running;
         uint32_t pc;
         void UpdatePanels(bool vi = false);
+
+        DebugPanel *PaneTitleHitTest(const wxPoint &pos);
+        DebugPanel *selectedpane;
 
         void CreateMenubar();
         wxMenuItem *run;

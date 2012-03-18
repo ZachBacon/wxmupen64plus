@@ -12,11 +12,6 @@ DebugPanel::~DebugPanel()
 {
 }
 
-void DebugPanel::Rename(wxCommandEvent &evt)
-{
-
-}
-
 void DebugPanel::Print(wxString &msg)
 {
     if (output)
