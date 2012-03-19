@@ -200,9 +200,11 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     const int count = columns.Count();
     for (int n=0; n<count; n++)
     {
-        m_item_list->AppendColumn(new wxDataViewColumn(columns[n], new wxDataViewTextRenderer(), n,
-                                  sizes[n], wxALIGN_LEFT,
-                                  wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE ));
+        wxDataViewColumn* col = new wxDataViewColumn(columns[n], new wxDataViewTextRenderer(), n,
+                                   sizes[n], wxALIGN_LEFT,
+                                   wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
+        m_item_list->AppendColumn(col);
+        if (n == 0) col->SetSortOrder(true); // select column 0 by default
     }
     
     populateList();
