@@ -969,9 +969,23 @@ unsigned char MemRead8(unsigned int address)
 
 // -----------------------------------------------------------------------------------------------------------
 
+unsigned short MemRead16(unsigned int address)
+{
+    return (*DebugMemRead16)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 unsigned int MemRead32(unsigned int address)
 {
     return (*DebugMemRead32)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned long long MemRead64(unsigned int address)
+{
+    return (*DebugMemRead64)(address);
 }
 
 // -----------------------------------------------------------------------------------------------------------

@@ -211,7 +211,26 @@ void BreakpointPanel::UpdateValues()
     for (int i = 0; i < list->GetItemCount(); i++)
     {
         const Breakpoint *bpt = (const Breakpoint *)list->GetItemData(i);
-        list->SetItem(i, 2, wxString::Format("%08X", MemRead32(bpt->GetAddress())));
+        switch (bpt->GetLength())
+        {
+            case 1:
+                list->SetItem(i, 2, wxString::Format("%02X", MemRead8(bpt->GetAddress())));
+            break;
+            case 2:
+                list->SetItem(i, 2, wxString::Format("%04X", MemRead16(bpt->GetAddress())));
+            break;
+            case 4:
+                list->SetItem(i, 2, wxString::Format("%08X", MemRead32(bpt->GetAddress())));
+            break;
+            case 8:
+            {
+                uint64_t val = MemRead64(bpt->GetAddress());
+                list->SetItem(i, 2, wxString::Format("%08X%08X", val >> 32, val & 0xffffffff));
+            }
+            break;
+            default:
+            break;
+        }
     }
 }
 
