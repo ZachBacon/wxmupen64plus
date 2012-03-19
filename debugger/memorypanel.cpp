@@ -18,14 +18,14 @@
 // These control the drawing of MemoryWindow
 #define offset_start_x 5
 #define offset_start_y 5
-#define data_start_x 70
+#define data_start_x (offset_start_x + g_bold_number_width * 8 + 10)
 #define data_start_y offset_start_y
-#define data_inc_x 16 // Width reserved for 1 byte
-#define data_add_inc_x 6 // Additional spacing after 4 bytes
-#define data_inc_y 12 // Height reserved for 1 byte
+#define data_inc_x (g_number_width * 2 + 4) // Width reserved for 1 byte
+#define data_add_inc_x (g_number_width) // Additional spacing after 4 bytes
+#define data_inc_y (g_normal_height - 1) // Height reserved for 1 byte
 #define data_clip_cols 4 // Should be multiple of 4
-#define value_width 12 // Actual width of 1 byte (about)
-#define value_height 10 // Actual height of 1 byte (about)
+#define value_width (g_number_width * 2) // Actual width of 1 byte (about)
+#define value_height (g_normal_height - 3) // Actual height of 1 byte (about)
 #define value_border_w 4
 #define value_border_h 2
 
@@ -285,7 +285,7 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
 void MemoryWindow::Resize(wxSizeEvent &evt)
 {
     wxSize size = evt.GetSize();
-    int new_cols = (size.GetWidth() - data_start_x) / (data_inc_x * data_clip_cols + data_add_inc_x * data_clip_cols / 4) * data_clip_cols;
+    int new_cols = (size.GetWidth() - data_start_x + data_add_inc_x) / (data_inc_x * data_clip_cols + data_add_inc_x * data_clip_cols / 4) * data_clip_cols;
     int new_rows = (size.GetHeight() - data_start_y) / data_inc_y;
     if (!new_cols)
         return;
@@ -313,7 +313,7 @@ void MemoryWindow::Deselect()
     if (selected != -1)
     {
         wxMemoryDC dc(*render_buffer);
-        dc.SetFont(*wxNORMAL_FONT);
+        dc.SetFont(*g_main_font);
         DrawValue(&dc, selected, wxWHITE_BRUSH);
         wxClientDC clientdc(this);
         DrawValue(&clientdc, selected, wxWHITE_BRUSH);
@@ -565,7 +565,7 @@ void MemoryWindow::Draw()
     // Destruct memorydc before using bitmap :p
     {
         wxMemoryDC dc(*render_buffer);
-        dc.SetFont(*wxNORMAL_FONT);
+        dc.SetFont(*g_main_font);
         Render(&dc);
     }
     wxClientDC client_dc(this);

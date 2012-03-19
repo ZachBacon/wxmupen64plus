@@ -15,6 +15,7 @@
 #include "registerpanel.h"
 #include "../mupen64plusplus/MupenAPI.h"
 #include "breakpoint.h"
+#include "colors.h"
 
 extern ptr_ConfigOpenSection PtrConfigOpenSection; // lazy
 
@@ -108,6 +109,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     vi_count = 0;
 
     SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
+    InitDrawingValues();
     g_debugger = this;
 
     CreateMenubar();

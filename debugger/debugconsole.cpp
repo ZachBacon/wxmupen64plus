@@ -5,6 +5,9 @@
 #include <wx/hashmap.h>
 #include <wx/menu.h>
 
+#include "colors.h"
+#include <wx/dcmemory.h>
+
 #include "../mupen64plusplus/MupenAPI.h"
 
 typedef void(DebugConsole::*CmdFunc)(wxString &);
@@ -27,6 +30,7 @@ Type can be w, r, or x (write, read, execute) or any combination of above." };
 Cmd helpcmd = { &DebugConsole::CmdHelp, "\"h|help|?\" Helps poor people" };
 Cmd vibreakcmd = { &DebugConsole::CmdViBreak, "\"vi|vibreak\" Breaks at the next vertical interrupt. Used mainly for debugging the debugger" };
 Cmd clearcmd = { &DebugConsole::CmdCls, "\"cls|clear\" Clears this output screen" };
+Cmd textcmd = { &DebugConsole::CmdTextDebug, "\"text\" Displays informative information" };
 
 enum
 {
@@ -53,6 +57,7 @@ void DebugConsole::InitCommands()
     (*commands)["vi"] = vibreakcmd;
     (*commands)["cls"] = clearcmd;
     (*commands)["clear"] = clearcmd;
+    (*commands)["text"] = textcmd;
 }
 
 DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_, id)
@@ -75,6 +80,31 @@ DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_,
 DebugConsole::~DebugConsole()
 {
     parent->ConsoleClosed(this);
+}
+
+void DebugConsole::CmdTextDebug(wxString &cmd)
+{
+    // You have to use dc to get this information, right?
+    wxMemoryDC dc;
+    dc.SetFont(*g_main_font);
+
+    const char *arg = cmd.c_str();
+    while (arg[0] != 0 && arg[0] != ' ')
+        arg++;
+    while (arg[0] != 0 && arg[0] == ' ')
+        arg++;
+
+    if (!arg[0])
+    {
+        wxFontMetrics metr = dc.GetFontMetrics();
+        Print(wxString::Format("W: %d, H: %d (W: %d, H: %d) // A: %d D: %d // IL: %d, EL: %d", dc.GetCharWidth(), dc.GetCharHeight(),
+                               metr.averageWidth, metr.height, metr.ascent, metr.descent, metr.internalLeading, metr.externalLeading));
+    }
+    else
+    {
+        wxSize extend = dc.GetTextExtent(arg);
+        Print(wxString::Format("W: %d, H: %d", extend.x, extend.y));
+    }
 }
 
 void DebugConsole::CmdPlay(wxString &cmd)

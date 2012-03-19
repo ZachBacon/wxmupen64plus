@@ -20,10 +20,10 @@
 
 #define line_start_y 1
 #define address_start_x 5
-#define address_width 60
-#define opcode_start_x address_start_x + 70
-#define comment_start_x opcode_start_x + 500
-#define line_height 10
+#define address_width (g_number_width * 8 + 10)
+#define opcode_start_x (address_start_x * 2 + address_width)
+#define comment_start_x (opcode_start_x + 500)
+#define line_height (g_normal_height - 2)
 
 #define scrollbar_size 0x80c // Maybe these could be member vars, changing when resized?
 #define scrollbar_thumb 10 // Though now they have nice 0x4, 0x100 and (almost) 0x1000 scroll steps
@@ -308,7 +308,7 @@ void DisasmWindow::Render(bool same_address)
     wxMemoryDC dc(*render_buffer);
     wxColour bg_colour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 
-    dc.SetFont(*wxNORMAL_FONT);
+    dc.SetFont(*g_main_font);
     dc.SetPen(*wxTRANSPARENT_PEN);
     wxBrush bg(bg_colour);
     dc.SetBackground(bg);

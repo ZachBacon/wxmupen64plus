@@ -17,6 +17,8 @@ class DebugConsole : public DebugPanel
 
         static void InitCommands();
 
+        void CmdTextDebug(wxString &cmd);
+
         void CmdPlay(wxString &cmd);
         void CmdPause(wxString &cmd);
         void CmdStep(wxString &cmd);
