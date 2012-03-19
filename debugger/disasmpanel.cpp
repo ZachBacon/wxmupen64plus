@@ -266,6 +266,7 @@ void DisasmWindow::Select(uint32_t address, bool add)
 
 void DisasmWindow::MouseClick(wxMouseEvent &evt)
 {
+    evt.Skip();
     wxPoint pos = evt.GetPosition();
     if (pos.y < line_start_y)
         return;

@@ -3,7 +3,7 @@
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
-#include <wx/notebook.h>
+#include <wx/aui/auibook.h>
 #include <wx/menu.h>
 
 #include "../mupen64plusplus/MupenAPI.h"
@@ -15,14 +15,11 @@ wxDEFINE_EVENT(REGVAL_CHANGE_EVT, RegChangeEvent);
 
 enum
 {
-    gpr_page = 0,
-    cop0_page,
-    cop1_page
-};
-
-enum
-{
-    menu_reset = 1
+    menu_reset = 1,
+    cop0_togglereserved,
+    cop1_float32,
+    cop1_float64,
+    cop1_raw
 };
 
 const char *gpr_names[] =
@@ -65,8 +62,8 @@ SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, Regis
     else
     {
         value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
-        value->SetSize(150, -1);
-        SetSize(150 + reg_name_len, 28);
+        value->SetSize(120, -1);
+        SetSize(130 + reg_name_len, 28);
     }
     value->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
     value->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
@@ -229,7 +226,7 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
         break;
         case REGISTER_COP1:
             reg_name_len = 20;
-            reg_basewidth = 140;
+            reg_basewidth = 130;
             raw_registers.v = GetRegister(M64P_CPU_REG_COP1_SIMPLE_PTR);
             for (int i = 0; i < 32; i++)
             {
@@ -241,6 +238,7 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
         default:
         break;
     }
+    SetFocus();
 }
 
 void RegisterTab::Update()
@@ -362,18 +360,17 @@ void RegisterTab::ValueChanged(RegChangeEvent &evt)
 RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
-    notebook = new wxNotebook(this, -1);
+    notebook = new wxAuiNotebook(this, -1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
 
     gpr_tab = new RegisterTab(notebook, -1, REGISTER_GPR);
     cop0_tab = new RegisterTab(notebook, -1, REGISTER_COP0);
     cop1_tab = new RegisterTab(notebook, -1, REGISTER_COP1);
 
-    notebook->InsertPage(gpr_page, gpr_tab, _("GPR"));
-    notebook->InsertPage(cop0_page, cop0_tab, _("COP0"));
-    notebook->InsertPage(cop1_page, cop1_tab, _("COP1"));
+    notebook->AddPage(gpr_tab, _("GPR"));
+    notebook->AddPage(cop0_tab, _("COP0"));
+    notebook->AddPage(cop1_tab, _("COP1"));
 
     sizer->Add(notebook, 1, wxEXPAND);
-
     SetSizer(sizer);
 }
 

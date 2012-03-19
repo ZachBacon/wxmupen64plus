@@ -52,7 +52,6 @@ enum
     pane_rename_id,
 };
 
-
 class SimpleTextEntryDialog : public wxDialog
 {
     public:

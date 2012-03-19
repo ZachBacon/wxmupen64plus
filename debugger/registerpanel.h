@@ -6,7 +6,7 @@
 #include <wx/scrolwin.h>
 
 
-class wxNotebook;
+class wxAuiNotebook;
 class wxTextCtrl;
 
 // After four hours of trying to get both sizer and scrolling stuff work with
@@ -109,13 +109,14 @@ class RegisterPanel : public DebugPanel
         virtual ~RegisterPanel();
 
         void Update(bool vi);
+        void SelectNothing(wxCommandEvent &evt);
 
     private:
 
         RegisterTab *gpr_tab;
         RegisterTab *cop0_tab;
         RegisterTab *cop1_tab;
-        wxNotebook *notebook;
+        wxAuiNotebook *notebook;
 };
 
 #endif // REGISTERPANEL_H
