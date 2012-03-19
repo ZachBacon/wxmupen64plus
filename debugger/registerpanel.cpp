@@ -229,7 +229,7 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
         break;
         case REGISTER_COP1:
             reg_name_len = 20;
-            reg_basewidth = 150;
+            reg_basewidth = 140;
             raw_registers.v = GetRegister(M64P_CPU_REG_COP1_SIMPLE_PTR);
             for (int i = 0; i < 32; i++)
             {

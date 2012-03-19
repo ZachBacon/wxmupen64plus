@@ -1,5 +1,6 @@
 #include "debuggerframe.h"
 
+#include <wx/aui/framemanager.h>
 #include <wx/menu.h>
 #include <wx/panel.h>
 #include <wx/dialog.h>
@@ -515,13 +516,9 @@ void DebuggerFrame::MenuOption(wxCommandEvent &evt)
     {
         case run_on_boot_opt_id:
             if (run_on_boot != 0)
-            {
                 run_on_boot = 0;
-            }
             else
-            {
                 run_on_boot = 2;
-            }
         break;
         case runtime_update_opt_id:
             if (runtime_update)
@@ -646,7 +643,7 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
                 run->Check(false);
                 running = false;
                 pc = evt.GetInt();
-                Print(wxString::Format("Paused at %x", pc));
+                Print(wxString::Format("Paused at %08X", pc));
                 UpdatePanels();
                 Raise();
             }

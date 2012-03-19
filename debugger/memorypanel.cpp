@@ -534,7 +534,7 @@ void MemoryWindow::Render(wxDC *dc)
     if (!data)
         return;
 
-    dc->SetTextForeground(*wxBLACK);
+    dc->SetTextForeground(g_color_text_default);
     if (offsets_changed)
     {
         wxFont orig = dc->GetFont();
@@ -547,16 +547,15 @@ void MemoryWindow::Render(wxDC *dc)
 
     if (selected != -1)
     {
-        dc->SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-        wxBrush select_bg(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+        dc->SetTextForeground(g_color_text_selected);
         if (editing)
         {
             char buf[4];
             sprintf(buf, "%X_", new_value);
-            DrawValue(dc, selected, &select_bg, buf);
+            DrawValue(dc, selected, &g_brush_selected, buf);
         }
         else
-            DrawValue(dc, selected, &select_bg);
+            DrawValue(dc, selected, &g_brush_selected);
     }
 }
 

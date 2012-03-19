@@ -2,13 +2,12 @@
 #define DEBUGGERFRAME_H
 
 #include <wx/frame.h>
-#include <wx/aui/framemanager.h>
-#include <set>
 
 #include "main.h"
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_DEBUG_EVENT, -1);
 
+class wxAuiManager;
 class DebugConsole;
 class DebugPanel;
 class Breakpoint;
