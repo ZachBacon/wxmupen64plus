@@ -111,12 +111,21 @@ void DisasmPanel::Update(bool vi)
         code->SetPc(pc);
         sprintf(buf, "%08X", pc);
         pc_display->SetValue(buf);
-        go_address->SetValue(buf);
+        if (go_address->IsEmpty())
+            go_address->SetValue(buf);
 
-//        int diff = (int)(code->GetPos() - address) / 4;
-//        if (abs(diff) > lines / 2)
-//
-//        Goto(pc);
+        int lines = code->GetLines() - 2; // -1 because lines have the partially seen one included, another -1 because magic (bad?)
+        uint32_t current_address = code->GetPos();
+        int diff = (int)(pc - current_address) / 4;
+        if (diff > lines || diff < 0)
+        {
+            if (diff > 2 * lines || diff < 0 - lines * 1) // Center if jumped more than one screen
+                Goto(pc, 0);
+            else if (diff < 0)
+                Goto(pc, 1);
+            else // lines < diff < 2 * lines
+                Goto(current_address + (diff - lines) * 4, 1);
+        }
     }
     else
     {
@@ -129,6 +138,7 @@ void DisasmPanel::Update(bool vi)
 
 void DisasmPanel::Run(wxCommandEvent &evt)
 {
+    code->Deselect();
     parent->Run();
 }
 
@@ -139,6 +149,7 @@ void DisasmPanel::Pause(wxCommandEvent &evt)
 
 void DisasmPanel::Step(wxCommandEvent &evt)
 {
+    code->Deselect();
     parent->Step();
 }
 
