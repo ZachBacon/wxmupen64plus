@@ -47,11 +47,11 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     go_address = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
     go_address->SetMaxLength(10);
     go_address->SetMinSize(wxSize(70, -1));
-    go_button = new wxButton(subpanel, -1, _("Go"));
+    go_button = new wxButton(subpanel, -1, _("Follow"));
     wxStaticText *pc_text = new wxStaticText(subpanel, -1, _("PC"));
     pc_display = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
     pc_display->SetMinSize(wxSize(70, -1));
-    pc_go = new wxButton(subpanel, -1, _("Go to PC"));
+    pc_go = new wxButton(subpanel, -1, _("Follow PC"));
     run = new wxButton(subpanel, -1, _("Run"));
     pause = new wxButton(subpanel, -1, _("Pause"));
     step = new wxButton(subpanel, -1, _("Step"));
