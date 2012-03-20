@@ -37,6 +37,7 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     data_lines = 0;
     data = 0;
     data_strings = 0;
+    scroll_accum_delta = 0;
 
     code = new DisasmWindow(this, -1);
     scrollbar = new wxScrollBar(this, -1, wxDefaultPosition, wxDefaultSize, wxSB_VERTICAL);
@@ -91,6 +92,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     scrollbar->Bind(wxEVT_SCROLL_PAGEUP, &DisasmPanel::Scrolled, this);
     scrollbar->Bind(wxEVT_SCROLL_PAGEDOWN, &DisasmPanel::Scrolled, this);
     scrollbar->Bind(wxEVT_SCROLL_THUMBTRACK, &DisasmPanel::Scrolled, this);
+
+    Bind(wxEVT_MOUSEWHEEL, &DisasmPanel::MouseScroll, this);
 }
 
 DisasmPanel::~DisasmPanel()
@@ -141,19 +144,20 @@ void DisasmPanel::Step(wxCommandEvent &evt)
 
 void DisasmPanel::Goto(wxCommandEvent &evt)
 {
-    Goto(strtoul(go_address->GetValue(), 0, 16));
+    Goto(strtoul(go_address->GetValue(), 0, 16), 1);
+    code->Select(address, false);
 }
 
 void DisasmPanel::GotoPc(wxCommandEvent &evt)
 {
     go_address->SetValue(pc_display->GetValue());
-    Goto(strtoul(pc_display->GetValue(), 0, 16));
+    Goto(strtoul(pc_display->GetValue(), 0, 16), 0);
 }
 
-void DisasmPanel::Goto(uint32_t new_address)
+void DisasmPanel::Goto(uint32_t new_address, int mode)
 {
-    int lines = code->GetLines();
-    new_address -= lines * 2;
+    if (mode == 0)
+        new_address -= code->GetLines() * 2;
     new_address &= 0xfffffffc;
     if (new_address == address)
         return;
@@ -162,19 +166,41 @@ void DisasmPanel::Goto(uint32_t new_address)
     code->Goto(address);
 }
 
+void DisasmPanel::MouseScroll(wxMouseEvent &evt)
+{
+    scroll_accum_delta += evt.GetWheelRotation();
+    int scroll_delta = evt.GetWheelDelta();
+    if (scroll_accum_delta >= scroll_delta)
+    {
+        Scroll(scroll_accum_delta / scroll_delta * -3); // Why these are reverse -.-
+        scroll_accum_delta = scroll_accum_delta % scroll_delta;
+    }
+    else if (scroll_accum_delta <= 0 - scroll_delta)
+    {
+        Scroll(scroll_accum_delta / scroll_delta * -3);
+        scroll_accum_delta = scroll_accum_delta % scroll_delta;
+    }
+}
+
+void DisasmPanel::Scroll(int amt)
+{
+    if (amt > 0 && (uint32_t)(address + amt) < address)
+        Goto(0xfffffffc, 2);
+    else if (amt < 0 && (uint32_t)(address + amt) > address)
+        Goto(0, 1);
+    else
+        Goto(address + amt * 4, 1);
+}
+
+
 void DisasmPanel::Scrolled(wxScrollEvent &evt)
 {
     if (evt.GetEventType() != wxEVT_SCROLL_THUMBRELEASE)
     {
         int pos = evt.GetPosition();
         int line_change = (pos - scroll_thumbpos) * scroll_multiplier;
+        Scroll(line_change);
         scroll_thumbpos = pos;
-        if (line_change > 0 && (uint32_t)(address + line_change) < address)
-            Goto(0 - code->GetLines() * 2);
-        else if (line_change < 0 && (uint32_t)(address + line_change) > address)
-            Goto(0 + code->GetLines() * 2);
-        else
-            Goto(address + line_change * 4 + code->GetLines() * 2);
     }
     if (evt.GetEventType() != wxEVT_SCROLL_THUMBTRACK)
     {
