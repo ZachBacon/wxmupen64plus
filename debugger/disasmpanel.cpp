@@ -105,7 +105,7 @@ void DisasmPanel::Update(bool vi)
         char buf[16];
         int pc = parent->GetPc();
         code->SetPc(pc);
-        sprintf(buf, "%X", pc);
+        sprintf(buf, "%08X", pc);
         pc_display->SetValue(buf);
         go_address->SetValue(buf);
 
@@ -329,7 +329,7 @@ void DisasmWindow::Render(bool same_address)
         Breakpoint *bpt = Breakpoint::Find(current_address);
         if (current_address == pc)
         {
-            dc.SetBrush(*wxCYAN_BRUSH);
+            dc.SetBrush(g_brush_pc);
             dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
             dc.SetBrush(bg);
         }

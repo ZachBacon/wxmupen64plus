@@ -10,6 +10,7 @@ extern wxBrush g_brush_read;
 extern wxBrush g_brush_write;
 extern wxBrush g_brush_disabled;
 extern wxBrush g_brush_selected;
+extern wxBrush g_brush_pc;
 
 extern wxColour g_color_text_selected;
 extern wxColour g_color_text_default;
