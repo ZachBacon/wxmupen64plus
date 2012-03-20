@@ -225,7 +225,7 @@ void BreakpointPanel::UpdateValues()
             case 8:
             {
                 uint64_t val = MemRead64(bpt->GetAddress());
-                list->SetItem(i, 2, wxString::Format("%08X%08X", val >> 32, val & 0xffffffff));
+                list->SetItem(i, 2, wxString::Format("%08X%08X",  (uint32_t)(val >> 32), (uint32_t)(val & 0xffffffff)));
             }
             break;
             default:
@@ -396,7 +396,7 @@ void BreakpointPanel::GenerateFilterMenu(wxMenu *menu)
 
 void BreakpointPanel::RClickItem(wxListEvent &evt)
 {
-    wxMenu menu, filter;
+    wxMenu menu, *filter = new wxMenu;
     wxMenuItem *add, *edit, *remove, *disable, *enable, *separator;
     add = new wxMenuItem(&menu, break_add, _("New.."));
     menu.Append(add);
@@ -415,8 +415,8 @@ void BreakpointPanel::RClickItem(wxListEvent &evt)
     separator = new wxMenuItem(&menu);
     menu.Append(separator);
 
-    GenerateFilterMenu(&filter);
-    menu.AppendSubMenu(&filter, _("Show"));
+    GenerateFilterMenu(filter);
+    menu.AppendSubMenu(filter, _("Show"));
 
     menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &BreakpointPanel::RClickEvent, this, break_add, break_last - 1);
 
@@ -425,15 +425,15 @@ void BreakpointPanel::RClickItem(wxListEvent &evt)
 
 void BreakpointPanel::RClickMenu(wxMouseEvent &evt)
 {
-    wxMenu menu, filter;
+    wxMenu menu, *filter = new wxMenu;
     wxMenuItem *add, *separator;
     add = new wxMenuItem(&menu, break_add, _("New.."));
     menu.Append(add);
     separator = new wxMenuItem(&menu);
     menu.Append(separator);
 
-    GenerateFilterMenu(&filter);
-    menu.AppendSubMenu(&filter, _("Show"));
+    GenerateFilterMenu(filter);
+    menu.AppendSubMenu(filter, _("Show"));
 
     menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &BreakpointPanel::RClickEvent, this, break_add, break_last - 1);
 
