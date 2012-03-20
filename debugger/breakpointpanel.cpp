@@ -206,27 +206,41 @@ void BreakpointPanel::CreateList()
     UpdateValues();
 }
 
+bool BreakpointPanel::HasValueChanged(int item, const uint64_t &new_value)
+{
+    wxString val_string = list->GetItemText(item, 2);
+    if (val_string.empty())
+        return true;
+    return (strtoull(val_string, 0, 16) != new_value);
+}
+
 void BreakpointPanel::UpdateValues()
 {
     for (int i = 0; i < list->GetItemCount(); i++)
     {
+        uint64_t new_value;
         const Breakpoint *bpt = (const Breakpoint *)list->GetItemData(i);
         switch (bpt->GetLength())
         {
             case 1:
-                list->SetItem(i, 2, wxString::Format("%02X", MemRead8(bpt->GetAddress())));
+                new_value = MemRead8(bpt->GetAddress());
+                if (HasValueChanged(i, new_value))
+                    list->SetItem(i, 2, wxString::Format("%02X",  (uint8_t)new_value));
             break;
             case 2:
-                list->SetItem(i, 2, wxString::Format("%04X", MemRead16(bpt->GetAddress())));
+                new_value = MemRead16(bpt->GetAddress());
+                if (HasValueChanged(i, new_value))
+                    list->SetItem(i, 2, wxString::Format("%04X",  (uint16_t)new_value));
             break;
             case 4:
-                list->SetItem(i, 2, wxString::Format("%08X", MemRead32(bpt->GetAddress())));
+                new_value = MemRead32(bpt->GetAddress());
+                if (HasValueChanged(i, new_value))
+                    list->SetItem(i, 2, wxString::Format("%08X", (uint32_t)new_value));
             break;
             case 8:
-            {
-                uint64_t val = MemRead64(bpt->GetAddress());
-                list->SetItem(i, 2, wxString::Format("%08X%08X",  (uint32_t)(val >> 32), (uint32_t)(val & 0xffffffff)));
-            }
+                new_value = MemRead64(bpt->GetAddress());
+                if (HasValueChanged(i, new_value))
+                    list->SetItem(i, 2, wxString::Format("%08X%08X",  (uint32_t)(new_value >> 32), (uint32_t)(new_value & 0xffffffff)));
             break;
             default:
             break;

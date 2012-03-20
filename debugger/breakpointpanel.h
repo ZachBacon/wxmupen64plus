@@ -20,6 +20,7 @@ class BreakpointPanel : public DebugPanel
     private:
         void CreateList();
         void UpdateValues();
+        bool HasValueChanged(int item, const uint64_t &new_value);
         void GenerateFilterMenu(wxMenu *menu);
         int filter;
         int current_item;
