@@ -613,6 +613,15 @@ void DebuggerFrame::RefreshPanels()
         UpdatePanels(false);
 }
 
+wxString DebuggerFrame::GetBreakReason(uint32_t pc)
+{
+    Breakpoint *bpt = Breakpoint::Find(pc);
+    if (bpt && (bpt->GetType() & BREAK_TYPE_EXECUTE))
+        return wxString::Format("Hit breakpoint \"%s\"", bpt->GetName());
+    else
+        return wxString::Format("Paused at %08X", pc);
+}
+
 void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
 {
     switch (evt.GetId())
@@ -642,7 +651,7 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
                 run->Check(false);
                 running = false;
                 pc = evt.GetInt();
-                Print(wxString::Format("Paused at %08X", pc));
+                Print(GetBreakReason(pc));
                 UpdatePanels();
                 Raise();
             }

@@ -65,6 +65,8 @@ class DebuggerFrame : public wxFrame
         static DebuggerFrame *g_debugger;
         static m64p_handle debugger_config;
 
+        wxString GetBreakReason(uint32_t pc);
+
         static wxPoint g_aui_pos;
 
         int next_id;
