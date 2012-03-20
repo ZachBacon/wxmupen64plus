@@ -266,11 +266,11 @@ DisasmWindow::~DisasmWindow()
 
 int DisasmWindow::AddressHitTest(const wxPoint &pos)
 {
-    if (pos.x < address_start_x || pos.x > address_start_x + address_width)
+    if (/*pos.x < address_start_x || */pos.x > address_start_x + address_width)
         return -1;
-    if (pos.y < line_start_y)
+    if (pos.y < line_start_y - 2)
         return -1;
-    return ((pos.y - line_start_y) / line_height);
+    return ((pos.y - line_start_y - 2) / line_height);
 }
 
 void DisasmWindow::Select(uint32_t address, bool add)
@@ -313,12 +313,12 @@ void DisasmWindow::MouseClick(wxMouseEvent &evt)
 {
     evt.Skip();
     wxPoint pos = evt.GetPosition();
-    if (pos.y < line_start_y || pos.x < opcode_start_x)
+    if (pos.y < line_start_y - 2 || pos.x < opcode_start_x)
     {
         Deselect();
         return;
     }
-    int row = (pos.y - line_start_y) / line_height;
+    int row = (pos.y - line_start_y - 2) / line_height;
     Select(address + row * 4, wxGetKeyState(WXK_SHIFT));
 }
 
