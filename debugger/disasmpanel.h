@@ -20,6 +20,7 @@ class DisasmPanel : public DebugPanel
         const char **RequestData(int lines);
 
         void Scrolled(wxScrollEvent &evt);
+        void CodeDClick(wxMouseEvent &evt);
         void Run(wxCommandEvent &evt);
         void Pause(wxCommandEvent &evt);
         void Step(wxCommandEvent &evt);
@@ -61,11 +62,14 @@ class DisasmWindow : public wxWindow
         void MouseClick(wxMouseEvent &evt);
 
         void Select(uint32_t address, bool add);
+        void Deselect();
         void Goto(uint32_t addr);
         void SetPc(uint32_t pc_) { pc = pc_; }
 
         int GetLines() { return lines; }
-        int GetPos() { return address; }
+        uint32_t GetPos() { return address; }
+
+        int AddressHitTest(const wxPoint &pos);
 
     private:
         uint32_t address;

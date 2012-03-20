@@ -584,7 +584,7 @@ void DebuggerFrame::ConsoleClosed(DebugConsole *console)
     }
 }
 
-void DebuggerFrame::Print(wxString msg)
+void DebuggerFrame::Print(const wxString &msg)
 {
     if (output)
         output->Print(msg);

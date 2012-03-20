@@ -12,7 +12,7 @@ class DebugConsole : public DebugPanel
     public:
         DebugConsole(DebuggerFrame *parent, int id = -1);
         ~DebugConsole();
-        void Print(wxString msg);
+        void Print(const wxString &msg);
         void Command(wxCommandEvent &evt);
 
         static void InitCommands();

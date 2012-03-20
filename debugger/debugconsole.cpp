@@ -184,7 +184,7 @@ void DebugConsole::Command(wxCommandEvent &evt)
     in->Clear();
 }
 
-void DebugConsole::Print(wxString msg)
+void DebugConsole::Print(const wxString &msg)
 {
     if (lines)
         out->AppendText("\n");

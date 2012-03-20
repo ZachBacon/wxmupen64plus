@@ -13,7 +13,7 @@ class DebugPanel : public wxPanel
         virtual ~DebugPanel();
 
         virtual void Update(bool vi) {}
-        void Print(wxString &msg);
+        void Print(const wxString &msg);
 
     protected:
         DebuggerFrame *parent;

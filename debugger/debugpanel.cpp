@@ -12,7 +12,7 @@ DebugPanel::~DebugPanel()
 {
 }
 
-void DebugPanel::Print(wxString &msg)
+void DebugPanel::Print(const wxString &msg)
 {
     if (output)
         output->Print(msg);

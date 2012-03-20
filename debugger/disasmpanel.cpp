@@ -81,6 +81,7 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
     run->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Run, this);
     pause->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Pause, this);
     step->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &DisasmPanel::Step, this);
+    code->Bind(wxEVT_LEFT_DCLICK, &DisasmPanel::CodeDClick, this);
 
     scrollbar->Bind(wxEVT_SCROLL_THUMBRELEASE, &DisasmPanel::Scrolled, this);
     scrollbar->Bind(wxEVT_SCROLL_TOP, &DisasmPanel::Scrolled, this);
@@ -212,6 +213,34 @@ const char **DisasmPanel::RequestData(int lines)
     return data;
 }
 
+void DisasmPanel::CodeDClick(wxMouseEvent &evt)
+{
+    int line = code->AddressHitTest(evt.GetPosition());
+    if (line == -1)
+        return;
+
+    uint32_t address = code->GetPos() + line * 4;
+    if (!MemIsValid(address))
+        return;
+
+    Breakpoint *bpt = Breakpoint::Find(address);
+    if (bpt)
+    {
+        // Let's touch only breakpoints that could have been added by this code
+        if (bpt->GetLength() == 4 && bpt->GetAddress() == address && bpt->GetType() == BREAK_TYPE_EXECUTE)
+            delete bpt;
+        else
+            return;
+    }
+    else
+    {
+        bpt = new Breakpoint(data[line], address, 4, BREAK_TYPE_EXECUTE);
+        bpt->Add();
+    }
+    Breakpoint::SetChanged(true);
+    parent->RefreshPanels();
+}
+
 /// ------------------------------------------------------------------------------
 
 DisasmWindow::DisasmWindow(DisasmPanel *parent_, int id) : wxWindow(parent_, id, wxDefaultPosition, wxDefaultSize)
@@ -233,6 +262,15 @@ DisasmWindow::DisasmWindow(DisasmPanel *parent_, int id) : wxWindow(parent_, id,
 DisasmWindow::~DisasmWindow()
 {
     delete render_buffer;
+}
+
+int DisasmWindow::AddressHitTest(const wxPoint &pos)
+{
+    if (pos.x < address_start_x || pos.x > address_start_x + address_width)
+        return -1;
+    if (pos.y < line_start_y)
+        return -1;
+    return ((pos.y - line_start_y) / line_height);
 }
 
 void DisasmWindow::Select(uint32_t address, bool add)
@@ -264,12 +302,22 @@ void DisasmWindow::Select(uint32_t address, bool add)
     Render();
 }
 
+void DisasmWindow::Deselect()
+{
+    select_start = 0x1;
+    select_end = 0x1;
+    Render();
+}
+
 void DisasmWindow::MouseClick(wxMouseEvent &evt)
 {
     evt.Skip();
     wxPoint pos = evt.GetPosition();
-    if (pos.y < line_start_y)
+    if (pos.y < line_start_y || pos.x < opcode_start_x)
+    {
+        Deselect();
         return;
+    }
     int row = (pos.y - line_start_y) / line_height;
     Select(address + row * 4, wxGetKeyState(WXK_SHIFT));
 }
@@ -304,6 +352,9 @@ void DisasmWindow::Paint(wxPaintEvent &evt)
 
 void DisasmWindow::Render(bool same_address)
 {
+    if (Breakpoint::IsChanged())
+        same_address = false;
+
     data = parent->RequestData(lines);
 
     wxMemoryDC dc(*render_buffer);

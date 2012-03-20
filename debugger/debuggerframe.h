@@ -52,7 +52,7 @@ class DebuggerFrame : public wxFrame
 
         void ProcessCallback(wxCommandEvent &evt);
 
-        void Print(wxString msg);
+        void Print(const wxString &msg);
         void SaveConfig();
 
         static bool Exists() { return g_debugger != 0; }
