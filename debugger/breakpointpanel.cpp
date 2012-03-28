@@ -1,5 +1,4 @@
 #include "breakpointpanel.h"
-#include <wx/listctrl.h>
 #include <wx/sizer.h>
 #include <wx/menu.h>
 #include <wx/dialog.h>
@@ -8,8 +7,10 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/msgdlg.h>
-#include "debuggerframe.h"
+
 #include "breakpoint.h"
+#include "debuggerframe.h"
+#include "dv_treelist.h"
 #include "../mupen64plusplus/MupenAPI.h"
 
 #define BREAK_FILTER_DISABLED 0x1
@@ -34,6 +35,14 @@ enum
     break_last
 };
 
+enum
+{
+    name_col = 0,
+    address_col,
+    length_col,
+    value_col,
+    enabled_col
+};
 
 class BreakpointDialog : public wxDialog
 {
@@ -51,9 +60,9 @@ class BreakpointDialog : public wxDialog
             gridsizer->AddGrowableCol(1, 1);
             wxStaticText *name_stext = new wxStaticText(valuepanel, -1, _("Name")), *addr_stext = new wxStaticText(valuepanel, -1, _("Address"));
             wxStaticText *length_stext = new wxStaticText(valuepanel, -1, _("Length"));
-            name_textctrl = new wxTextCtrl(valuepanel, -1);
-            addr_textctrl = new wxTextCtrl(valuepanel, -1);
-            length_textctrl = new wxTextCtrl(valuepanel, -1);
+            name_textctrl = new wxTextCtrl(valuepanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+            addr_textctrl = new wxTextCtrl(valuepanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+            length_textctrl = new wxTextCtrl(valuepanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
             gridsizer->Add(name_stext);
             gridsizer->Add(name_textctrl);
             gridsizer->Add(addr_stext);
@@ -61,9 +70,9 @@ class BreakpointDialog : public wxDialog
             gridsizer->Add(length_stext);
             gridsizer->Add(length_textctrl);
 
-            exec_cbox = new wxCheckBox(typepanel, -1, _("Execute"));
-            read_cbox = new wxCheckBox(typepanel, -1, _("Read"));
-            write_cbox = new wxCheckBox(typepanel, -1, _("Write"));
+            exec_cbox = new wxCheckBox(typepanel, -1, _("Execute"), wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS);
+            read_cbox = new wxCheckBox(typepanel, -1, _("Read"), wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS);
+            write_cbox = new wxCheckBox(typepanel, -1, _("Write"), wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS);
             wxBoxSizer *typesizer = new wxBoxSizer(wxHORIZONTAL);
             typesizer->Add(exec_cbox);
             typesizer->Add(read_cbox);
@@ -74,6 +83,12 @@ class BreakpointDialog : public wxDialog
             buttonsizer->Add(ok_btn, 0, wxRIGHT, 5);
             buttonsizer->Add(cancel_btn);
             ok_btn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &BreakpointDialog::Ok, this);
+            name_textctrl->Bind(wxEVT_KEY_DOWN, &BreakpointDialog::OkChar, this);
+            addr_textctrl->Bind(wxEVT_KEY_DOWN, &BreakpointDialog::OkChar, this);
+            length_textctrl->Bind(wxEVT_KEY_DOWN, &BreakpointDialog::OkChar, this);
+            exec_cbox->Bind(wxEVT_KEY_DOWN, &BreakpointDialog::OkChar, this);
+            read_cbox->Bind(wxEVT_KEY_DOWN, &BreakpointDialog::OkChar, this);
+            write_cbox->Bind(wxEVT_KEY_DOWN, &BreakpointDialog::OkChar, this);
 
             mainpanel->SetSizer(mainsizer);
             valuepanel->SetSizer(gridsizer);
@@ -96,19 +111,28 @@ class BreakpointDialog : public wxDialog
         {
             EndModal(wxOK);
         }
-        void UpdateBreakpoint(Breakpoint *bpt)
+        void OkChar(wxKeyEvent &evt)
         {
-            wxString name = name_textctrl->GetValue();
-            uint32_t address = strtoul(addr_textctrl->GetValue(), 0, 16);
-            int length = strtoul(length_textctrl->GetValue(), 0, 16);
-            char type = 0;
+            int code = evt.GetKeyCode();
+            if (code == WXK_RETURN || code == WXK_NUMPAD_ENTER)
+                EndModal(wxOK);
+            else
+                evt.Skip();
+        }
+
+        void GetValues(wxString *name, uint32_t *address, uint32_t *length, uint32_t *type)
+        {
+            // type is uint32_t instead of char just to make code look nicer :p
+            *name = name_textctrl->GetValue();
+            *address = strtoul(addr_textctrl->GetValue(), 0, 16);
+            *length = strtoul(length_textctrl->GetValue(), 0, 16);
+            *type = 0;
             if (exec_cbox->GetValue())
-                type |= BREAK_TYPE_EXECUTE;
+                *type |= BREAK_TYPE_EXECUTE;
             if (read_cbox->GetValue())
-                type |= BREAK_TYPE_READ;
+                *type |= BREAK_TYPE_READ;
             if (write_cbox->GetValue())
-                type |= BREAK_TYPE_WRITE;
-            bpt->Update(name, address, length, type);
+                *type |= BREAK_TYPE_WRITE;
         }
         void SetValues(Breakpoint *bpt)
         {
@@ -124,10 +148,19 @@ class BreakpointDialog : public wxDialog
             if (type & BREAK_TYPE_WRITE)
                 write_cbox->SetValue(true);
         }
+        Breakpoint *GenerateBreakpoint()
+        {
+            wxString name;
+            uint32_t address, length, type;
+            GetValues(&name, &address, &length, &type);
+            return new Breakpoint(name, address, length, type);
+        }
         BreakValidity IsValid()
         {
-            Breakpoint tmp_bpt;
-            UpdateBreakpoint(&tmp_bpt);
+            wxString name;
+            uint32_t address, length, type;
+            GetValues(&name, &address, &length, &type);
+            Breakpoint tmp_bpt(name, address, length, type);
             return tmp_bpt.IsValid();
         }
         ~BreakpointDialog()
@@ -142,22 +175,111 @@ class BreakpointDialog : public wxDialog
         wxCheckBox *write_cbox;
 };
 
+
+class BreakDataModel : public DataViewTreeListModel
+{
+    public:
+        BreakDataModel() : DataViewTreeListModel(4)
+        {
+        }
+        wxString GetColumnType(unsigned int col) const
+        {
+            switch (col)
+            {
+                default:
+                case name_col:
+                    return "string";
+                case address_col:
+                case value_col:
+                    return "long";
+                case enabled_col:
+                    return "bool";
+            }
+        }
+        wxString GetBreakValue(Breakpoint *bpt) const
+        {
+            switch (bpt->GetLength())
+            {
+                case 1:
+                    return wxString::Format("%02X",  MemRead8(bpt->GetAddress()));
+                break;
+                case 2:
+                    return wxString::Format("%04X",  MemRead16(bpt->GetAddress()));
+                break;
+                case 4:
+                    return wxString::Format("%08X", MemRead32(bpt->GetAddress()));
+                break;
+                case 8:
+                {
+                    uint64_t value = MemRead64(bpt->GetAddress());
+                    return wxString::Format("%08X%08X",  (uint32_t)(value >> 32), (uint32_t)(value & 0xffffffff));
+                }
+                break;
+            }
+            return "";
+        }
+        void GetValue(wxVariant &variant, const wxDataViewItem &item_, unsigned int col) const
+        {
+            dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
+            if (item->isGroup)
+            {
+                if (col == 0)
+                    variant = (((dvtlGroup *)item->val)->name);
+                return;
+            }
+            Breakpoint *bpt = (Breakpoint *)item->val;
+            switch (col)
+            {
+                case name_col:
+                    variant = bpt->GetName();
+                break;
+                case address_col:
+                    variant = wxString::Format("%08X:%X", bpt->GetAddress(), bpt->GetLength());
+                break;
+                case value_col:
+                    variant = GetBreakValue(bpt);
+                break;
+                case enabled_col:
+                    variant = bpt->IsEnabled();
+                break;
+                default:
+                break;
+            }
+        }
+        bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col)
+        {
+            return false;
+        }
+        void UpdateBreakpoint(Breakpoint *bpt)
+        {
+            ItemChanged(wxDataViewItem(FindItem(bpt)));
+        }
+};
+
+
 BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
     filter = BREAK_FILTER_ALL;
 
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
-    list = new wxListCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_VRULES);
+    list = new wxDataViewCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxDV_VERT_RULES | wxDV_MULTIPLE);
+    name_column = list->AppendTextColumn(_("Name"), name_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
+    address_column = list->AppendTextColumn(_("Address"), address_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
+    value_column = list->AppendTextColumn(_("Value"), value_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
+    enabled_column = list->AppendToggleColumn(_("Enabled"), enabled_col, wxDATAVIEW_CELL_INERT , -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE);
+    list->SetExpanderColumn(name_column);
+
+    data_model = new BreakDataModel();
+    list->AssociateModel(data_model);
+    data_model->DecRef();
+
     sizer->Add(list, 1, wxEXPAND);
     SetSizer(sizer);
 
-    list->InsertColumn(0, _("Name"));
-    list->InsertColumn(1, _("Address"));
-    list->InsertColumn(2, _("Value"));
-    list->InsertColumn(3, _("Status"));
 
-    list->Bind(wxEVT_RIGHT_UP, &BreakpointPanel::RClickMenu, this);
-    list->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &BreakpointPanel::RClickItem, this);
+    list->Bind(wxEVT_LEFT_DOWN, &BreakpointPanel::Deselect, this);
+    list->Bind(wxEVT_CONTEXT_MENU, &BreakpointPanel::RClickMenu, this);
+    list->Bind(wxEVT_COMMAND_DATAVIEW_ITEM_CONTEXT_MENU, &BreakpointPanel::RClickItem, this);
 
     CreateList();
 }
@@ -167,48 +289,48 @@ BreakpointPanel::~BreakpointPanel()
 
 }
 
+bool BreakpointPanel::FilterTest(Breakpoint *bpt)
+{
+    bool enabled = bpt->IsEnabled();
+    int type = bpt->GetType();
+    if ((!enabled && !(filter & BREAK_FILTER_DISABLED)) || (enabled && !(filter & BREAK_FILTER_ENABLED)))
+        return false;
+    if ((type & BREAK_TYPE_EXECUTE) && (filter & BREAK_FILTER_EXEC))
+        return true;
+    if ((type & BREAK_TYPE_READ) && (filter & BREAK_FILTER_READ))
+        return true;
+    if ((type & BREAK_TYPE_WRITE) && (filter & BREAK_FILTER_WRITE))
+        return true;
+    return false;
+}
+
+void BreakpointPanel::AddBreakpoint(Breakpoint *bpt)
+{
+    if (!FilterTest(bpt))
+        return;
+
+    data_model->AddItem(bpt);
+}
+
 void BreakpointPanel::CreateList()
 {
-    const std::unordered_set<Breakpoint *> *breakpoints = Breakpoint::GetAllBreakpoints();
+    const std::unordered_set<Breakpoint *> *breakpoints = parent->GetBreakpoints();
     if (!breakpoints)
         return;
-    list->DeleteAllItems();
+
     int i = 0;
     for (auto it = breakpoints->begin(); it != breakpoints->end(); it++, i++)
     {
         Breakpoint *bpt = *it;
-        bool enabled = bpt->IsEnabled(), passfilter = false;
-        int type = bpt->GetType();
-        if ((!enabled && !(filter & BREAK_FILTER_DISABLED)) || (enabled && !(filter & BREAK_FILTER_ENABLED)))
-            continue;
-        if ((type & BREAK_TYPE_EXECUTE) && (filter & BREAK_FILTER_EXEC))
-            passfilter = true;
-        if ((type & BREAK_TYPE_READ) && (filter & BREAK_FILTER_READ))
-            passfilter = true;
-        if ((type & BREAK_TYPE_WRITE) && (filter & BREAK_FILTER_WRITE))
-            passfilter = true;
-        if (!passfilter)
-            continue;
-
-        wxListItem item;
-        item.SetId(i);
-        item.SetText(bpt->GetName());
-        item.SetData(bpt);
-        long id = list->InsertItem(item);
-
-        list->SetItem(id, 0, bpt->GetName());
-        list->SetItem(id, 1, wxString::Format("%08X:%X", bpt->GetAddress(), bpt->GetLength()));
-        if (bpt->IsEnabled())
-            list->SetItem(id, 3, _("Enabled"));
-        else
-            list->SetItem(id, 3, _("Disabled"));
+        // naah
+        AddBreakpoint(bpt);
     }
     UpdateValues();
 }
 
 bool BreakpointPanel::HasValueChanged(int item, const uint64_t &new_value)
 {
-    wxString val_string = list->GetItemText(item, 2);
+    wxString val_string;// = list->GetItemText(item, 2);
     if (val_string.empty())
         return true;
     return (strtoull(val_string, 0, 16) != new_value);
@@ -216,44 +338,37 @@ bool BreakpointPanel::HasValueChanged(int item, const uint64_t &new_value)
 
 void BreakpointPanel::UpdateValues()
 {
-    for (int i = 0; i < list->GetItemCount(); i++)
+
+}
+
+void BreakpointPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason)
+{
+    switch (reason)
     {
-        uint64_t new_value;
-        const Breakpoint *bpt = (const Breakpoint *)list->GetItemData(i);
-        switch (bpt->GetLength())
-        {
-            case 1:
-                new_value = MemRead8(bpt->GetAddress());
-                if (HasValueChanged(i, new_value))
-                    list->SetItem(i, 2, wxString::Format("%02X",  (uint8_t)new_value));
-            break;
-            case 2:
-                new_value = MemRead16(bpt->GetAddress());
-                if (HasValueChanged(i, new_value))
-                    list->SetItem(i, 2, wxString::Format("%04X",  (uint16_t)new_value));
-            break;
-            case 4:
-                new_value = MemRead32(bpt->GetAddress());
-                if (HasValueChanged(i, new_value))
-                    list->SetItem(i, 2, wxString::Format("%08X", (uint32_t)new_value));
-            break;
-            case 8:
-                new_value = MemRead64(bpt->GetAddress());
-                if (HasValueChanged(i, new_value))
-                    list->SetItem(i, 2, wxString::Format("%08X%08X",  (uint32_t)(new_value >> 32), (uint32_t)(new_value & 0xffffffff)));
-            break;
-            default:
-            break;
-        }
+        case BREAK_ADDED:
+            AddBreakpoint(bpt);
+        break;
+        case BREAK_REMOVED:
+            data_model->RemoveItem(bpt);
+        break;
+        case BREAK_CHANGED:
+            if (data_model->FindItem(bpt))
+            {
+                if (!FilterTest(bpt)) // no longer matches the filter
+                    data_model->RemoveItem(bpt);
+                else // just update
+                    data_model->UpdateBreakpoint(bpt);
+            }
+            else // As it was not tracked, it's practically same as new breakpoint
+                AddBreakpoint(bpt);
+
+        break;
     }
 }
 
 void BreakpointPanel::Update(bool vi)
 {
-    if (Breakpoint::IsChanged())
-        CreateList();
-    else
-        UpdateValues();
+    UpdateValues();
 }
 
 void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
@@ -266,8 +381,7 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
             BreakpointDialog dlg(this, -1, _("Add breakpoint"));
             if (dlg.ShowModal() == wxOK)
             {
-                Breakpoint *bpt = new Breakpoint;
-                dlg.UpdateBreakpoint(bpt);
+                Breakpoint *bpt = dlg.GenerateBreakpoint();
                 BreakValidity valid = bpt->IsValid();
                 if (valid != BREAK_VALID)
                 {
@@ -292,13 +406,8 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
                 }
                 else
                 {
-                    if (!bpt->Add())
+                    if (!parent->AddBreakpoint(bpt))
                         delete bpt;
-                    else
-                    {
-                        Breakpoint::SetChanged(true);
-                        parent->RefreshPanels();
-                    }
                 }
             }
         }
@@ -306,7 +415,7 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
         case break_edit:
         {
             BreakpointDialog dlg(this, -1, _("Edit breakpoint"));
-            Breakpoint *bpt = (Breakpoint *)list->GetItemData(list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED));
+            Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)list->GetSelection().GetID())->val;
             dlg.SetValues(bpt);
             if (dlg.ShowModal() == wxOK)
             {
@@ -333,9 +442,10 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
                 }
                 else
                 {
-                    dlg.UpdateBreakpoint(bpt);
-                    Breakpoint::SetChanged(true);
-                    parent->RefreshPanels();
+                    wxString name;
+                    uint32_t address, length, type;
+                    dlg.GetValues(&name, &address, &length, &type);
+                    parent->EditBreakpoint(bpt, name, address, length, type);
                 }
             }
         }
@@ -344,20 +454,17 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
         case break_enable:
         case break_delete:
         {
-            int item = list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-            while (item != -1)
+            wxDataViewItemArray items;
+            list->GetSelections(items);
+            int amt = items.GetCount();
+            for (int i = 0; i < amt; i++)
             {
-                Breakpoint *bpt = (Breakpoint *)list->GetItemData(item);
-                if (id == break_disable)
-                    bpt->Disable();
-                else if (id == break_enable)
-                    bpt->Enable();
+                Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->val;
+                if (id == break_delete)
+                    parent->DeleteBreakpoint(bpt, i == amt - 1);
                 else
-                    delete bpt;
-                item = list->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+                    parent->EnableBreakpoint(bpt, id == break_enable, i == amt - 1);
             }
-            Breakpoint::SetChanged(true);
-            parent->RefreshPanels();
         }
         break;
         case break_f_disabled:
@@ -408,13 +515,13 @@ void BreakpointPanel::GenerateFilterMenu(wxMenu *menu)
     f_write->Check(filter & BREAK_FILTER_WRITE);
 }
 
-void BreakpointPanel::RClickItem(wxListEvent &evt)
+void BreakpointPanel::RClickItem(wxDataViewEvent &evt)
 {
     wxMenu menu, *filter = new wxMenu;
     wxMenuItem *add, *edit, *remove, *disable, *enable, *separator;
     add = new wxMenuItem(&menu, break_add, _("New.."));
     menu.Append(add);
-    if (list->GetSelectedItemCount() == 1)
+    if (list->GetSelection().GetID() != 0) // wx 2.9.3: list->GetSelectedItemsCount() == 1 or list->HasSelecion()
     {
         edit = new wxMenuItem(&menu, break_edit, _("Edit.."));
         menu.Append(edit);
@@ -437,7 +544,7 @@ void BreakpointPanel::RClickItem(wxListEvent &evt)
     PopupMenu(&menu);
 }
 
-void BreakpointPanel::RClickMenu(wxMouseEvent &evt)
+void BreakpointPanel::RClickMenu(wxCommandEvent &evt)
 {
     wxMenu menu, *filter = new wxMenu;
     wxMenuItem *add, *separator;
@@ -453,3 +560,10 @@ void BreakpointPanel::RClickMenu(wxMouseEvent &evt)
 
     PopupMenu(&menu);
 }
+
+
+void BreakpointPanel::Deselect(wxMouseEvent &evt)
+{
+    list->UnselectAll();
+}
+

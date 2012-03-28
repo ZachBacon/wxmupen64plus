@@ -116,9 +116,9 @@ void MemoryPanel::SetValue(int pos, int value)
     MemWrite8(current_position + pos, value);
 }
 
-void MemoryPanel::RefreshPanels()
+void MemoryPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause)
 {
-    parent->RefreshPanels();
+    memory->Draw();
 }
 
 /// ------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ void MemoryWindow::RClickMenu(wxMouseEvent &evt)
     if (selected != -1)
     {
         wxMenu menu;
-        if (!Breakpoint::Find(offset + selected))
+        if (!parent->GetParent()->FindBreakpoint(offset + selected))
         {
             wxMenuItem *rb1, *rb2, *rb4, *wb1, *wb2, *wb4;
             rb1 = new wxMenuItem(&menu, read_break_1, _("Read breakpoint (1 byte)"));
@@ -232,9 +232,10 @@ void MemoryWindow::RClickMenu(wxMouseEvent &evt)
 void MemoryWindow::RClickEvent(wxCommandEvent &evt)
 {
     int id = evt.GetId();
+    DebuggerFrame *parent_frame = parent->GetParent();
     if (id == remove_break)
     {
-        delete Breakpoint::Find(offset + selected);
+        parent_frame->DeleteBreakpoint(parent_frame->FindBreakpoint(offset + selected));
         Draw();
     }
     else
@@ -275,10 +276,9 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
             name.Printf("Read (%X)", length);
         else
             name.Printf("Write (%X)", length);
-        bpt->Update(name, address, length, type);
-        bpt->Add();
-        Breakpoint::SetChanged(true);
-        parent->RefreshPanels();
+
+        parent_frame->EditBreakpoint(bpt, name, address, length, type);
+        parent_frame->AddBreakpoint(bpt);
     }
 }
 
@@ -441,7 +441,7 @@ void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg, const char *v
         dc->SetBrush(*bg);
         dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
     }
-    else if (Breakpoint *bpt = Breakpoint::Find(offset + pos))
+    else if (Breakpoint *bpt = parent->GetParent()->FindBreakpoint(offset + pos))
     {
         dc->SetPen(*wxTRANSPARENT_PEN);
         int type = bpt->GetType(), count = 0;
@@ -561,7 +561,7 @@ void MemoryWindow::Render(wxDC *dc)
 
 void MemoryWindow::Draw()
 {
-    // Destruct memorydc before using bitmap :p
+    // Destroy memorydc before using bitmap :p
     {
         wxMemoryDC dc(*render_buffer);
         dc.SetFont(*g_main_font);

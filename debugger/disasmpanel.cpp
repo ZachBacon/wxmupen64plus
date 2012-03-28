@@ -133,8 +133,14 @@ void DisasmPanel::Update(bool vi)
         run->Enable(false);
         pause->Enable(true);
     }
-    code->Render(true);
+    code->Render();
 }
+
+void DisasmPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause)
+{
+    code->Render();
+}
+
 
 void DisasmPanel::Run(wxCommandEvent &evt)
 {
@@ -260,22 +266,20 @@ void DisasmPanel::CodeDClick(wxMouseEvent &evt)
     if (!MemIsValid(address))
         return;
 
-    Breakpoint *bpt = Breakpoint::Find(address);
+    Breakpoint *bpt = parent->FindBreakpoint(address);
     if (bpt)
     {
         // Let's touch only breakpoints that could have been added by this code
         if (bpt->GetLength() == 4 && bpt->GetAddress() == address && bpt->GetType() == BREAK_TYPE_EXECUTE)
-            delete bpt;
+            parent->DeleteBreakpoint(bpt);
         else
             return;
     }
     else
     {
         bpt = new Breakpoint(data[line], address, 4, BREAK_TYPE_EXECUTE);
-        bpt->Add();
+        parent->AddBreakpoint(bpt);
     }
-    Breakpoint::SetChanged(true);
-    parent->RefreshPanels();
 }
 
 /// ------------------------------------------------------------------------------
@@ -387,11 +391,8 @@ void DisasmWindow::Paint(wxPaintEvent &evt)
     dc.DrawBitmap(*render_buffer, 0, 0);
 }
 
-void DisasmWindow::Render(bool same_address)
+void DisasmWindow::Render()
 {
-    if (Breakpoint::IsChanged())
-        same_address = false;
-
     data = parent->RequestData(lines);
 
     wxMemoryDC dc(*render_buffer);
@@ -402,10 +403,7 @@ void DisasmWindow::Render(bool same_address)
     wxBrush bg(bg_colour);
     dc.SetBackground(bg);
 
-    if (!same_address)
-        dc.Clear();
-    else
-        dc.DrawRectangle(opcode_start_x, line_start_y, comment_start_x - opcode_start_x, line_height * lines);
+    dc.Clear();
 
     dc.SetTextForeground(g_color_text_default);
     for (int i = 0; i < lines; i++)
@@ -414,7 +412,7 @@ void DisasmWindow::Render(bool same_address)
         bool current_line_selected = false;//, current_line_breakpoint = false;
         char buf[16];
         sprintf(buf, "%08X", current_address);
-        Breakpoint *bpt = Breakpoint::Find(current_address);
+        Breakpoint *bpt = parent->GetParent()->FindBreakpoint(current_address);
         if (current_address == pc)
         {
             dc.SetBrush(g_brush_pc);
@@ -430,14 +428,16 @@ void DisasmWindow::Render(bool same_address)
         }
         else
         {
-            if (!same_address || current_address == drawn_pc)
-                dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
+            dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
         }
         if (bpt)
         {
             if (bpt->GetType() & BREAK_TYPE_EXECUTE)
             {
-                dc.SetBrush(g_brush_execute);
+                if (bpt->IsEnabled())
+                    dc.SetBrush(g_brush_execute);
+                else
+                    dc.SetBrush(g_brush_disabled);
                 dc.DrawRectangle(0, line_start_y + i * line_height + 2, address_width, line_height);
                 dc.SetBrush(bg);
                 //current_line_breakpoint = true;

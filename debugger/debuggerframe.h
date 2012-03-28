@@ -4,6 +4,7 @@
 #include <wx/frame.h>
 
 #include "main.h"
+#include <unordered_set>
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_DEBUG_EVENT, -1);
 
@@ -11,6 +12,8 @@ class wxAuiManager;
 class DebugConsole;
 class DebugPanel;
 class Breakpoint;
+class BreakpointInterface;
+extern template class std::unordered_set<Breakpoint *>;
 
 // This code assumes that there won't be multiple DebuggerFrames,
 // as it makes implementing debug callbacks a lot easier..
@@ -24,31 +27,28 @@ class DebuggerFrame : public wxFrame
 
         void Reset();
 
-        void Close(wxCloseEvent &evt);
-        void MenuClose(wxCommandEvent &evt);
-        void MenuAddPanel(wxCommandEvent &evt);
-        void MenuState(wxCommandEvent &evt);
-        void MenuOption(wxCommandEvent &evt);
-        void PaneTitleRClick(wxMouseEvent &evt);
-        void PaneTitleEvent(wxCommandEvent &evt);
-
         void ConsoleClosed(DebugConsole *console);
 
         void Run();
         void Step();
         void Pause();
         void ViBreak();
+
+        // These are practically BreakpointInterface interface :p
+        // (With addition of telling all child panels about the changes)
+        bool AddBreakpoint(Breakpoint *bpt);
+        void DeleteBreakpoint(Breakpoint *bpt, bool refresh = true);
+        Breakpoint *FindBreakpoint(uint32_t address);
+        void EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type);
+        void EnableBreakpoint(Breakpoint *bpt, bool enable = true, bool refresh = true);
+        const std::unordered_set<Breakpoint *> *GetBreakpoints();
+
         void RefreshPanels();
 
         uint32_t GetPc() { return pc; }
 
         DebugConsole *GetMainOutput() { return output; }
         void SetMainOutput(DebugConsole *output_) { output = output_; }
-
-        void NewBreakpoint(Breakpoint *data);
-        void DeleteBreakpoint(Breakpoint *data);
-        Breakpoint *FindBreakpoint(int id);
-        Breakpoint *FindBreakpoint(wxString name);
 
         void ProcessCallback(wxCommandEvent &evt);
 
@@ -57,6 +57,15 @@ class DebuggerFrame : public wxFrame
 
         static bool Exists() { return g_debugger != 0; }
         static void Delete();
+
+
+        void Close(wxCloseEvent &evt);
+        void MenuClose(wxCommandEvent &evt);
+        void MenuAddPanel(wxCommandEvent &evt);
+        void MenuState(wxCommandEvent &evt);
+        void MenuOption(wxCommandEvent &evt);
+        void PaneTitleRClick(wxMouseEvent &evt);
+        void PaneTitleEvent(wxCommandEvent &evt);
 
     private:
         static void DebuggerInit();
@@ -79,6 +88,7 @@ class DebuggerFrame : public wxFrame
         bool running;
         uint32_t pc;
         void UpdatePanels(bool vi = false);
+        BreakpointInterface *breakpoints;
 
         DebugPanel *PaneTitleHitTest(const wxPoint &pos);
         DebugPanel *selectedpane;

@@ -16,6 +16,7 @@ class DisasmPanel : public DebugPanel
         virtual ~DisasmPanel();
 
         void Update(bool vi);
+        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause);
 
         const char **RequestData(int lines);
 
@@ -62,7 +63,7 @@ class DisasmWindow : public wxWindow
         ~DisasmWindow();
 
         void Resize(wxSizeEvent &evt);
-        void Render(bool same_address = false);
+        void Render();
         void Paint(wxPaintEvent &evt);
         void MouseClick(wxMouseEvent &evt);
 

@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-// These correspond to core's dpg_breakpoint.h
+// These correspond to core's dbg_breakpoint.h (for now)
 #define BREAK_TYPE_EXECUTE 0x20
 #define BREAK_TYPE_READ 0x8
 #define BREAK_TYPE_WRITE 0x10
@@ -13,6 +13,7 @@
 
 class Breakpoint;
 extern template class std::unordered_map<uint32_t, Breakpoint *>;
+extern template class std::unordered_set<Breakpoint *>;
 
 enum BreakValidity
 {
@@ -23,17 +24,37 @@ enum BreakValidity
     BREAK_INVALID_LENGTH
 };
 
+class BreakpointInterface
+{
+    public:
+        BreakpointInterface();
+        ~BreakpointInterface();
+
+        bool Add(Breakpoint *bpt);
+        bool Update(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type);
+        void Delete(Breakpoint *bpt);
+        bool Enable(Breakpoint *bpt);
+        void Disable(Breakpoint *bpt);
+
+        Breakpoint *Find(uint32_t address, uint32_t length = 1);
+        const std::unordered_set<Breakpoint *> *GetAllBreakpoints() { return breakset; }
+
+    private:
+        bool RawAdd(Breakpoint *bpt);
+        void Remove(Breakpoint *bpt);
+        // I don't think hash table is the best option for data ranges far aways each other, but it shall be enough for now
+        std::unordered_map<uint32_t, Breakpoint *> *breakmap;
+        std::unordered_set<Breakpoint *> *breakset;
+};
+
 class Breakpoint
 {
+    friend class BreakpointInterface;
     public:
         Breakpoint();
         Breakpoint(const wxString &name, uint32_t address, int length, char type);
-        bool Update(const wxString &name, uint32_t address, int length, char type);
         ~Breakpoint();
-        bool Add();
-        void Remove();
-        void Enable();
-        void Disable();
+
 
         BreakValidity IsValid() const;
         bool IsEnabled() const { return enabled; }
@@ -42,27 +63,16 @@ class Breakpoint
         uint32_t GetAddress() const { return address; }
         int GetLength() const { return length; }
 
-        static void SetChanged(bool val) { changed = val; }
-        static bool IsChanged() { return changed; }
-
-        static Breakpoint *Find(uint32_t address);
-        static const std::unordered_set<Breakpoint *> *GetAllBreakpoints() { return breakset; }
-
     private:
+        // Setting values outside of creation should be done through BreakpointInterface
+        void SetValues(const wxString &name, uint32_t address, int length, char type);
         wxString name;
         int id;
         uint32_t address;
         int length;
         char type;
-        bool active;
         bool enabled;
-
-        // I don't think hash table is the best option for data ranges far aways each other, but it shall be enough for now
-        static std::unordered_map<uint32_t, Breakpoint *> *breakmap;
-        static std::unordered_set<Breakpoint *> *breakset;
-        static bool changed;
 };
-
 
 #endif // BREAKPOINT_H
 

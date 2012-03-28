@@ -8,132 +8,166 @@
 extern ptr_DebugBreakpointCommand DebugBreakpointCommand;
 extern ptr_DebugBreakpointLookup DebugBreakpointLookup;
 template class std::unordered_map<uint32_t, Breakpoint *>;
-std::unordered_map<uint32_t, Breakpoint *> *Breakpoint::breakmap = 0;
-std::unordered_set<Breakpoint *> *Breakpoint::breakset = 0;
-bool Breakpoint::changed = true;
+template class std::unordered_set<Breakpoint *>;
+
+
+BreakpointInterface::BreakpointInterface()
+{
+    breakmap = new std::unordered_map<uint32_t, Breakpoint *> ;
+    breakset = new std::unordered_set<Breakpoint *>;
+}
+
+BreakpointInterface::~BreakpointInterface()
+{
+    for (auto it = breakset->begin(); it != breakset->end(); it++)
+    {
+        Remove(*it);
+    }
+    delete breakset;
+    delete breakmap;
+}
+
+bool BreakpointInterface::RawAdd(Breakpoint *bpt)
+{
+    breakpoint raw_bpt;
+    raw_bpt.address = bpt->address;
+    raw_bpt.endaddr = bpt->address + bpt->length - 1;
+    raw_bpt.flags = BPT_FLAG_ENABLED | (bpt->type & BREAK_TYPE_ALL);
+
+    bpt->id = (*DebugBreakpointCommand)(M64P_BKP_CMD_ADD_STRUCT, 0, &raw_bpt);
+    if (bpt->id == -1)
+        return false;
+
+    bpt->enabled = true;
+    return true;
+}
+
+bool BreakpointInterface::Add(Breakpoint *bpt)
+{
+    if (bpt->IsValid() != BREAK_VALID)
+        return false;
+
+    if (Find(bpt->address, bpt->length))
+        return false; // Well, this could edit the existing breakpoint to merge or something it with this one
+
+    if (!RawAdd(bpt))
+        return false;
+
+    for (int i = 0; i < bpt->length; i++)
+        breakmap->insert(std::pair<uint32_t, Breakpoint *>(bpt->address + i, bpt));
+    breakset->insert(bpt);
+    return true;
+}
+
+bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type)
+{
+    if (!bpt->enabled)
+    {
+        bpt->SetValues(name, address, length, type);
+        return true;
+    }
+    if (address != bpt->address || length != bpt->length)
+    {
+        Breakpoint *other = Find(address, length);
+        if (other && other != bpt)
+            return false;
+
+        for (int i = 0; i < bpt->length; i++)
+            breakmap->erase(bpt->address + i);
+        for (int i = 0; i < length; i++)
+            breakmap->insert(std::pair<uint32_t, Breakpoint *>(address + i, bpt));
+    }
+    bpt->SetValues(name, address, length, type);
+    breakpoint raw_bpt;
+    raw_bpt.address = address;
+    raw_bpt.endaddr = address + length - 1;
+    raw_bpt.flags = type & BREAK_TYPE_ALL;
+
+    (*DebugBreakpointCommand)(M64P_BKP_CMD_REPLACE, bpt->id, &raw_bpt);
+    return true;
+
+}
+
+void BreakpointInterface::Remove(Breakpoint *bpt)
+{
+    if (bpt->id == -1)
+        return;
+
+    (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
+    bpt->id = -1;
+    bpt->enabled = false;
+
+    for (int i = 0; i < bpt->length; i++)
+        breakmap->erase(bpt->address + i);
+    breakset->erase(bpt);
+}
+
+void BreakpointInterface::Delete(Breakpoint *bpt)
+{
+    Remove(bpt);
+    delete bpt;
+}
+
+bool BreakpointInterface::Enable(Breakpoint *bpt)
+{
+    if (bpt->enabled)
+        return true;
+
+    return RawAdd(bpt);
+}
+
+void BreakpointInterface::Disable(Breakpoint *bpt)
+{
+    if (!bpt->enabled)
+        return;
+
+    (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
+    bpt->id = -1;
+    bpt->enabled = false;
+}
+
+Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)
+{
+    if (!breakmap)
+        return 0;
+
+    std::unordered_map<uint32_t, Breakpoint *>::iterator it, end = breakmap->end();
+    for (uint32_t i = 0; i < length; i++)
+    {
+        it = breakmap->find(address + i);
+        if (it != end)
+            return it->second;
+    }
+    return 0;
+}
+
+// ----------------------------------------------------------------------
 
 Breakpoint::Breakpoint()
 {
-    if (!breakmap)
-    {
-        breakmap = new std::unordered_map<uint32_t, Breakpoint *>;
-        breakset = new std::unordered_set<Breakpoint *>;
-    }
     name = "";
     address = 0;
     type = 0;
     length = 0;
     id = -1;
-    active = false;
 }
 
 Breakpoint::Breakpoint(const wxString &name_, uint32_t address_, int length_, char type_)
 {
-    if (!breakmap)
-    {
-        breakmap = new std::unordered_map<uint32_t, Breakpoint *>;
-        breakset = new std::unordered_set<Breakpoint *>;
-    }
     id = -1;
-    active = false;
-    Update(name_, address_, length_, type_);
-}
-
-bool Breakpoint::Update(const wxString &name_, uint32_t address_, int length_, char type_)
-{
-    name = name_;
-    type = type_;
-    if (!active)
-    {
-        address = address_;
-        length = length_;
-        return true;
-    }
-
-    if (address_ != address || length_ != length)
-    {
-        Breakpoint *other = Find(address_);
-        if (other && other != this)
-            return false;
-
-        for (int i = 0; i < length; i++)
-            breakmap->erase(address + i);
-        address = address_;
-        length = length_;
-        for (int i = 0; i < length; i++)
-            breakmap->insert(std::pair<uint32_t, Breakpoint *>(address + i, this));
-    }
-    breakpoint bpt;
-    bpt.address = address;
-    bpt.endaddr = address + length - 1;
-    bpt.flags = type & BREAK_TYPE_ALL;
-    if (enabled)
-        bpt.flags |= BPT_FLAG_ENABLED;
-
-    (*DebugBreakpointCommand)(M64P_BKP_CMD_REPLACE, id, &bpt);
-    return true;
-
+    SetValues(name_, address_, length_, type_);
 }
 
 Breakpoint::~Breakpoint()
 {
-    Remove();
 }
 
-
-bool Breakpoint::Add()
+void Breakpoint::SetValues(const wxString &name_, uint32_t address_, int length_, char type_)
 {
-    if (IsValid() != BREAK_VALID)
-        return false;
-    if (Find(address))
-        return false; // Well, this could edit the existing breakpoint to include types this one has
-
-    breakpoint bpt;
-    bpt.address = address;
-    bpt.endaddr = address + length - 1;
-    bpt.flags = BPT_FLAG_ENABLED | (type & BREAK_TYPE_ALL);
-
-    id = (*DebugBreakpointCommand)(M64P_BKP_CMD_ADD_STRUCT, 0, &bpt);
-    if (id == -1)
-        return false;
-
-    enabled = true;
-    active = true;
-    for (int i = 0; i < length; i++)
-        breakmap->insert(std::pair<uint32_t, Breakpoint *>(address + i, this));
-    breakset->insert(this);
-    return true;
-}
-
-void Breakpoint::Remove()
-{
-    if (id == -1)
-        return;
-
-    (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, id, 0);
-    id = -1;
-    for (int i = 0; i < length; i++)
-        breakmap->erase(address + i);
-    breakset->erase(this);
-    active = false;
-}
-
-void Breakpoint::Enable()
-{
-    if (enabled)
-        return;
-
-    (*DebugBreakpointCommand)(M64P_BKP_CMD_ENABLE, id, 0);
-    enabled = true;
-}
-
-void Breakpoint::Disable()
-{
-    if (!enabled)
-        return;
-
-    (*DebugBreakpointCommand)(M64P_BKP_CMD_DISABLE, id, 0);
-    enabled = false;
+    name = name_;
+    type = type_;
+    address = address_;
+    length = length_;
 }
 
 BreakValidity Breakpoint::IsValid() const
@@ -147,15 +181,4 @@ BreakValidity Breakpoint::IsValid() const
     if (name.empty())
         return BREAK_INVALID_NAME;
     return BREAK_VALID;
-}
-
-Breakpoint *Breakpoint::Find(uint32_t address)
-{
-    if (!breakmap)
-        return 0;
-
-    auto it = breakmap->find(address);
-    if (it == breakmap->end())
-        return 0;
-    return it->second;
 }

@@ -5,6 +5,14 @@
 
 class DebuggerFrame;
 class DebugConsole;
+class Breakpoint;
+
+enum BreakUpdateCause
+{
+    BREAK_REMOVED,
+    BREAK_ADDED,
+    BREAK_CHANGED
+};
 
 class DebugPanel : public wxPanel
 {
@@ -14,6 +22,10 @@ class DebugPanel : public wxPanel
 
         virtual void Update(bool vi) {}
         void Print(const wxString &msg);
+
+        DebuggerFrame *GetParent() { return parent; }
+
+        virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause) {}
 
     protected:
         DebuggerFrame *parent;

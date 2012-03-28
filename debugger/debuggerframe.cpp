@@ -107,6 +107,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     inited = false;
     vi_break = false;
     vi_count = 0;
+    breakpoints = new BreakpointInterface;
 
     SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
     InitDrawingValues();
@@ -219,12 +220,20 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_)
         aui->DetachPane(&testpanel);
     }
 
-    size_t pos = perspective.find("name=", 0), name_end, id_end;
+    size_t pos = 0, name_end, id_end;
     int id;
     wxString name;
-    while (pos != perspective.npos)
+    while ((pos = perspective.find("name=", pos)) != perspective.npos)
     {
         pos += 5;
+        size_t state_pos = perspective.find("state=", pos);
+        if (state_pos != perspective.npos)
+        {
+            const char *cstring = perspective.c_str() + state_pos + 6;
+            uint32_t state = atoi(cstring);
+            if (state & wxAuiPaneInfo::wxAuiPaneState::optionHidden) // If the pane is hidden, don't load it
+                continue; // I don't get how they become hidden in the first place <.<
+        }
         name_end = perspective.find('_', pos);
         name = perspective.substr(pos, name_end - pos);
         id = wxNewId();
@@ -246,7 +255,6 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_)
         char buf[16];
         sprintf(buf, "%d", id);
         perspective.replace(name_end + 1, id_end - name_end - 1, buf);
-        pos = perspective.find("name=", id_end);
     }
     aui->LoadPerspective(perspective);
     return true;
@@ -333,6 +341,70 @@ void DebuggerFrame::PaneTitleEvent(wxCommandEvent &evt)
             aui->Update();
         }
     }
+}
+
+bool DebuggerFrame::AddBreakpoint(Breakpoint *bpt)
+{
+    if (!breakpoints->Add(bpt))
+        return false;
+
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
+    {
+        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_ADDED);
+    }
+    return true;
+}
+
+void DebuggerFrame::DeleteBreakpoint(Breakpoint *bpt, bool refresh)
+{
+    breakpoints->Delete(bpt);
+    if (refresh)
+    {
+        wxAuiPaneInfoArray panes = aui->GetAllPanes();
+        for (uint32_t i = 0; i < panes.GetCount(); i++)
+        {
+            ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_REMOVED);
+        }
+    }
+}
+
+void DebuggerFrame::EnableBreakpoint(Breakpoint *bpt, bool enable, bool refresh)
+{
+    if (enable == bpt->IsEnabled())
+        return;
+    if (enable)
+        breakpoints->Enable(bpt);
+    else
+        breakpoints->Disable(bpt);
+    if (refresh)
+    {
+        wxAuiPaneInfoArray panes = aui->GetAllPanes();
+        for (uint32_t i = 0; i < panes.GetCount(); i++)
+        {
+            ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED);
+        }
+    }
+}
+
+void DebuggerFrame::EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type)
+{
+    breakpoints->Update(bpt, name, address, length, type);
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
+    {
+        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED);
+    }
+}
+
+Breakpoint *DebuggerFrame::FindBreakpoint(uint32_t address)
+{
+    return breakpoints->Find(address);
+}
+
+const std::unordered_set<Breakpoint *> *DebuggerFrame::GetBreakpoints()
+{
+     return breakpoints->GetAllBreakpoints();
 }
 
 void DebuggerFrame::SaveConfig()
@@ -531,26 +603,6 @@ void DebuggerFrame::MenuOption(wxCommandEvent &evt)
     }
 }
 
-void DebuggerFrame::NewBreakpoint(Breakpoint *data)
-{
-
-}
-
-void DebuggerFrame::DeleteBreakpoint(Breakpoint *data)
-{
-
-}
-
-Breakpoint *DebuggerFrame::FindBreakpoint(int id)
-{
-    return 0;
-}
-
-Breakpoint *DebuggerFrame::FindBreakpoint(wxString name)
-{
-    return 0;
-}
-
 void DebuggerFrame::Run()
 {
     run->Check(true);
@@ -602,7 +654,6 @@ void DebuggerFrame::UpdatePanels(bool vi)
     {
         ((DebugPanel *)(panes.Item(i).window))->Update(vi);
     }
-    Breakpoint::SetChanged(false);
 }
 
 void DebuggerFrame::RefreshPanels()
@@ -615,7 +666,7 @@ void DebuggerFrame::RefreshPanels()
 
 wxString DebuggerFrame::GetBreakReason(uint32_t pc)
 {
-    Breakpoint *bpt = Breakpoint::Find(pc);
+    Breakpoint *bpt = FindBreakpoint(pc);
     if (bpt && (bpt->GetType() & BREAK_TYPE_EXECUTE))
         return wxString::Format("Hit breakpoint \"%s\"", bpt->GetName());
     else
