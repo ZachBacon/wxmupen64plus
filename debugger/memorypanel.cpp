@@ -116,9 +116,10 @@ void MemoryPanel::SetValue(int pos, int value)
     MemWrite8(current_position + pos, value);
 }
 
-void MemoryPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause)
+void MemoryPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update)
 {
-    memory->Draw();
+    if (last_update)
+        memory->Draw();
 }
 
 /// ------------------------------------------------------------------------------

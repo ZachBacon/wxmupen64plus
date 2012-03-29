@@ -16,7 +16,7 @@ class DisasmPanel : public DebugPanel
         virtual ~DisasmPanel();
 
         void Update(bool vi);
-        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause);
+        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 
         const char **RequestData(int lines);
 

@@ -17,7 +17,7 @@ class BreakpointPanel : public DebugPanel
         virtual ~BreakpointPanel();
 
         void Update(bool vi);
-        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason);
+        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason, bool last_update);
 
         void RClickMenu(wxCommandEvent &evt);
         void RClickItem(wxDataViewEvent &evt);

@@ -6,6 +6,7 @@
 #include <wx/menu.h>
 
 #include "colors.h"
+#include "breakpoint.h"
 #include <wx/dcmemory.h>
 
 #include "../mupen64plusplus/MupenAPI.h"
@@ -22,10 +23,11 @@ CommandMap *DebugConsole::commands = 0;
 Cmd playcmd = { &DebugConsole::CmdPlay, "\"play|run\" Continues the execution" };
 Cmd pausecmd = { &DebugConsole::CmdPause, "\"pause|stop\" Pauses the execution" };
 Cmd stepcmd = { &DebugConsole::CmdStep, "\"step\" Executes a single instruction" };
-Cmd breakcmd = { &DebugConsole::CmdBreak, "\"b|break|breakpoint <opt>\" Manipulates breakpoints. Opt can be:\n    \"a|add <type> <address>\" Adds a new breakpoint\n\
-    \"d|del <id|address>\" Deletes breakpoint\n    \"dis|disable <id|address>\" Disables breakpoint\n\
-    \"ena|enable <id|address>\" Enables previously disabled breakpoint\n    \"l|list\" Lists all breakpoints\n\
-Commands accepting either address or breakpoint id will assume the argument to be id in conflicting situations, unless the argument is prefixed by either \"0\" or \"0x\".\n\
+Cmd breakcmd = { &DebugConsole::CmdBreak, "\"b|break|breakpoint <opt>\" Manipulates breakpoints. Opt can be:\n\
+    \"a|add <type> <address> [length] [name]\" Adds a new breakpoint\n\
+    \"d|del|delete <name|address>\" Deletes breakpoint\n    \"dis|disable <name|address>\" Disables breakpoint\n\
+    \"ena|enable <name|address>\" Enables previously disabled breakpoint\n    \"l|list\" Lists all breakpoints\n\
+If there are multiple breakpoints with same name, all are affected\
 Type can be w, r, or x (write, read, execute) or any combination of above." };
 Cmd helpcmd = { &DebugConsole::CmdHelp, "\"h|help|?\" Helps poor people" };
 Cmd vibreakcmd = { &DebugConsole::CmdViBreak, "\"vi|vibreak\" Breaks at the next vertical interrupt. Used mainly for debugging the debugger" };
@@ -125,6 +127,132 @@ void DebugConsole::CmdStep(wxString &cmd)
 
 void DebugConsole::CmdBreak(wxString &cmd)
 {
+    const char *cmd_cstr = cmd.c_str();
+    strtok((char *)cmd_cstr, " ");
+    char *arg = strtok(0, " ");
+    if (!arg)
+    {
+        Print(breakcmd.help);
+        return;
+    }
+    if (arg[0] == 'a' && (arg[1] == 0 || strcmp(arg, "add") == 0))
+    {
+        const char *type_str = strtok(0, " "), *address_str = strtok(0, " "), *length_str = strtok(0, " "), *name = strtok(0, " ");
+        if (!address_str)
+        {
+            Print(breakcmd.help);
+            return;
+        }
+        uint32_t address = strtoul(address_str, 0, 16);
+        uint32_t length = 0;
+        if (length_str)
+            length = strtoul(length_str, 0, 16);
+        if (!length)
+            length = 4;
+
+        char type = 0;
+        while (type_str[0])
+        {
+            if (type_str[0] == 'x')
+                type |= BREAK_TYPE_EXECUTE;
+            else if (type_str[0] == 'r')
+                type |= BREAK_TYPE_READ;
+            else if (type_str[0] == 'w')
+                type |= BREAK_TYPE_WRITE;
+            type_str++;
+        }
+        if (!type)
+        {
+            Print("Invalid type.");
+            return;
+        }
+
+
+        if (!name)
+            name = "unnamed";
+
+        Breakpoint *bpt = new Breakpoint(name, address, length, type);
+        if (!parent->AddBreakpoint(bpt))
+        {
+            if (bpt->IsValid() == BREAK_INVALID_ADDRESS)
+                Print("Invalid address.");
+            else if (Breakpoint *other = parent->FindBreakpoint(address, length))
+                Print(wxString::Format("There is already breakpoint named \"%s\" at %08X.", other->GetName(), other->GetAddress()));
+            else
+                Print("Maximum number of breakpoints reached.");
+            delete bpt;
+        }
+    }
+    else if (arg[0] == 'd')
+    {
+        const char *name = strtok(0, " ");
+        if (!name)
+        {
+            Print(breakcmd.help);
+            return;
+        }
+        int break_amt;
+        auto breaks = parent->FindBreakpointsByName(name, &break_amt);
+        if (arg[1] == 0 || strcmp(arg, "del") == 0 || strcmp(arg, "delete") == 0)
+        {
+            for (int i = 0; i < break_amt; i++)
+            {
+                parent->DeleteBreakpoint(breaks[i], i == break_amt - 1);
+            }
+        }
+        else if (strcmp(arg, "dis") == 0 || strcmp(arg, "disable") == 0)
+        {
+            for (int i = 0; i < break_amt; i++)
+            {
+                parent->EnableBreakpoint(breaks[i], false, i == break_amt - 1);
+            }
+        }
+    }
+    else if (arg[0] == 'e' && (strcmp(arg, "ena") == 0 || strcmp(arg, "enable") == 0))
+    {
+        const char *name = strtok(0, " ");
+        if (!name)
+        {
+            Print(breakcmd.help);
+            return;
+        }
+        int break_amt;
+        auto breaks = parent->FindBreakpointsByName(name, &break_amt);
+        for (int i = 0; i < break_amt; i++)
+        {
+            parent->EnableBreakpoint(breaks[i], true, i == break_amt - 1);
+        }
+    }
+    else if (arg[0] == 'l' && (arg[1] == 0 || strcmp(arg, "list") == 0))
+    {
+        Print("Name\t\tType\tAddress:length\tenabled");
+        const BreakContainer *breaks = parent->GetBreakpoints();
+        int count = breaks->size();
+        auto it = breaks->begin();
+        for (int i = 0; i < count; i++, ++it)
+        {
+            Breakpoint *bpt = it->second;
+            char type_str[4], *type_pos = type_str, type = bpt->GetType();
+            if (type & BREAK_TYPE_READ)
+                *(type_pos++) = 'r';
+            if (type & BREAK_TYPE_READ)
+                *(type_pos++) = 'w';
+            if (type & BREAK_TYPE_EXECUTE)
+                *(type_pos++) = 'x';
+            *type_pos = 0;
+            char enabled;
+            if (bpt->IsEnabled())
+                enabled = 'y';
+            else
+                enabled = 'n';
+            wxString name = bpt->GetName();
+            if (name.length() < 10) // Just guessing, and tab width might be really different on different platforms
+                name.Append('\t');
+            Print(wxString::Format("%s\t%s\t%08X:%X\t%c", name, type_str, bpt->GetAddress(), bpt->GetLength(), enabled));
+        }
+    }
+    else
+        Print(breakcmd.help);
 }
 
 void DebugConsole::CmdViBreak(wxString &cmd)

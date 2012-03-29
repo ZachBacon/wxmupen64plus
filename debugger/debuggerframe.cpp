@@ -351,25 +351,24 @@ bool DebuggerFrame::AddBreakpoint(Breakpoint *bpt)
     wxAuiPaneInfoArray panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
-        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_ADDED);
+        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_ADDED, true);
     }
     return true;
 }
 
-void DebuggerFrame::DeleteBreakpoint(Breakpoint *bpt, bool refresh)
+void DebuggerFrame::DeleteBreakpoint(Breakpoint *bpt, bool last_update)
 {
     breakpoints->Delete(bpt);
-    if (refresh)
+
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
-        wxAuiPaneInfoArray panes = aui->GetAllPanes();
-        for (uint32_t i = 0; i < panes.GetCount(); i++)
-        {
-            ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_REMOVED);
-        }
+        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_REMOVED, last_update);
     }
+
 }
 
-void DebuggerFrame::EnableBreakpoint(Breakpoint *bpt, bool enable, bool refresh)
+void DebuggerFrame::EnableBreakpoint(Breakpoint *bpt, bool enable, bool last_update)
 {
     if (enable == bpt->IsEnabled())
         return;
@@ -377,13 +376,11 @@ void DebuggerFrame::EnableBreakpoint(Breakpoint *bpt, bool enable, bool refresh)
         breakpoints->Enable(bpt);
     else
         breakpoints->Disable(bpt);
-    if (refresh)
+
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
-        wxAuiPaneInfoArray panes = aui->GetAllPanes();
-        for (uint32_t i = 0; i < panes.GetCount(); i++)
-        {
-            ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED);
-        }
+        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED, last_update);
     }
 }
 
@@ -393,16 +390,21 @@ void DebuggerFrame::EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32
     wxAuiPaneInfoArray panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
-        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED);
+        ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED, true);
     }
 }
 
-Breakpoint *DebuggerFrame::FindBreakpoint(uint32_t address)
+Breakpoint *DebuggerFrame::FindBreakpoint(uint32_t address, uint32_t length)
 {
-    return breakpoints->Find(address);
+    return breakpoints->Find(address, length);
 }
 
-const std::unordered_set<Breakpoint *> *DebuggerFrame::GetBreakpoints()
+std::unique_ptr<Breakpoint *[]> DebuggerFrame::FindBreakpointsByName(const wxString &name, int *amt)
+{
+    return breakpoints->FindByName(name, amt);
+}
+
+const BreakContainer *DebuggerFrame::GetBreakpoints()
 {
      return breakpoints->GetAllBreakpoints();
 }

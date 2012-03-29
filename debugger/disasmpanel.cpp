@@ -136,9 +136,10 @@ void DisasmPanel::Update(bool vi)
     code->Render();
 }
 
-void DisasmPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause)
+void DisasmPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update)
 {
-    code->Render();
+    if (last_update)
+        code->Render();
 }
 
 

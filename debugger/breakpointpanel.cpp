@@ -314,14 +314,14 @@ void BreakpointPanel::AddBreakpoint(Breakpoint *bpt)
 
 void BreakpointPanel::CreateList()
 {
-    const std::unordered_set<Breakpoint *> *breakpoints = parent->GetBreakpoints();
+    const BreakContainer *breakpoints = parent->GetBreakpoints();
     if (!breakpoints)
         return;
 
     int i = 0;
-    for (auto it = breakpoints->begin(); it != breakpoints->end(); it++, i++)
+    for (auto it = breakpoints->begin(); it != breakpoints->end(); ++it, i++)
     {
-        Breakpoint *bpt = *it;
+        Breakpoint *bpt = it->second;
         // naah
         AddBreakpoint(bpt);
     }
@@ -341,7 +341,7 @@ void BreakpointPanel::UpdateValues()
 
 }
 
-void BreakpointPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason)
+void BreakpointPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason, bool last_update)
 {
     switch (reason)
     {

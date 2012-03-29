@@ -5,25 +5,46 @@
 #include <m64p_debugger.h>
 #include "../mupen64plusplus/MupenAPI.h"
 
+using namespace std;
+
 extern ptr_DebugBreakpointCommand DebugBreakpointCommand;
 extern ptr_DebugBreakpointLookup DebugBreakpointLookup;
-template class std::unordered_map<uint32_t, Breakpoint *>;
-template class std::unordered_set<Breakpoint *>;
+
+template class unique_ptr<Breakpoint *[]>;
+template class unordered_map<uint32_t, Breakpoint *>;
+template class BreakContainer;
+
+bool CmpStringPointers::operator()(const wxString *a, const wxString *b) const
+{
+    return *a == *b;
+}
+
+size_t HashStringPointer::operator()(const wxString *val) const
+{
+    const char *str = val->c_str();
+    unsigned long hash = 5381;
+    int c;
+
+    while ((c = *str++))
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash;
+}
 
 
 BreakpointInterface::BreakpointInterface()
 {
-    breakmap = new std::unordered_map<uint32_t, Breakpoint *> ;
-    breakset = new std::unordered_set<Breakpoint *>;
+    breakmap = new unordered_map<uint32_t, Breakpoint *> ;
+    breaks = new BreakContainer;
 }
 
 BreakpointInterface::~BreakpointInterface()
 {
-    for (auto it = breakset->begin(); it != breakset->end(); it++)
+    for (auto it = breaks->begin(); it != breaks->end(); ++it)
     {
-        Remove(*it);
+        Remove(it->second);
     }
-    delete breakset;
+    delete breaks;
     delete breakmap;
 }
 
@@ -54,8 +75,8 @@ bool BreakpointInterface::Add(Breakpoint *bpt)
         return false;
 
     for (int i = 0; i < bpt->length; i++)
-        breakmap->insert(std::pair<uint32_t, Breakpoint *>(bpt->address + i, bpt));
-    breakset->insert(bpt);
+        breakmap->insert(pair<uint32_t, Breakpoint *>(bpt->address + i, bpt));
+    breaks->insert(pair<wxString *, Breakpoint *>(&bpt->name,bpt));
     return true;
 }
 
@@ -75,7 +96,7 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
         for (int i = 0; i < bpt->length; i++)
             breakmap->erase(bpt->address + i);
         for (int i = 0; i < length; i++)
-            breakmap->insert(std::pair<uint32_t, Breakpoint *>(address + i, bpt));
+            breakmap->insert(pair<uint32_t, Breakpoint *>(address + i, bpt));
     }
     bpt->SetValues(name, address, length, type);
     breakpoint raw_bpt;
@@ -99,7 +120,30 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
 
     for (int i = 0; i < bpt->length; i++)
         breakmap->erase(bpt->address + i);
-    breakset->erase(bpt);
+
+    auto range = breaks->equal_range(&bpt->name);
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        if (it->second == bpt)
+        {
+            breaks->erase(it);
+            break;
+        }
+    }
+}
+
+unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name, int *amt)
+{
+    int count = breaks->count(&name);
+    unique_ptr<Breakpoint *[]> ret(new Breakpoint*[count]);
+    auto range = breaks->equal_range(&name);
+    auto it = range.first;
+    for (int i = 0; i < count; i++, ++it)
+    {
+        ret[i] = it->second;
+    }
+    *amt = count;
+    return ret;
 }
 
 void BreakpointInterface::Delete(Breakpoint *bpt)
@@ -140,6 +184,7 @@ Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)
     }
     return 0;
 }
+
 
 // ----------------------------------------------------------------------
 

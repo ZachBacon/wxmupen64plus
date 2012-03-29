@@ -72,7 +72,7 @@ class MemoryPanel : public DebugPanel
         void SetValue(int pos, int value);
         void Goto(wxCommandEvent &evt);
 
-        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause);
+        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 
         uint8_t *RequestData(int size, int relative_offset = 0);
     private:

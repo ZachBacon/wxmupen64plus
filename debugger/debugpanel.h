@@ -25,7 +25,7 @@ class DebugPanel : public wxPanel
 
         DebuggerFrame *GetParent() { return parent; }
 
-        virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause) {}
+        virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update) {}
 
     protected:
         DebuggerFrame *parent;

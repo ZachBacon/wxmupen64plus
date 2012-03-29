@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <wx/string.h>
 #include <unordered_map>
-#include <unordered_set>
+#include <memory>
 
 // These correspond to core's dbg_breakpoint.h (for now)
 #define BREAK_TYPE_EXECUTE 0x20
@@ -12,8 +12,21 @@
 #define BREAK_TYPE_ALL (BREAK_TYPE_EXECUTE | BREAK_TYPE_READ | BREAK_TYPE_WRITE)
 
 class Breakpoint;
+class HashStringPointer
+{
+    public:
+    size_t operator()(const wxString *val) const;
+};
+class CmpStringPointers
+{
+    public:
+    bool operator()(const wxString *a, const wxString *b) const;
+};
+#define BreakContainer std::unordered_multimap<const wxString *, Breakpoint *, HashStringPointer, CmpStringPointers>
+
+extern template class std::unique_ptr<Breakpoint *[]>;
 extern template class std::unordered_map<uint32_t, Breakpoint *>;
-extern template class std::unordered_set<Breakpoint *>;
+extern template class BreakContainer;
 
 enum BreakValidity
 {
@@ -37,14 +50,15 @@ class BreakpointInterface
         void Disable(Breakpoint *bpt);
 
         Breakpoint *Find(uint32_t address, uint32_t length = 1);
-        const std::unordered_set<Breakpoint *> *GetAllBreakpoints() { return breakset; }
+        std::unique_ptr<Breakpoint *[]> FindByName(const wxString &name, int *amt);
+        const BreakContainer *GetAllBreakpoints() { return breaks; }
 
     private:
         bool RawAdd(Breakpoint *bpt);
         void Remove(Breakpoint *bpt);
         // I don't think hash table is the best option for data ranges far aways each other, but it shall be enough for now
         std::unordered_map<uint32_t, Breakpoint *> *breakmap;
-        std::unordered_set<Breakpoint *> *breakset;
+        BreakContainer *breaks;
 };
 
 class Breakpoint

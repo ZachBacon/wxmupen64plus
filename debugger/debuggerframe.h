@@ -2,9 +2,10 @@
 #define DEBUGGERFRAME_H
 
 #include <wx/frame.h>
+#include <unordered_map>
 
 #include "main.h"
-#include <unordered_set>
+#include "breakpoint.h"
 
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_DEBUG_EVENT, -1);
 
@@ -13,7 +14,6 @@ class DebugConsole;
 class DebugPanel;
 class Breakpoint;
 class BreakpointInterface;
-extern template class std::unordered_set<Breakpoint *>;
 
 // This code assumes that there won't be multiple DebuggerFrames,
 // as it makes implementing debug callbacks a lot easier..
@@ -38,10 +38,11 @@ class DebuggerFrame : public wxFrame
         // (With addition of telling all child panels about the changes)
         bool AddBreakpoint(Breakpoint *bpt);
         void DeleteBreakpoint(Breakpoint *bpt, bool refresh = true);
-        Breakpoint *FindBreakpoint(uint32_t address);
+        Breakpoint *FindBreakpoint(uint32_t address, uint32_t length = 1);
+        std::unique_ptr<Breakpoint *[]> FindBreakpointsByName(const wxString &name, int *amt);
         void EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type);
         void EnableBreakpoint(Breakpoint *bpt, bool enable = true, bool refresh = true);
-        const std::unordered_set<Breakpoint *> *GetBreakpoints();
+        const BreakContainer *GetBreakpoints();
 
         void RefreshPanels();
 
