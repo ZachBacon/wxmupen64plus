@@ -240,7 +240,6 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
     }
     else
     {
-        Breakpoint *bpt = new Breakpoint;
         int address = offset + selected, length, type;
         switch (id)
         {
@@ -277,8 +276,9 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
         else
             name.Printf("Write (%X)", length);
 
-        parent_frame->EditBreakpoint(bpt, name, address, length, type);
-        parent_frame->AddBreakpoint(bpt);
+        Breakpoint *bpt = new Breakpoint(name, address, length, type);
+        if(!parent_frame->AddBreakpoint(bpt))
+            parent->Print("Unable to add a new breakpoint");
     }
 }
 
