@@ -97,9 +97,9 @@ def configure(ctx):
     if os.name == 'nt':
         if wxhome == None :
             ctx.fatal("On Windows, the --wxhome argument is mandatory")
-        ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --prefix=' + wxhome + ' ' + wxconfig_args + ' --libs core,base,gl,html', package='', uselib_store='wxWidgets')
+        ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --prefix=' + wxhome + ' ' + wxconfig_args + ' --libs adv,aui,core,base,gl,html', package='', uselib_store='wxWidgets')
     else:
-        ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --libs core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
+        ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --libs adv,aui,core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
 
     ctx.check_cc(compile_filename='test.c', execute=False, cflags=["-I"+api_path], msg="Checking mupen64plus is recent enough...", fragment=
 """#include "../main/version.h"
@@ -196,14 +196,18 @@ def build(bld):
 
 
     # Build the program
+    debugger_sources = ['debugger/breakpoint.cpp', 'debugger/breakpointpanel.cpp', 'debugger/colors.cpp',
+                        'debugger/debugconsole.cpp', 'debugger/debuggerframe.cpp', 'debugger/debugpanel.cpp',
+                        'debugger/disasmpanel.cpp', 'debugger/dv_treelist.cpp', 'debugger/memorypanel.cpp',
+                        'debugger/registerpanel.cpp']
     bld.program(features='c cxx cxxprogram',
-                cxxflags=build_flags,
+                cxxflags=build_flags+['-std=gnu++0x'],
                 cflags=build_flags+['-Wfatal-errors'],
                 linkflags=link_flags + additional_links,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
                         'mupen64plusplus/MupenAPIpp.cpp', 'mupen64plusplus/MupenAPI.c',
                         'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c',
-                        'wxvidext.cpp'] + osal_src,
+                        'wxvidext.cpp'] + osal_src + debugger_sources,
                 target='wxmupen64plus',
                 uselib = 'SDL wxWidgets',
                 install_path = bin_install_path,

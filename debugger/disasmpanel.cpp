@@ -397,12 +397,10 @@ void DisasmWindow::Render()
     data = parent->RequestData(lines);
 
     wxMemoryDC dc(*render_buffer);
-    wxColour bg_colour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 
     dc.SetFont(*g_main_font);
     dc.SetPen(*wxTRANSPARENT_PEN);
-    wxBrush bg(bg_colour);
-    dc.SetBackground(bg);
+    dc.SetBackground(g_brush_bg);
 
     dc.Clear();
 
@@ -418,13 +416,13 @@ void DisasmWindow::Render()
         {
             dc.SetBrush(g_brush_pc);
             dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
-            dc.SetBrush(bg);
+            dc.SetBrush(g_brush_bg);
         }
         else if (current_address >= select_start && current_address <= select_end)
         {
             dc.SetBrush(g_brush_selected);
             dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
-            dc.SetBrush(bg);
+            dc.SetBrush(g_brush_bg);
             current_line_selected = true;
         }
         else
@@ -440,7 +438,7 @@ void DisasmWindow::Render()
                 else
                     dc.SetBrush(g_brush_disabled);
                 dc.DrawRectangle(0, line_start_y + i * line_height + 2, address_width, line_height);
-                dc.SetBrush(bg);
+                dc.SetBrush(g_brush_bg);
                 //current_line_breakpoint = true;
             }
         }
