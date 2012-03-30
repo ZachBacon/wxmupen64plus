@@ -57,6 +57,7 @@ DataViewTreeListModel::DataViewTreeListModel(int cols_)
 
 DataViewTreeListModel::~DataViewTreeListModel()
 {
+    delete (dvtlGroup *)root_item.val;
 }
 
 bool DataViewTreeListModel::IsContainer(const wxDataViewItem &item_) const
