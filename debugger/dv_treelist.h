@@ -22,8 +22,8 @@ class dvtlGroup
         ~dvtlGroup();
 
         void *const *GetChildren(int *amt);
-        int AddChild(void *child);
-        void RemoveChild(void *child);
+        int AddChild(dvtlModelItem *child);
+        void RemoveChild(dvtlModelItem *child);
 
         wxString name;
 
@@ -48,6 +48,7 @@ class DataViewTreeListModel : public wxDataViewModel
         dvtlModelItem *FindItem(void *value);
 
     private:
+        dvtlModelItem root_item;
         int cols;
 
         // I'm not sure about using a hash table here..

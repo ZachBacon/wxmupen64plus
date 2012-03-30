@@ -21,18 +21,18 @@ void *const *dvtlGroup::GetChildren(int *amt)
     return children;
 }
 
-int dvtlGroup::AddChild(void *child)
+int dvtlGroup::AddChild(dvtlModelItem *child)
 {
     if (child_amount >= child_array_size)
     {
         child_array_size += 8;
         children = (void **)realloc(children, child_array_size * sizeof(void **));
     }
-    children[child_array_size] = child;
-    return child_array_size++;
+    children[child_amount] = child;
+    return child_amount++;
 }
 
-void dvtlGroup::RemoveChild(void *child)
+void dvtlGroup::RemoveChild(dvtlModelItem *child)
 {
     for (int i = 0; i < child_amount; i++)
     {
@@ -50,6 +50,9 @@ void dvtlGroup::RemoveChild(void *child)
 DataViewTreeListModel::DataViewTreeListModel(int cols_)
 {
     cols = cols_;
+    root_item.parent = 0;
+    root_item.isGroup = true;
+    root_item.val = new dvtlGroup("");
 }
 
 DataViewTreeListModel::~DataViewTreeListModel()
@@ -73,6 +76,9 @@ wxDataViewItem DataViewTreeListModel::GetParent(const wxDataViewItem &item_) con
 unsigned int DataViewTreeListModel::GetChildren(const wxDataViewItem &item_, wxDataViewItemArray &children) const
 {
     dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
+    if (!item)
+        item = (dvtlModelItem *)&root_item; // Breaks constness
+
     int count = 0;
     if (item->isGroup)
     {
@@ -98,6 +104,9 @@ void DataViewTreeListModel::AddItem(void *value, dvtlModelItem *parent)
     item->isGroup = false;
     item->val = value;
     item->parent = parent;
+    if (!parent)
+        ((dvtlGroup *)root_item.val)->AddChild(item);
+
     value_lookup[value] = item;
     wxDataViewItem item_(item);
     ItemAdded(wxDataViewItem(parent), item_);
@@ -119,6 +128,8 @@ void DataViewTreeListModel::RemoveItem(void *value)
         return;
 
     dvtlModelItem *item = it->second;
+    if (!item->parent)
+        ((dvtlGroup *)root_item.val)->RemoveChild(item);
 
     wxDataViewItem item_(item);
     ItemDeleted(wxDataViewItem(item->parent), item_);
