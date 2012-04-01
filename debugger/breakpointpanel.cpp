@@ -223,7 +223,7 @@ class BreakDataModel : public DataViewTreeListModel
             dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
             if (item->isGroup)
             {
-                if (col == 0)
+                if (col == 0 && item->val)
                     variant = (((dvtlGroup *)item->val)->name);
                 return;
             }
