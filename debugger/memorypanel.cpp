@@ -171,7 +171,7 @@ void MemoryWindow::MouseSelect(wxMouseEvent &evt)
     }
 
     pos.x -= data_start_x - value_border_w / 2;
-    pos.y -= data_start_y - value_border_h / 2;
+    pos.y -= data_start_y + value_border_h / 2;
     int row = pos.y / data_inc_y;
     int x_incs = pos.x / (data_add_inc_x + data_inc_x * 4);
     int col = x_incs * 4;
