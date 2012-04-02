@@ -45,25 +45,25 @@ SingleRegister::SingleRegister(wxWindow *parent, int id, const char *name, Regis
     if (type == REGISTER_INT64 || type == REGISTER_INT32)
     {
         value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
-        value->SetSize(60, -1);
+        value->SetSize(g_number_width * 10.5, -1);
         if (type == REGISTER_INT64)
         {
-            value2 = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len + 62, 1));
-            value2->SetSize(60, -1);
+            value2 = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len + g_number_width * 11, 1));
+            value2->SetSize(g_number_width * 10.5, -1);
             value2->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
             value2->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
-            SetSize(130 + reg_name_len, 28);
+            SetSize(g_number_width * 23 + reg_name_len, 28);
         }
         else
         {
-            SetSize(65 + reg_name_len, 28);
+            SetSize(g_number_width * 11 + reg_name_len, 28);
         }
     }
     else
     {
         value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
-        value->SetSize(120, -1);
-        SetSize(130 + reg_name_len, 28);
+        value->SetSize(110, -1);
+        SetSize(120 + reg_name_len, 28);
     }
     value->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
     value->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
@@ -204,7 +204,7 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
     {
         case REGISTER_GPR:
             reg_name_len = 20;
-            reg_basewidth = 130;
+            reg_basewidth = g_number_width * 23;
             raw_registers.v = GetRegister(M64P_CPU_REG_REG);
             for (int i = 0; i < 32; i++)
             {
@@ -213,8 +213,8 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
         break;
         case REGISTER_COP0:
             show_reserved = false;
-            reg_name_len = 50;
-            reg_basewidth = 80;
+            reg_name_len = 80;
+            reg_basewidth = g_number_width * 12;
             raw_registers.v = GetRegister(M64P_CPU_REG_COP0);
             for (int i = 0; i < 7; i++)
                 Append(cop0_names[i], REGISTER_INT32, i + 1);
@@ -225,8 +225,8 @@ void RegisterTab::InitRegisters(RegisterGroup type_)
 
         break;
         case REGISTER_COP1:
-            reg_name_len = 20;
-            reg_basewidth = 130;
+            reg_name_len = 30;
+            reg_basewidth = 120;
             raw_registers.v = GetRegister(M64P_CPU_REG_COP1_SIMPLE_PTR);
             for (int i = 0; i < 32; i++)
             {

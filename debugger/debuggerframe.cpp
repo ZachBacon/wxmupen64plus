@@ -552,7 +552,7 @@ void DebuggerFrame::LoadGameValues()
             if (osal_insensitive_strcmp(section.name, "breakpoint") == 0 && section.num_values >= 4)
             {
                 uint32_t address, length = 0, type = 0;
-                const char *name = 0;
+                wxString name;
                 for (int i = 0; i < section.num_values; i++)
                 {
                     if (osal_insensitive_strcmp(section.keys[i], "name") == 0)
