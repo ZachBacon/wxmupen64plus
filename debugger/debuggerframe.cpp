@@ -268,6 +268,7 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_)
         perspective.replace(name_end + 1, id_end - name_end - 1, buf);
     }
     aui->LoadPerspective(perspective);
+    RefreshPanels();
     return true;
 }
 
