@@ -315,6 +315,7 @@ void BreakpointPanel::AddBreakpoint(Breakpoint *bpt)
 
 void BreakpointPanel::CreateList()
 {
+    data_model->Clear();
     const BreakContainer *breakpoints = parent->GetBreakpoints();
     if (!breakpoints)
         return;
@@ -323,7 +324,6 @@ void BreakpointPanel::CreateList()
     for (auto it = breakpoints->begin(); it != breakpoints->end(); ++it, i++)
     {
         Breakpoint *bpt = it->second;
-        // naah
         AddBreakpoint(bpt);
     }
     UpdateValues();

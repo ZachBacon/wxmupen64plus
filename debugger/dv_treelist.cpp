@@ -134,7 +134,23 @@ void DataViewTreeListModel::RemoveItem(void *value)
 
     wxDataViewItem item_(item);
     ItemDeleted(wxDataViewItem(item->parent), item_);
+    delete item;
 
     value_lookup.erase(it);
+}
+
+void DataViewTreeListModel::Clear()
+{
+    for (auto &it : value_lookup)
+    {
+        dvtlModelItem *item = it.second;
+        if (item->isGroup)
+            delete (dvtlGroup *)item->val;
+        delete item;
+    }
+    delete (dvtlGroup *)root_item.val;
+    root_item.val = new dvtlGroup("");
+    value_lookup.clear();
+    Cleared();
 }
 

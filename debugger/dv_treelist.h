@@ -47,6 +47,8 @@ class DataViewTreeListModel : public wxDataViewModel
         void RemoveItem(void *value);
         dvtlModelItem *FindItem(void *value);
 
+        void Clear();
+
     private:
         dvtlModelItem root_item;
         int cols;
