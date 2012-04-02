@@ -73,6 +73,8 @@ class Breakpoint
 
 
         BreakValidity IsValid() const;
+        static BreakValidity IsValid(const wxString &name, uint32_t address, int length, char type);
+
         bool IsEnabled() const { return enabled; }
         char GetType() const { return type; }
         const wxString &GetName() const { return name; }

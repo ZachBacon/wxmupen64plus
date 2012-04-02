@@ -179,8 +179,9 @@ class BreakpointDialog : public wxDialog
 class BreakDataModel : public DataViewTreeListModel
 {
     public:
-        BreakDataModel() : DataViewTreeListModel(4)
+        BreakDataModel(DebuggerFrame *parent) : DataViewTreeListModel(4)
         {
+            debug_frame = parent;
         }
         wxString GetColumnType(unsigned int col) const
         {
@@ -246,14 +247,50 @@ class BreakDataModel : public DataViewTreeListModel
                 break;
             }
         }
-        bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col)
+        bool SetValue(const wxVariant &variant, const wxDataViewItem &item_, unsigned int col)
         {
-            return false;
+            dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
+            if (item->isGroup)
+            {
+                if (col == 0)
+                {
+                    ((dvtlGroup *)item->val)->name = variant.MakeString();
+                    return true;
+                }
+                else
+                    return false;
+            }
+            Breakpoint *bpt = (Breakpoint *)item->val;
+            switch (col)
+            {
+                case name_col:
+                    return debug_frame->EditBreakpoint(bpt, variant.MakeString(), bpt->GetAddress(), bpt->GetLength(), bpt->GetType());
+                break;
+                case address_col:
+                {
+                    uint32_t address, length;
+                    wxString value = variant.MakeString(), addr_str, len_str;
+                    addr_str = value.BeforeFirst(':', &len_str);
+                    address = strtoul(addr_str, 0, 16);
+                    length = strtoul(len_str, 0, 16);
+                    return debug_frame->EditBreakpoint(bpt, bpt->GetName(), address, length, bpt->GetType());
+                }
+                break;
+                case enabled_col:
+                    debug_frame->EnableBreakpoint(bpt, bpt->IsEnabled() == false);
+                    return true;
+                break;
+                default:
+                    return false;
+                break;
+            }
         }
         void UpdateBreakpoint(Breakpoint *bpt)
         {
             ItemChanged(wxDataViewItem(FindItem(bpt)));
         }
+    private:
+        DebuggerFrame *debug_frame;
 };
 
 
@@ -265,11 +302,11 @@ BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(par
     list = new wxDataViewCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxDV_VERT_RULES | wxDV_MULTIPLE | wxWANTS_CHARS);
     name_column = list->AppendTextColumn(_("Name"), name_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
     address_column = list->AppendTextColumn(_("Address"), address_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
-    value_column = list->AppendTextColumn(_("Value"), value_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
-    enabled_column = list->AppendToggleColumn(_("Enabled"), enabled_col, wxDATAVIEW_CELL_INERT , -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE);
+    value_column = list->AppendTextColumn(_("Value"), value_col, wxDATAVIEW_CELL_INERT , -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
+    enabled_column = list->AppendToggleColumn(_("Enabled"), enabled_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE);
     list->SetExpanderColumn(name_column);
 
-    data_model = new BreakDataModel();
+    data_model = new BreakDataModel(parent);
     list->AssociateModel(data_model);
     data_model->DecRef();
 
@@ -281,6 +318,7 @@ BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(par
     list->Bind(wxEVT_CONTEXT_MENU, &BreakpointPanel::RClickMenu, this);
     list->Bind(wxEVT_COMMAND_DATAVIEW_ITEM_CONTEXT_MENU, &BreakpointPanel::RClickItem, this);
     list->Bind(wxEVT_CHAR, &BreakpointPanel::KeyDown, this);
+    list->Bind(wxEVT_COMMAND_DATAVIEW_ITEM_ACTIVATED, &BreakpointPanel::EditEvent, this);
 
     CreateList();
 }
@@ -614,5 +652,10 @@ void BreakpointPanel::KeyDown(wxKeyEvent &evt)
             evt.Skip();
         break;
     }
+}
+
+void BreakpointPanel::EditEvent(wxDataViewEvent &evt)
+{
+    EditDialog();
 }
 

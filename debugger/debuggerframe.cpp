@@ -394,14 +394,16 @@ void DebuggerFrame::EnableBreakpoint(Breakpoint *bpt, bool enable, bool last_upd
     }
 }
 
-void DebuggerFrame::EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type)
+bool DebuggerFrame::EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type)
 {
-    breakpoints->Update(bpt, name, address, length, type);
+    if (!breakpoints->Update(bpt, name, address, length, type))
+        return false;
     wxAuiPaneInfoArray panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED, true);
     }
+    return true;
 }
 
 Breakpoint *DebuggerFrame::FindBreakpoint(uint32_t address, uint32_t length)

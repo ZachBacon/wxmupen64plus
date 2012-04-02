@@ -40,7 +40,7 @@ class DebuggerFrame : public wxFrame
         void DeleteBreakpoint(Breakpoint *bpt, bool refresh = true);
         Breakpoint *FindBreakpoint(uint32_t address, uint32_t length = 1);
         std::unique_ptr<Breakpoint *[]> FindBreakpointsByName(const wxString &name, int *amt);
-        void EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type);
+        bool EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type);
         void EnableBreakpoint(Breakpoint *bpt, bool enable = true, bool refresh = true);
         const BreakContainer *GetBreakpoints();
 

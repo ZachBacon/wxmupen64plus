@@ -82,6 +82,9 @@ bool BreakpointInterface::Add(Breakpoint *bpt)
 
 bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t address, int length, char type)
 {
+    if (Breakpoint::IsValid(name, address, length, type) != BREAK_VALID)
+        return false;
+
     if (!bpt->enabled)
     {
         bpt->SetValues(name, address, length, type);
@@ -221,6 +224,11 @@ void Breakpoint::SetValues(const wxString &name_, uint32_t address_, int length_
 }
 
 BreakValidity Breakpoint::IsValid() const
+{
+    return IsValid(name, address, length, type);
+}
+
+BreakValidity Breakpoint::IsValid(const wxString &name, uint32_t address, int length, char type)
 {
     if (!(type & BREAK_TYPE_ALL))
         return BREAK_INVALID_TYPE;

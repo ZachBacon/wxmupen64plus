@@ -24,6 +24,7 @@ class BreakpointPanel : public DebugPanel
         void RClickEvent(wxCommandEvent &evt);
         void Deselect(wxMouseEvent &evt);
         void KeyDown(wxKeyEvent &evt);
+        void EditEvent(wxDataViewEvent &evt);
 
         void AddBreakpoint(Breakpoint *bpt);
 
