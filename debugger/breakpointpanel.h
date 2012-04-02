@@ -23,6 +23,7 @@ class BreakpointPanel : public DebugPanel
         void RClickItem(wxDataViewEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
         void Deselect(wxMouseEvent &evt);
+        void KeyDown(wxKeyEvent &evt);
 
         void AddBreakpoint(Breakpoint *bpt);
 
@@ -34,6 +35,11 @@ class BreakpointPanel : public DebugPanel
         void GenerateFilterMenu(wxMenu *menu);
         int filter;
         int current_item;
+
+        void AddDialog();
+        void EditDialog();
+        void DeleteSelected();
+        void EnableSelected(bool enable);
 
         wxDataViewCtrl *list;
         wxDataViewColumn *name_column;

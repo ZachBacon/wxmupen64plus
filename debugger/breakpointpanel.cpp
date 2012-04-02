@@ -262,7 +262,7 @@ BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(par
     filter = BREAK_FILTER_ALL;
 
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
-    list = new wxDataViewCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxDV_VERT_RULES | wxDV_MULTIPLE);
+    list = new wxDataViewCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxDV_VERT_RULES | wxDV_MULTIPLE | wxWANTS_CHARS);
     name_column = list->AppendTextColumn(_("Name"), name_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
     address_column = list->AppendTextColumn(_("Address"), address_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
     value_column = list->AppendTextColumn(_("Value"), value_col, wxDATAVIEW_CELL_EDITABLE, -1, wxALIGN_NOT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
@@ -280,6 +280,7 @@ BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(par
     list->Bind(wxEVT_LEFT_DOWN, &BreakpointPanel::Deselect, this);
     list->Bind(wxEVT_CONTEXT_MENU, &BreakpointPanel::RClickMenu, this);
     list->Bind(wxEVT_COMMAND_DATAVIEW_ITEM_CONTEXT_MENU, &BreakpointPanel::RClickItem, this);
+    list->Bind(wxEVT_CHAR, &BreakpointPanel::KeyDown, this);
 
     CreateList();
 }
@@ -371,101 +372,103 @@ void BreakpointPanel::Update(bool vi)
     UpdateValues();
 }
 
+void BreakpointPanel::AddDialog()
+{
+    BreakpointDialog dlg(this, -1, _("Add breakpoint"));
+    if (dlg.ShowModal() == wxOK)
+    {
+        Breakpoint *bpt = dlg.GenerateBreakpoint();
+        BreakValidity valid = bpt->IsValid();
+        if (valid != BREAK_VALID)
+        {
+            delete bpt;
+            switch (valid)
+            {
+                case BREAK_INVALID_ADDRESS:
+                    wxMessageBox(_("Invalid address"), _("Error"));
+                break;
+                case BREAK_INVALID_TYPE:
+                    wxMessageBox(_("No type specified"), _("Error"));
+                break;
+                case BREAK_INVALID_NAME:
+                    wxMessageBox(_("No name specified"), _("Error"));
+                break;
+                case BREAK_INVALID_LENGTH:
+                    wxMessageBox(_("Invalid length (?)"), _("Error"));
+                break;
+                default:
+                break;
+            }
+        }
+        else
+        {
+            if (!parent->AddBreakpoint(bpt))
+                delete bpt;
+        }
+    }
+}
+
+void BreakpointPanel::EditDialog()
+{
+    BreakpointDialog dlg(this, -1, _("Edit breakpoint"));
+    dvtlModelItem *item = (dvtlModelItem *)list->GetSelection().GetID();
+    if (!item)
+        return;
+
+    Breakpoint *bpt = (Breakpoint *)item->val;
+    dlg.SetValues(bpt);
+    if (dlg.ShowModal() == wxOK)
+    {
+        BreakValidity valid = dlg.IsValid();
+        if (valid != BREAK_VALID)
+        {
+            switch (valid)
+            {
+                case BREAK_INVALID_ADDRESS:
+                    wxMessageBox(_("Invalid address"), _("Error"));
+                break;
+                case BREAK_INVALID_TYPE:
+                    wxMessageBox(_("No type specified"), _("Error"));
+                break;
+                case BREAK_INVALID_NAME:
+                    wxMessageBox(_("No name specified"), _("Error"));
+                break;
+                case BREAK_INVALID_LENGTH:
+                    wxMessageBox(_("Invalid length (?)"), _("Error"));
+                break;
+                default:
+                break;
+            }
+        }
+        else
+        {
+            wxString name;
+            uint32_t address, length, type;
+            dlg.GetValues(&name, &address, &length, &type);
+            parent->EditBreakpoint(bpt, name, address, length, type);
+        }
+    }
+}
+
 void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
 {
     int id = evt.GetId();
     switch(id)
     {
         case break_add:
-        {
-            BreakpointDialog dlg(this, -1, _("Add breakpoint"));
-            if (dlg.ShowModal() == wxOK)
-            {
-                Breakpoint *bpt = dlg.GenerateBreakpoint();
-                BreakValidity valid = bpt->IsValid();
-                if (valid != BREAK_VALID)
-                {
-                    delete bpt;
-                    switch (valid)
-                    {
-                        case BREAK_INVALID_ADDRESS:
-                            wxMessageBox(_("Invalid address"), _("Error"));
-                        break;
-                        case BREAK_INVALID_TYPE:
-                            wxMessageBox(_("No type specified"), _("Error"));
-                        break;
-                        case BREAK_INVALID_NAME:
-                            wxMessageBox(_("No name specified"), _("Error"));
-                        break;
-                        case BREAK_INVALID_LENGTH:
-                            wxMessageBox(_("Invalid length (?)"), _("Error"));
-                        break;
-                        default:
-                        break;
-                    }
-                }
-                else
-                {
-                    if (!parent->AddBreakpoint(bpt))
-                        delete bpt;
-                }
-            }
-        }
+            AddDialog();
         break;
         case break_edit:
-        {
-            BreakpointDialog dlg(this, -1, _("Edit breakpoint"));
-            Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)list->GetSelection().GetID())->val;
-            dlg.SetValues(bpt);
-            if (dlg.ShowModal() == wxOK)
-            {
-                BreakValidity valid = dlg.IsValid();
-                if (valid != BREAK_VALID)
-                {
-                    switch (valid)
-                    {
-                        case BREAK_INVALID_ADDRESS:
-                            wxMessageBox(_("Invalid address"), _("Error"));
-                        break;
-                        case BREAK_INVALID_TYPE:
-                            wxMessageBox(_("No type specified"), _("Error"));
-                        break;
-                        case BREAK_INVALID_NAME:
-                            wxMessageBox(_("No name specified"), _("Error"));
-                        break;
-                        case BREAK_INVALID_LENGTH:
-                            wxMessageBox(_("Invalid length (?)"), _("Error"));
-                        break;
-                        default:
-                        break;
-                    }
-                }
-                else
-                {
-                    wxString name;
-                    uint32_t address, length, type;
-                    dlg.GetValues(&name, &address, &length, &type);
-                    parent->EditBreakpoint(bpt, name, address, length, type);
-                }
-            }
-        }
+            EditDialog();
         break;
         case break_disable:
+            EnableSelected(false);
+        break;
         case break_enable:
+            EnableSelected(true);
+        break;
         case break_delete:
-        {
-            wxDataViewItemArray items;
-            list->GetSelections(items);
-            int amt = items.GetCount();
-            for (int i = 0; i < amt; i++)
-            {
-                Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->val;
-                if (id == break_delete)
-                    parent->DeleteBreakpoint(bpt, i == amt - 1);
-                else
-                    parent->EnableBreakpoint(bpt, id == break_enable, i == amt - 1);
-            }
-        }
+            DeleteSelected();
         break;
         case break_f_disabled:
             filter ^= BREAK_FILTER_DISABLED;
@@ -488,6 +491,32 @@ void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
             CreateList();
         break;
     }
+}
+
+void BreakpointPanel::EnableSelected(bool enable)
+{
+    wxDataViewItemArray items;
+    list->GetSelections(items);
+    int amt = items.GetCount();
+    for (int i = 0; i < amt; i++)
+    {
+        Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->val;
+        parent->EnableBreakpoint(bpt, enable, i == amt - 1);
+    }
+    list->UnselectAll();
+}
+
+void BreakpointPanel::DeleteSelected()
+{
+    wxDataViewItemArray items;
+    list->GetSelections(items);
+    int amt = items.GetCount();
+    for (int i = 0; i < amt; i++)
+    {
+        Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->val;
+        parent->DeleteBreakpoint(bpt, i == amt - 1);
+    }
+    list->UnselectAll();
 }
 
 void BreakpointPanel::GenerateFilterMenu(wxMenu *menu)
@@ -519,18 +548,18 @@ void BreakpointPanel::RClickItem(wxDataViewEvent &evt)
 {
     wxMenu menu, *filter = new wxMenu;
     wxMenuItem *add, *edit, *remove, *disable, *enable, *separator;
-    add = new wxMenuItem(&menu, break_add, _("New.."));
+    add = new wxMenuItem(&menu, break_add, _("New..\tCtrl-A"));
     menu.Append(add);
     if (list->GetSelection().GetID() != 0) // wx 2.9.3: list->GetSelectedItemsCount() == 1 or list->HasSelecion()
     {
-        edit = new wxMenuItem(&menu, break_edit, _("Edit.."));
+        edit = new wxMenuItem(&menu, break_edit, _("Edit..\tCtrl-E"));
         menu.Append(edit);
     }
     disable = new wxMenuItem(&menu, break_disable, _("Disable"));
     menu.Append(disable);
     enable = new wxMenuItem(&menu, break_enable, _("Enable"));
     menu.Append(enable);
-    remove = new wxMenuItem(&menu, break_delete, _("Delete"));
+    remove = new wxMenuItem(&menu, break_delete, _("Delete\tDel"));
     menu.Append(remove);
 
     separator = new wxMenuItem(&menu);
@@ -561,9 +590,29 @@ void BreakpointPanel::RClickMenu(wxCommandEvent &evt)
     PopupMenu(&menu);
 }
 
-
 void BreakpointPanel::Deselect(wxMouseEvent &evt)
 {
     list->UnselectAll();
+}
+
+void BreakpointPanel::KeyDown(wxKeyEvent &evt)
+{
+    switch (evt.GetKeyCode())
+    {
+        case WXK_DELETE:
+            DeleteSelected();
+        break;
+        case WXK_CONTROL_A:
+            if (wxGetKeyState(WXK_CONTROL))
+                AddDialog();
+        break;
+        case WXK_CONTROL_E:
+            if (wxGetKeyState(WXK_CONTROL))
+                EditDialog();
+        break;
+        default:
+            evt.Skip();
+        break;
+    }
 }
 
