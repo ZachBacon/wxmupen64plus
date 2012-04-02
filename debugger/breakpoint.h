@@ -49,6 +49,8 @@ class BreakpointInterface
         bool Enable(Breakpoint *bpt);
         void Disable(Breakpoint *bpt);
 
+        void Clear();
+
         Breakpoint *Find(uint32_t address, uint32_t length = 1);
         std::unique_ptr<Breakpoint *[]> FindByName(const wxString &name, int *amt);
         const BreakContainer *GetAllBreakpoints() { return breaks; }

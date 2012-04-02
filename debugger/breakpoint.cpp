@@ -185,6 +185,11 @@ Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)
     return 0;
 }
 
+void BreakpointInterface::Clear()
+{
+    breakmap->clear();
+    breaks->clear();
+}
 
 // ----------------------------------------------------------------------
 

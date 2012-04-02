@@ -931,6 +931,13 @@ void osdNewMessage(const char* message)
 
 // -----------------------------------------------------------------------------------------------------------
 
+const char *GetUserDataPath()
+{
+    return (*PtrConfigGetUserDataPath)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 m64p_error SetDebuggingCallbacks(void (*init)(void), void (*update)(unsigned int), void (*vi)(void))
 {
     return (*DebugSetCallbacks)(init, update, vi);

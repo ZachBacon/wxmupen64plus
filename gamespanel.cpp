@@ -473,9 +473,9 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         }
         else if (not (found_sections & 0x2) && config[n]->m_section_name == "Core")
         {
-            if(config[n]->getParamWithName("EnableDebugger")->getBoolValue() == true)
+            if (config[n]->getParamWithName("EnableDebugger")->getBoolValue() == true)
             {
-                if(!DebuggerFrame::Exists())
+                if (!DebuggerFrame::Exists())
                     new DebuggerFrame;
             }
             found_sections |= 0x2;
@@ -592,6 +592,9 @@ void GamesPanel::onStop(wxCommandEvent& evt)
         wxCommandEvent evt(wxMUPEN_CLEANUP_GL_CANVAS, -1);
         wxGetApp().AddPendingEvent(evt);
         //cleanGLCanvas();
+
+        if (DebuggerFrame::Exists())
+            DebuggerFrame::GameClosed();
     }
     catch (std::runtime_error& ex)
     {

@@ -158,7 +158,7 @@ bool MupenFrontendApp::OnInit()
     SDL_Helper_Start();
 
 #if defined DATADIR_WXDATA
-    wxString datadir = "./wxdata/";
+    datadir = "./wxdata/";
 #elif defined DATADIR
     datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else

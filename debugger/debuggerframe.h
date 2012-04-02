@@ -54,11 +54,10 @@ class DebuggerFrame : public wxFrame
         void ProcessCallback(wxCommandEvent &evt);
 
         void Print(const wxString &msg);
-        void SaveConfig();
 
         static bool Exists() { return g_debugger != 0; }
         static void Delete();
-
+        static void GameClosed();
 
         void Close(wxCloseEvent &evt);
         void MenuClose(wxCommandEvent &evt);
@@ -99,7 +98,10 @@ class DebuggerFrame : public wxFrame
         wxMenuItem *pause;
 
         void LoadConfig();
+        void SaveConfig();
         bool LoadAui(const wxString &perspective);
+        void LoadGameValues();
+        void SaveGameValues();
         bool runtime_update;
         char run_on_boot; // 0 = nope; 1 = yea; 2 = yea, done
 

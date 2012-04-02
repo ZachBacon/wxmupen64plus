@@ -6,17 +6,19 @@
 #include <wx/dialog.h>
 #include <wx/textctrl.h>
 #include <wx/button.h>
+#include <wx/dir.h>
 #include <stdexcept>
 
 
+#include "../mupen64plusplus/MupenAPI.h"
 #include "breakpointpanel.h"
 #include "disasmpanel.h"
 #include "memorypanel.h"
 #include "debugconsole.h"
 #include "registerpanel.h"
-#include "../mupen64plusplus/MupenAPI.h"
 #include "breakpoint.h"
 #include "colors.h"
+#include "debugconfig.h"
 
 extern ptr_ConfigOpenSection PtrConfigOpenSection; // lazy
 
@@ -124,11 +126,19 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     Bind(wxEVT_RIGHT_UP, &DebuggerFrame::PaneTitleRClick, this);
 }
 
+void DebuggerFrame::GameClosed()
+{
+    if (!g_debugger)
+        return;
+    g_debugger->SaveGameValues();
+}
+
 void DebuggerFrame::Delete()
 {
     if (!g_debugger)
         return;
     g_debugger->SaveConfig();
+    g_debugger->SaveGameValues();
     g_debugger->Destroy();
 }
 
@@ -519,6 +529,110 @@ void DebuggerFrame::LoadConfig()
         Print("WARNING: Dynamic recompiler limits debugging features, please use interpreter");
 }
 
+void DebuggerFrame::LoadGameValues()
+{
+    m64p_rom_settings rom_settings;
+    getRomSettings(&rom_settings);
+
+    wxString game_values_name, game_values_path = GetUserDataPath();
+    game_values_path.Printf("%sdebugger", GetUserDataPath());
+    game_values_name.Printf("%s/%s.ids", game_values_path, rom_settings.goodname);
+    if (!wxDir::Exists(game_values_path))
+        wxDir::Make(game_values_path);
+
+    DebugConfigIn vals(game_values_name);
+    if (vals.IsOk())
+    {
+        DebugConfigSection section;
+        while(vals.GetNextSection(&section) == true)
+        {
+            if (strcmpi(section.name, "breakpoint") == 0 && section.num_values >= 4)
+            {
+                uint32_t address, length = 0, type = 0;
+                const char *name = 0;
+                for (int i = 0; i < section.num_values; i++)
+                {
+                    if (strcmpi(section.keys[i], "name") == 0)
+                        name = section.values[i];
+                    else if (strcmpi(section.keys[i], "address") == 0)
+                        address = strtoul(section.values[i], 0, 16);
+                    else if (strcmpi(section.keys[i], "length") == 0)
+                        length = strtoul(section.values[i], 0, 16);
+                    else if (strcmpi(section.keys[i], "type") == 0)
+                    {
+                        const char *type_str = section.values[i];
+                        while (type_str[0] != 0)
+                        {
+                            if (type_str[0] == 'x')
+                                type |= BREAK_TYPE_EXECUTE;
+                            else if (type_str[0] == 'r')
+                                type |= BREAK_TYPE_READ;
+                            else if (type_str[0] == 'w')
+                                type |= BREAK_TYPE_WRITE;
+                            type_str++;
+                        }
+                    }
+                }
+                if (!name || !length || !type)
+                    continue;
+                Breakpoint *bpt = new Breakpoint(name, address, length, type);
+                AddBreakpoint(bpt);
+            }
+        }
+    }
+}
+
+void DebuggerFrame::SaveGameValues()
+{
+    m64p_rom_settings rom_settings;
+    getRomSettings(&rom_settings);
+    wxString game_values_name;
+    game_values_name.Printf("%sdebugger/%s.ids", GetUserDataPath(), rom_settings.goodname);
+
+    DebugConfigOut vals(game_values_name);
+    DebugConfigSection section;
+    section.name = "Breakpoint";
+    section.keys[0] = "Name";
+    section.keys[1] = "Address";
+    section.keys[2] = "Length";
+    section.keys[3] = "Type";
+    section.num_values = 4;
+    auto breaks = breakpoints->GetAllBreakpoints();
+    for (auto &it : *breaks)
+    {
+        char addr[16], len[16], type_str[4];
+        int type_count = 0, type;
+        Breakpoint *bpt = it.second;
+        sprintf(addr, "%X", bpt->GetAddress());
+        sprintf(len, "%X", bpt->GetLength());
+
+        type = bpt->GetType();
+        if (type & BREAK_TYPE_EXECUTE)
+        {
+            type_str[type_count] = 'x';
+            type_count++;
+        }
+        if (type & BREAK_TYPE_READ)
+        {
+            type_str[type_count] = 'r';
+            type_count++;
+        }
+        if (type & BREAK_TYPE_WRITE)
+        {
+            type_str[type_count] = 'w';
+            type_count++;
+        }
+        type_str[type_count] = 0;
+
+        section.values[0] = bpt->GetName().ToUTF8();
+        section.values[1] = addr;
+        section.values[2] = len;
+        section.values[3] = type_str;
+
+        vals.WriteSection(&section);
+    }
+}
+
 void DebuggerFrame::CreateMenubar()
 {
     wxMenu *filemenu = new wxMenu, *viewmenu = new wxMenu, *statemenu = new wxMenu, *optmenu = new wxMenu;
@@ -642,6 +756,8 @@ void DebuggerFrame::Print(const wxString &msg)
 {
     if (output)
         output->Print(msg);
+    else
+        printf("Debugger: %s", (const char *)msg);
 }
 
 void DebuggerFrame::MenuClose(wxCommandEvent &evt)
@@ -750,6 +866,9 @@ void DebuggerFrame::Reset()
 {
     if (run_on_boot == 2)
         run_on_boot = 1;
+
+    breakpoints->Clear();
+    LoadGameValues();
     // TODO--
 }
 

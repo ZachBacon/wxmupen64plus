@@ -85,6 +85,8 @@ m64p_error GetVideoExtension(char videoExtension[], const int videoExtensionLen)
 extern ptr_CoreShutdown  CoreShutdown;
 extern ptr_CoreStartup   CoreStartup;
 
+const char *GetUserDataPath();
+
 /**
  * @pre The emulator cannot be currently running. A ROM image must not be currently opened
  */
