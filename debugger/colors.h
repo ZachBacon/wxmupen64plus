@@ -19,6 +19,7 @@ extern wxColour g_color_text_default;
 extern int g_number_width;
 extern int g_bold_number_width;
 extern int g_normal_height;
+extern wxSize g_textctrl_default;
 
 extern const wxFont *g_main_font;
 

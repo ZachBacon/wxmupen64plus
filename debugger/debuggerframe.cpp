@@ -555,7 +555,7 @@ void DebuggerFrame::LoadGameValues()
                 for (int i = 0; i < section.num_values; i++)
                 {
                     if (strcmpi(section.keys[i], "name") == 0)
-                        name = section.values[i];
+                        name = wxString::FromUTF8(section.values[i]);
                     else if (strcmpi(section.keys[i], "address") == 0)
                         address = strtoul(section.values[i], 0, 16);
                     else if (strcmpi(section.keys[i], "length") == 0)
@@ -645,7 +645,6 @@ void DebuggerFrame::CreateMenubar()
     pause = new wxMenuItem(statemenu, state_pause_id, _("Pause\tF12"), wxEmptyString, wxITEM_CHECK);
     wxMenuItem *separator1 = new wxMenuItem(statemenu);
     wxMenuItem *step = new wxMenuItem(statemenu, state_step_id, _("Step\tF7"));
-    wxMenuItem *vibreak = new wxMenuItem(statemenu, state_vibreak_id, _("Next vertical interrupt"));
 
     run_on_boot_menu = new wxMenuItem(optmenu, run_on_boot_opt_id, _("Run on boot"), wxEmptyString, wxITEM_CHECK);
     runtime_update_menu = new wxMenuItem(optmenu, runtime_update_opt_id, _("Update values while running"), wxEmptyString, wxITEM_CHECK);
@@ -654,7 +653,6 @@ void DebuggerFrame::CreateMenubar()
     statemenu->Append(pause);
     statemenu->Append(separator1);
     statemenu->Append(step);
-    statemenu->Append(vibreak);
 
     viewmenu->Append(console_panel_id, _("Console"));
     viewmenu->Append(break_panel_id, _("Breakpoints\tCtrl-B"));

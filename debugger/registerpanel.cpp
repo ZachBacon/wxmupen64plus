@@ -7,9 +7,9 @@
 #include <wx/menu.h>
 
 #include "../mupen64plusplus/MupenAPI.h"
+#include "colors.h"
 
-// These are practically wanted (default..) width for the register text controls
-#define singlereg_height 22
+#define singlereg_height (g_textctrl_default.y + 1)
 
 wxDEFINE_EVENT(REGVAL_CHANGE_EVT, RegChangeEvent);
 

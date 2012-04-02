@@ -1,6 +1,8 @@
 #include "colors.h"
 #include <wx/settings.h>
 #include <wx/dcmemory.h>
+#include <wx/frame.h>
+#include <wx/textctrl.h>
 
 wxBrush g_brush_execute;
 wxBrush g_brush_read;
@@ -16,6 +18,7 @@ wxColour g_color_text_default;
 int g_number_width;
 int g_bold_number_width;
 int g_normal_height;
+wxSize g_textctrl_default;
 
 const wxFont *g_main_font;
 
@@ -40,5 +43,11 @@ void InitDrawingValues()
     g_brush_bg.SetColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
     g_color_text_selected = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
     g_color_text_default = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+
+
+    wxFrame *frame = new wxFrame(0, -1, "tmp");
+    wxTextCtrl *ctrl = new wxTextCtrl(frame, -1);
+    g_textctrl_default = ctrl->GetSize();
+    frame->Destroy();
 }
 
