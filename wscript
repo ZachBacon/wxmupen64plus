@@ -24,7 +24,7 @@ out = 'build'
 
 def options(opt):
     import os
-    
+
     opt.add_option('--mupenapi',  action='store', help='Where to find Mupen64Plus API headers (optional)', default='/usr/include')
     opt.add_option('--wxconfig',  action='store', help='Which wx-config utility to use (optional)', default='wx-config', dest="wxconfig")
     opt.add_option('--sdlconfig', action='store', help='Which sdl-config utility to use (optional)', default='sdl-config', dest="sdlconfig")
@@ -33,7 +33,7 @@ def options(opt):
     opt.add_option('--datadir', action='store', help='(Optional) the directory where to look for data files', default='',  dest='datadir')
     opt.add_option('--libdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='libdir')
     opt.add_option('--bindir', action='store', help='(Optional) the directory where to install wxmupen64plus binary', default='',  dest='bindir')
-    
+
     if os.name == 'nt':
         opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
 
@@ -48,7 +48,7 @@ def options(opt):
 #class one(Context):
 #        cmd = 'windres'
 #    command = ["windres", "--include-dir="+wxHomePath+"\include", "--input", "win32\Aria.rc", "--output", "msvcr.o"]
-    
+
 # --------------------------------------------------------------------------------------------
 #                                          CONFIGURE
 # --------------------------------------------------------------------------------------------
@@ -58,31 +58,31 @@ def configure(ctx):
     import subprocess
     import waflib
     import os
-    
+
     api_path   = Options.options.mupenapi
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
-    
+
     wxconfig_args = Options.options.wxconfig_args
-    
+
     wxhome = ''
     if os.name == 'nt':
         wxhome = ''.join(Options.options.wxhome)
-    
+
     if Options.options.debugmode != 'true' and Options.options.debugmode != 'false':
         waflib.Logs.warn("Warning, the --debug option may only be 'true' or 'false'. Defaulting to 'false'.")
-    
+
     is_debug   = (Options.options.debugmode == 'true')
-    
+
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
-    
+
     ctx.env['api_path'] = api_path
     ctx.env['is_debug'] = is_debug
     ctx.env['wxhome'] = wxhome
     ctx.env['datadir'] = Options.options.datadir
     ctx.env['libdir'] = Options.options.libdir
-    
+
     ctx.find_program('gcc', var='GCC', mandatory=True)
     ctx.find_program('g++', var='GPP', mandatory=True)
     ctx.check_cc(header_name="stdio.h", function_name='printf', msg='Checking C compiler works', errmsg="No")
@@ -93,7 +93,7 @@ def configure(ctx):
     ctx.check_cc(header_name="../main/version.h", includes=[api_path])
 
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
-    
+
     if os.name == 'nt':
         if wxhome == None :
             ctx.fatal("On Windows, the --wxhome argument is mandatory")
@@ -124,10 +124,10 @@ def build(bld):
     api_path = bld.env['api_path']
 
     wxhome = bld.env['wxhome']
-    
+
     link_flags = []
     build_flags = []
-    
+
     # Set up debug or release build options
     if bld.env['is_debug']:
         build_flags += ['-g','-DDEBUG=1']
@@ -145,15 +145,15 @@ def build(bld):
 
     osal_src = []
     additional_links = []
-    
+
     # Windows
     if os.name == 'nt':
         cmd = "windres --include-dir=" + wxhome + r"\include ${SRC} --output ${TGT}"
         bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
-        
+
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
         additional_links += ['manifest.o']
-        
+
     # A few OSX-specific flags
     elif os.uname()[0] == 'Darwin':
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
@@ -161,19 +161,19 @@ def build(bld):
                        '-Wl,-framework,Cocoa', '-Wl,-framework,AudioToolbox',
                        '-Wl,-framework,System', '-Wl,-framework,OpenGL',
                        '-Wl,-framework,QuickTime', '-Wl,-framework,WebKit']
-        
+
         # install target
         bld.install_files('wxMupen64Plus.app/Contents', 'Info.plist')
         data_dir = bld.path.find_dir('data')
         bld.install_files('wxMupen64Plus.app/Contents/Resources', data_dir.ant_glob('*'))
         bin_install_path = "wxMupen64Plus.app/Contents/MacOS"
-        
+
     elif os.uname()[0] == 'FreeBSD':
         if 'LOCALBASE' in os.environ:
            LOCALBASE = os.environ['LOCALBASE']
         else:
            LOCALBASE = '/usr/local/'
-        
+
         build_flags += ['-I'+ LOCALBASE +'/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         link_flags += ['-lGL','-lX11']
@@ -182,10 +182,10 @@ def build(bld):
         build_flags += ['-I/usr/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         link_flags += ['-lGL', '-ldl', '-lX11']
-        
+
         if os.uname()[0] != 'FreeBSD':
             link_flags += ['-ldl']
-        
+
         # install target
         data_dir = bld.path.find_dir('data')
         if len(bld.env['datadir']) > 0:
@@ -199,7 +199,7 @@ def build(bld):
     debugger_sources = ['debugger/breakpoint.cpp', 'debugger/breakpointpanel.cpp', 'debugger/colors.cpp',
                         'debugger/debugconsole.cpp', 'debugger/debuggerframe.cpp', 'debugger/debugpanel.cpp',
                         'debugger/disasmpanel.cpp', 'debugger/dv_treelist.cpp', 'debugger/memorypanel.cpp',
-                        'debugger/registerpanel.cpp']
+                        'debugger/registerpanel.cpp', 'debugger/debugconfig.cpp']
     bld.program(features='c cxx cxxprogram',
                 cxxflags=build_flags+['-std=gnu++0x'],
                 cflags=build_flags+['-Wfatal-errors'],
