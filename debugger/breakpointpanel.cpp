@@ -12,6 +12,7 @@
 #include "debuggerframe.h"
 #include "dv_treelist.h"
 #include "../mupen64plusplus/MupenAPI.h"
+#include "../mupen64plusplus/osal_preproc.h"
 
 #define BREAK_FILTER_DISABLED 0x1
 #define BREAK_FILTER_ENABLED 0x2

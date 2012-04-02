@@ -11,6 +11,7 @@
 
 
 #include "../mupen64plusplus/MupenAPI.h"
+#include "../mupen64plusplus/osal_preproc.h"
 #include "breakpointpanel.h"
 #include "disasmpanel.h"
 #include "memorypanel.h"
@@ -548,19 +549,19 @@ void DebuggerFrame::LoadGameValues()
         DebugConfigSection section;
         while(vals.GetNextSection(&section) == true)
         {
-            if (strcmpi(section.name, "breakpoint") == 0 && section.num_values >= 4)
+            if (osal_insensitive_strcmp(section.name, "breakpoint") == 0 && section.num_values >= 4)
             {
                 uint32_t address, length = 0, type = 0;
                 const char *name = 0;
                 for (int i = 0; i < section.num_values; i++)
                 {
-                    if (strcmpi(section.keys[i], "name") == 0)
+                    if (osal_insensitive_strcmp(section.keys[i], "name") == 0)
                         name = wxString::FromUTF8(section.values[i]);
-                    else if (strcmpi(section.keys[i], "address") == 0)
+                    else if (osal_insensitive_strcmp(section.keys[i], "address") == 0)
                         address = strtoul(section.values[i], 0, 16);
-                    else if (strcmpi(section.keys[i], "length") == 0)
+                    else if (osal_insensitive_strcmp(section.keys[i], "length") == 0)
                         length = strtoul(section.values[i], 0, 16);
-                    else if (strcmpi(section.keys[i], "type") == 0)
+                    else if (osal_insensitive_strcmp(section.keys[i], "type") == 0)
                     {
                         const char *type_str = section.values[i];
                         while (type_str[0] != 0)
@@ -600,11 +601,11 @@ void DebuggerFrame::SaveGameValues()
     section.keys[3] = "Type";
     section.num_values = 4;
     auto breaks = breakpoints->GetAllBreakpoints();
-    for (auto &it : *breaks)
+    for (auto it = breaks->begin(); it != breaks->end(); ++it)
     {
         char addr[16], len[16], type_str[4];
         int type_count = 0, type;
-        Breakpoint *bpt = it.second;
+        Breakpoint *bpt = it->second;
         sprintf(addr, "%X", bpt->GetAddress());
         sprintf(len, "%X", bpt->GetLength());
 

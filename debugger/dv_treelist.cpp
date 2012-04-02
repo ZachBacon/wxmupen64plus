@@ -141,9 +141,9 @@ void DataViewTreeListModel::RemoveItem(void *value)
 
 void DataViewTreeListModel::Clear()
 {
-    for (auto &it : value_lookup)
+    for (auto it = value_lookup.begin(); it != value_lookup.end(); ++it)
     {
-        dvtlModelItem *item = it.second;
+        dvtlModelItem *item = it->second;
         if (item->isGroup)
             delete (dvtlGroup *)item->val;
         delete item;
