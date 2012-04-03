@@ -7,11 +7,9 @@
 
 
 class wxAuiNotebook;
+class wxAuiNotebookEvent;
 class wxTextCtrl;
-
-// After four hours of trying to get both sizer and scrolling stuff work with
-// the layout changing when it can fit another column, I just scrapped it all..
-// Might be less platform-independent :(
+class RegisterTab;
 
 enum RegisterType
 {
@@ -27,28 +25,17 @@ enum RegisterGroup
     REGISTER_COP1
 };
 
-class RegChangeEvent;
-extern const wxEventTypeTag<RegChangeEvent> REGVAL_CHANGE_EVT;
-class RegChangeEvent : public wxEvent
-{
-    public:
-        RegChangeEvent(int id) : wxEvent(id, REGVAL_CHANGE_EVT) {}
-        virtual wxEvent *Clone() const { return new RegChangeEvent(*this); }
-        wxAny value;
-};
-
-wxDECLARE_EVENT(REGVAL_CHANGE_EVT, RegChangeEvent);
-
 class SingleRegister : public wxPanel
 {
     public:
-        SingleRegister(wxWindow *parent, int id, const char *name, RegisterType type, wxPoint &pos, int reg_name_len);
+        SingleRegister(RegisterTab *parent, int id, const char *name, RegisterType type, wxPoint &pos, int reg_name_len);
         ~SingleRegister();
         uint64_t GetInt();
         double GetFloat();
 
         void SetInt(uint64_t value);
         void SetFloat(float value);
+        void SetDouble(double value);
         void ResetValue();
         void ValueChanged(wxCommandEvent &evt);
         void ValueChanged();
@@ -57,6 +44,7 @@ class SingleRegister : public wxPanel
         void RClickEvent(wxCommandEvent &evt);
 
     private:
+        RegisterTab *parent;
         bool setting_value;
         wxAny original_value;
         wxTextCtrl *value;
@@ -67,39 +55,89 @@ class SingleRegister : public wxPanel
 class RegisterTab : public wxScrolledWindow
 {
     public:
-        RegisterTab(wxWindow *parent, int id, RegisterGroup type);
-        ~RegisterTab();
+        RegisterTab(wxWindow *parent, int id);
+        virtual ~RegisterTab();
 
         void Size(wxSizeEvent &evt);
 
         void Append(const char *name, RegisterType type, int id = -1);
-        void ValueChanged(RegChangeEvent &evt);
 
-        void SetInt(int index, uint64_t value);
-        void SetFloat(int index, float value);
+        virtual void ValueChanged(int id, const wxAny &value) = 0;
+        virtual void Update() = 0;
 
-        void Update();
+        virtual void RClickMenu() {}
+        virtual void MenuClick(wxCommandEvent &evt) {}
 
-    private:
-        void InitRegisters(RegisterGroup type_);
-
-        wxPoint CalcItemPos(int index);
-        union
-        {
-            uint64_t *i64;
-            uint32_t *i32;
-            float **fp;
-            void *v;
-        } raw_registers;
-
-        bool show_reserved;
-        void Reorder();
-        int cols;
-        int rows;
+    protected:
         int reg_name_len;
         int reg_basewidth;
-        RegisterGroup type;
-        std::vector<SingleRegister *> registers;
+        virtual void Reorder() = 0;
+        virtual int GetAmount() = 0;
+        virtual wxPoint CalcItemPos(int index);
+
+    private:
+        char cols;
+        char rows;
+};
+
+class GprTab : public RegisterTab
+{
+    public:
+        GprTab(wxWindow *parent, int id);
+        ~GprTab();
+
+        void Update();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount() { return 32; }
+
+    private:
+        SingleRegister *registers[32];
+        uint64_t *raw_registers;
+};
+
+class Cop0Tab : public RegisterTab
+{
+    public:
+        Cop0Tab(wxWindow *parent, int id);
+        ~Cop0Tab();
+
+        void Update();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount();
+
+    private:
+        bool show_reserved;
+        SingleRegister *registers[32];
+        uint32_t *raw_registers;
+};
+
+class Cop1Tab : public RegisterTab
+{
+    public:
+        Cop1Tab(wxWindow *parent, int id);
+        ~Cop1Tab();
+
+        void Update();
+        void UpdateRegs();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount();
+
+    private:
+        SingleRegister *registers[32];
+        int mode;
+        bool additional_regs;
+        float **raw_registers_simple;
+        double **raw_registers_double;
+        uint64_t *raw_registers_raw;
 };
 
 class RegisterPanel : public DebugPanel
@@ -109,10 +147,9 @@ class RegisterPanel : public DebugPanel
         virtual ~RegisterPanel();
 
         void Update(bool vi);
-        void SelectNothing(wxCommandEvent &evt);
+        void TabRClick(wxAuiNotebookEvent &evt);
 
     private:
-
         RegisterTab *gpr_tab;
         RegisterTab *cop0_tab;
         RegisterTab *cop1_tab;
