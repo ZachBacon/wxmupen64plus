@@ -554,6 +554,7 @@ void DebuggerFrame::LoadGameValues()
             {
                 uint32_t address, length = 0, type = 0;
                 wxString name;
+                bool enabled = true;
                 for (int i = 0; i < section.num_values; i++)
                 {
                     if (osal_insensitive_strcmp(section.keys[i], "name") == 0)
@@ -576,11 +577,15 @@ void DebuggerFrame::LoadGameValues()
                             type_str++;
                         }
                     }
+                    else if (osal_insensitive_strcmp(section.keys[i], "enabled") == 0)
+                        enabled = osal_insensitive_strcmp(section.values[i], "true") == 0;
                 }
                 if (!name || !length || !type)
                     continue;
                 Breakpoint *bpt = new Breakpoint(name, address, length, type);
                 AddBreakpoint(bpt);
+                if (!enabled)
+                    EnableBreakpoint(bpt, false);
             }
         }
     }
@@ -600,7 +605,8 @@ void DebuggerFrame::SaveGameValues()
     section.keys[1] = "Address";
     section.keys[2] = "Length";
     section.keys[3] = "Type";
-    section.num_values = 4;
+    section.keys[4] = "Enabled";
+    section.num_values = 5;
     auto breaks = breakpoints->GetAllBreakpoints();
     for (auto it = breaks->begin(); it != breaks->end(); ++it)
     {
@@ -632,6 +638,10 @@ void DebuggerFrame::SaveGameValues()
         section.values[1] = addr;
         section.values[2] = len;
         section.values[3] = type_str;
+        if (bpt->IsEnabled())
+            section.values[4] = "True";
+        else
+            section.values[4] = "False";
 
         vals.WriteSection(&section);
     }
@@ -759,7 +769,7 @@ void DebuggerFrame::Print(const wxString &msg)
     if (output)
         output->Print(msg);
     else
-        printf("Debugger: %s", (const char *)msg);
+        printf("Debugger: %s\n", (const char *)msg);
 }
 
 void DebuggerFrame::MenuClose(wxCommandEvent &evt)
