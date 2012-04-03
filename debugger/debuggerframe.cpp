@@ -778,10 +778,7 @@ void DebuggerFrame::UpdatePanels(bool vi)
 
 void DebuggerFrame::RefreshPanels()
 {
-    if (running)
-        UpdatePanels(true);
-    else
-        UpdatePanels(false);
+    UpdatePanels(running == true);
 }
 
 wxString DebuggerFrame::GetBreakReason(uint32_t pc)

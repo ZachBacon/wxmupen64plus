@@ -20,13 +20,13 @@
 #define offset_start_y 5
 #define data_start_x (offset_start_x + g_bold_number_width * 8 + 10)
 #define data_start_y offset_start_y
-#define data_inc_x (g_number_width * 2 + 4) // Width reserved for 1 byte
+#define data_inc_x (value_width + value_border_w) // Width reserved for 1 byte
 #define data_add_inc_x (g_number_width) // Additional spacing after 4 bytes
 #define data_inc_y (g_normal_height - 1) // Height reserved for 1 byte
 #define data_clip_cols 4 // Should be multiple of 4
 #define value_width (g_number_width * 2) // Actual width of 1 byte (about)
-#define value_height (g_normal_height - 3) // Actual height of 1 byte (about)
-#define value_border_w 4
+#define value_height (data_inc_y - value_border_h) // Actual height of 1 byte (about)
+#define value_border_w 4 // These are total of the borders on both sides
 #define value_border_h 2
 
 enum
@@ -162,16 +162,16 @@ void MemoryWindow::MouseSelect(wxMouseEvent &evt)
 {
     evt.Skip();
     wxPoint pos = evt.GetPosition(), last = GetValuePosition(display_size - 1);
-    last.x += value_border_w + value_width;
-    last.y += value_border_h + value_height;
-    if (pos.x < data_start_x || pos.x > last.x || pos.y < data_start_y || pos.y > last.y)
+    last.x += value_width + value_border_w / 2;
+    last.y += value_height + value_border_h / 2;
+    if (pos.x < data_start_x - value_border_w / 2 || pos.x > last.x || pos.y < data_start_y + value_border_h / 2 || pos.y > last.y)
     {
         Deselect();
         return;
     }
 
-    pos.x -= data_start_x - value_border_w / 2;
-    pos.y -= data_start_y + value_border_h / 2;
+    pos.x = pos.x - data_start_x + value_border_w / 2;
+    pos.y = pos.y - data_start_y - value_border_h / 2;
     int row = pos.y / data_inc_y;
     int x_incs = pos.x / (data_add_inc_x + data_inc_x * 4);
     int col = x_incs * 4;

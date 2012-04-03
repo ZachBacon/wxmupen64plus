@@ -108,11 +108,14 @@ void DisasmPanel::Update(bool vi)
         pause->Enable(false);
         char buf[16];
         int pc = parent->GetPc();
-        code->SetPc(pc);
-        sprintf(buf, "%08X", pc);
-        pc_display->SetValue(buf);
-        if (go_address->IsEmpty())
-            go_address->SetValue(buf);
+        if (pc)
+        {
+            code->SetPc(pc);
+            sprintf(buf, "%08X", pc);
+            pc_display->SetValue(buf);
+            if (go_address->IsEmpty())
+                go_address->SetValue(buf);
+        }
 
         int lines = code->GetLines() - 2; // -1 because lines have the partially seen one included, another -1 because magic (bad?)
         uint32_t current_address = code->GetPos();
