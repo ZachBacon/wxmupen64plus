@@ -10,6 +10,9 @@
 #include <wx/dcmemory.h>
 
 #include "../mupen64plusplus/MupenAPI.h"
+#include <m64p_debugger.h>
+
+extern ptr_DebugGetState DebugGetState;
 
 typedef void(DebugConsole::*CmdFunc)(wxString &);
 struct Cmd
@@ -33,6 +36,7 @@ Cmd helpcmd = { &DebugConsole::CmdHelp, "\"h|help|?\" Helps poor people" };
 Cmd vibreakcmd = { &DebugConsole::CmdViBreak, "\"vi|vibreak\" Breaks at the next vertical interrupt. Used mainly for debugging the debugger" };
 Cmd clearcmd = { &DebugConsole::CmdCls, "\"cls|clear\" Clears this output screen" };
 Cmd textcmd = { &DebugConsole::CmdTextDebug, "\"text\" Displays informative information" };
+Cmd nicmd = { &DebugConsole::CmdNi, "\"ni\" Shows when next interrupt will happen" };
 
 enum
 {
@@ -60,6 +64,7 @@ void DebugConsole::InitCommands()
     (*commands)["cls"] = clearcmd;
     (*commands)["clear"] = clearcmd;
     (*commands)["text"] = textcmd;
+    (*commands)["ni"] = nicmd;
 }
 
 DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_, id)
@@ -260,6 +265,11 @@ void DebugConsole::CmdViBreak(wxString &cmd)
     parent->ViBreak();
 }
 
+void DebugConsole::CmdNi(wxString &cmd)
+{
+    Print(wxString::Format("Next interrupt happens when count >= %X", (*DebugGetState)(M64P_DBG_CPU_NEXT_INTERRUPT)));
+}
+
 void DebugConsole::CmdCls(wxString &cmd)
 {
     out->Clear();
@@ -279,6 +289,7 @@ void DebugConsole::CmdHelp(wxString &cmd)
         Print("pause\tPauses execution");
         Print("step\tExecutes one instruction");
         Print("clear\tClears the screen");
+        Print("ni\tTells when next interrupt happens");
         Print("Type \"help <command>\" for detailed instructions.");
     }
     else

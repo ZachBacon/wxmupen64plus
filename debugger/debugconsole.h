@@ -26,6 +26,7 @@ class DebugConsole : public DebugPanel
         void CmdHelp(wxString &cmd);
         void CmdViBreak(wxString &cmd);
         void CmdCls(wxString &cmd);
+        void CmdNi(wxString &cmd);
 
         void RClickMenu(wxMouseEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
