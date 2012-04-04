@@ -105,7 +105,7 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
     breakpoint raw_bpt;
     raw_bpt.address = address;
     raw_bpt.endaddr = address + length - 1;
-    raw_bpt.flags = type & BREAK_TYPE_ALL;
+    raw_bpt.flags = (type & BREAK_TYPE_ALL) | BPT_FLAG_ENABLED;
 
     (*DebugBreakpointCommand)(M64P_BKP_CMD_REPLACE, bpt->id, &raw_bpt);
     return true;
