@@ -110,6 +110,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     inited = false;
     vi_break = false;
     vi_count = 0;
+    pc = 0;
     breakpoints = new BreakpointInterface;
 
     SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
