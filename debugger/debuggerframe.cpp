@@ -877,6 +877,12 @@ void DebuggerFrame::Reset()
         run_on_boot = 1;
 
     breakpoints->Clear();
+
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
+    {
+        ((DebugPanel *)(panes.Item(i).window))->Reset();
+    }
     LoadGameValues();
     // TODO--
 }

@@ -21,9 +21,11 @@ class DebugPanel : public wxPanel
         virtual ~DebugPanel();
 
         virtual void Update(bool vi) {}
+        virtual void Reset() {}
         void Print(const wxString &msg);
 
         DebuggerFrame *GetParent() { return parent; }
+
 
         virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update) {}
 

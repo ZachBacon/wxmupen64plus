@@ -28,9 +28,10 @@ class BreakpointPanel : public DebugPanel
 
         void AddBreakpoint(Breakpoint *bpt);
 
+        void Reset();
+
     private:
         void CreateList();
-        void UpdateValues();
         bool FilterTest(Breakpoint *bpt);
         bool HasValueChanged(int item, const uint64_t &new_value);
         void GenerateFilterMenu(wxMenu *menu);

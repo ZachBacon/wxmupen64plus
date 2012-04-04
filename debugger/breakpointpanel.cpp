@@ -290,6 +290,27 @@ class BreakDataModel : public DataViewTreeListModel
         {
             ItemChanged(wxDataViewItem(FindItem(bpt)));
         }
+        void UpdateGroup(dvtlGroup *group)
+        {
+            int amt;
+            dvtlModelItem *const *children = group->GetChildren(&amt);
+            for (int i = 0; i < amt; i++)
+            {
+                if (children[i]->isGroup)
+                    UpdateGroup((dvtlGroup *)children[i]->val);
+                else
+                {
+                    Breakpoint *bpt = (Breakpoint *)children[i]->val;
+                    wxString new_val = GetBreakValue(bpt);
+                    if (!new_val.empty())
+                        ValueChanged(wxDataViewItem(children[i]), value_col);
+                }
+            }
+        }
+        void UpdateValues()
+        {
+            UpdateGroup((dvtlGroup *)root_item.val);
+        }
     private:
         DebuggerFrame *debug_frame;
 };
@@ -365,7 +386,7 @@ void BreakpointPanel::CreateList()
         Breakpoint *bpt = it->second;
         AddBreakpoint(bpt);
     }
-    UpdateValues();
+    data_model->UpdateValues();
 }
 
 bool BreakpointPanel::HasValueChanged(int item, const uint64_t &new_value)
@@ -374,11 +395,6 @@ bool BreakpointPanel::HasValueChanged(int item, const uint64_t &new_value)
     if (val_string.empty())
         return true;
     return (strtoull(val_string, 0, 16) != new_value);
-}
-
-void BreakpointPanel::UpdateValues()
-{
-
 }
 
 void BreakpointPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason, bool last_update)
@@ -408,7 +424,7 @@ void BreakpointPanel::BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason,
 
 void BreakpointPanel::Update(bool vi)
 {
-    UpdateValues();
+    data_model->UpdateValues();
 }
 
 void BreakpointPanel::AddDialog()
@@ -659,4 +675,10 @@ void BreakpointPanel::EditEvent(wxDataViewEvent &evt)
 {
     EditDialog();
 }
+
+void BreakpointPanel::Reset()
+{
+    data_model->Clear();
+}
+
 

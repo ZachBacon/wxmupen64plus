@@ -7,7 +7,7 @@ dvtlGroup::dvtlGroup(const wxString &name_)
     name = name_;
     child_amount = 0;
     child_array_size = 8;
-    children = (void **)malloc(child_array_size * sizeof(void **));
+    children = (dvtlModelItem **)malloc(child_array_size * sizeof(dvtlModelItem **));
 }
 
 dvtlGroup::~dvtlGroup()
@@ -15,7 +15,7 @@ dvtlGroup::~dvtlGroup()
     free(children);
 }
 
-void *const *dvtlGroup::GetChildren(int *amt)
+dvtlModelItem *const *dvtlGroup::GetChildren(int *amt)
 {
     *amt = child_amount;
     return children;
@@ -26,7 +26,7 @@ int dvtlGroup::AddChild(dvtlModelItem *child)
     if (child_amount >= child_array_size)
     {
         child_array_size += 8;
-        children = (void **)realloc(children, child_array_size * sizeof(void **));
+        children = (dvtlModelItem **)realloc(children, child_array_size * sizeof(dvtlModelItem **));
     }
     children[child_amount] = child;
     return child_amount++;
@@ -84,7 +84,7 @@ unsigned int DataViewTreeListModel::GetChildren(const wxDataViewItem &item_, wxD
     if (item->isGroup)
     {
         dvtlGroup *group = (dvtlGroup *)(item->val);
-        void *const *raw_children = group->GetChildren(&count);
+        dvtlModelItem *const *raw_children = group->GetChildren(&count);
         for (int i = 0; i < count; i++)
         {
             wxDataViewItem new_item(raw_children[i]);
