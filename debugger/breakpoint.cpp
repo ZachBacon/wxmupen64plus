@@ -232,8 +232,8 @@ BreakValidity Breakpoint::IsValid(const wxString &name, uint32_t address, int le
 {
     if (!(type & BREAK_TYPE_ALL))
         return BREAK_INVALID_TYPE;
-    if (!MemIsValid(address))
-        return BREAK_INVALID_ADDRESS;
+//    if (!MemIsValid(address))
+//        return BREAK_INVALID_ADDRESS;
     if (!length)
         return BREAK_INVALID_LENGTH;
     if (name.empty())
