@@ -10,6 +10,7 @@ wxBrush g_brush_write;
 wxBrush g_brush_disabled;
 wxBrush g_brush_selected;
 wxBrush g_brush_pc;
+wxBrush g_brush_selected_pc;
 wxBrush g_brush_bg;
 
 wxColour g_color_text_selected;
@@ -38,8 +39,12 @@ void InitDrawingValues()
     g_brush_read.SetColour((wxColour)0x00c0c0);
     g_brush_write.SetColour((wxColour)0x008000);
     g_brush_disabled.SetColour(0x808080);
-    g_brush_selected.SetColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+
+    wxColour selected = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
+    g_brush_selected.SetColour(selected);
     g_brush_pc.SetColour(0xfff070);
+    g_brush_selected_pc.SetColour(wxColour((0x70 + selected.Red()) / 2, (0xff + selected.Green()) / 2, (0xff + selected.Blue()) / 2));
+
     g_brush_bg.SetColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
     g_color_text_selected = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
     g_color_text_default = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);

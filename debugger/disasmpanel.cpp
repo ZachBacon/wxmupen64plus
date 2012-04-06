@@ -417,7 +417,11 @@ void DisasmWindow::Render()
         Breakpoint *bpt = parent->GetParent()->FindBreakpoint(current_address);
         if (current_address == pc)
         {
-            dc.SetBrush(g_brush_pc);
+            if (pc >= select_start && pc <= select_end)
+                dc.SetBrush(g_brush_selected_pc);
+            else
+                dc.SetBrush(g_brush_pc);
+
             dc.DrawRectangle(0, line_start_y + i * line_height + 2, render_buffer->GetWidth(), line_height);
             dc.SetBrush(g_brush_bg);
         }
