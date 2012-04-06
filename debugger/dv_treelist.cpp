@@ -38,7 +38,7 @@ void dvtlGroup::RemoveChild(dvtlModelItem *child)
     {
         if (child == children[i])
         {
-            memmove(children + i, children + i + 1, child_amount - (i - 1) * sizeof(dvtlModelItem **));
+            memmove(children + i, children + i + 1, (child_amount - i - 1) * sizeof(dvtlModelItem **));
             child_amount--;
             return;
         }
@@ -130,7 +130,7 @@ void DataViewTreeListModel::RemoveItem(void *value)
 
     dvtlModelItem *item = it->second;
     if (!item->parent)
-        ((dvtlGroup *)root_item.val)->RemoveChild(item);        
+        ((dvtlGroup *)root_item.val)->RemoveChild(item);
 
     wxDataViewItem item_(item);
     ItemDeleted(wxDataViewItem(item->parent), item_);
