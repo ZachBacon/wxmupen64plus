@@ -457,7 +457,7 @@ void Cop1Tab::UpdateRegs()
             else
             {
                 for (int i = 0; i < 16; i++)
-                    registers[i]->SetDouble(*(raw_registers_double[i * 2]));
+                    registers[i * 2]->SetDouble(*(raw_registers_double[i * 2]));
             }
         break;
         case cop1_raw:
