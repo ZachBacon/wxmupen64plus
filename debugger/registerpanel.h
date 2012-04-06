@@ -43,6 +43,8 @@ class SingleRegister : public wxPanel
         void RClickMenu(wxMouseEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
 
+        void SetType(RegisterType new_type);
+
     private:
         RegisterTab *parent;
         bool setting_value;

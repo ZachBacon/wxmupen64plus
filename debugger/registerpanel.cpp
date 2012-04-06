@@ -39,6 +39,7 @@ SingleRegister::SingleRegister(RegisterTab *parent_, int id, const char *name, R
 {
     parent = parent_;
     type = type_;
+    value2 = 0;
 
     wxStaticText *text = new wxStaticText(this, -1, name, wxPoint(0, 1));
 
@@ -52,19 +53,14 @@ SingleRegister::SingleRegister(RegisterTab *parent_, int id, const char *name, R
             value2->SetSize(g_number_width * 10.5, -1);
             value2->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
             value2->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
-            SetSize(g_number_width * 23 + reg_name_len, 28);
-        }
-        else
-        {
-            SetSize(g_number_width * 11 + reg_name_len, 28);
         }
     }
     else
     {
         value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
-        value->SetSize(110, -1);
-        SetSize(120 + reg_name_len, 28);
+        value->SetSize(g_number_width * 20, -1);
     }
+    SetSize(g_number_width * 26, 28);
     value->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
     value->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
     text->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
@@ -190,6 +186,31 @@ double SingleRegister::GetFloat()
     return strtod(value->GetValue(), 0);
 }
 
+void SingleRegister::SetType(RegisterType new_type)
+{
+    if (type == new_type)
+        return;
+
+    if (type == REGISTER_INT64)
+        value2->Hide();
+    else if (type == REGISTER_FLOAT)
+        value->SetSize(g_number_width * 10.5, -1);
+
+    if (new_type == REGISTER_INT64)
+    {
+        if (!value2)
+        {
+            value2 = new wxTextCtrl(this, -1, "", wxPoint(value->GetPosition().x + g_number_width * 11, 1));
+            value2->SetSize(g_number_width * 10.5, -1);
+        }
+        else
+            value2->Show();
+    }
+    else if (new_type == REGISTER_FLOAT)
+        value->SetSize(g_number_width * 20, -1);
+    type = new_type;
+}
+
 /// ----------------------------------------------
 
 RegisterTab::RegisterTab(wxWindow *parent, int id) : wxScrolledWindow(parent, id)
@@ -245,7 +266,7 @@ wxPoint RegisterTab::CalcItemPos(int index)
 
 GprTab::GprTab(wxWindow *parent, int id) : RegisterTab(parent, id)
 {
-    reg_name_len = 20;
+    reg_name_len = g_number_width * 3;
     reg_basewidth = g_number_width * 23;
     raw_registers = (uint64_t *)GetRegister(M64P_CPU_REG_REG);
     for (int i = 0; i < 32; i++)
@@ -283,8 +304,8 @@ void GprTab::Reorder()
 
 Cop0Tab::Cop0Tab(wxWindow *parent, int id) : RegisterTab(parent, id)
 {
-    reg_name_len = 80;
-    reg_basewidth = g_number_width * 23 - 60;
+    reg_name_len = g_number_width * 13;
+    reg_basewidth = g_number_width * 13;
     raw_registers = (uint32_t *)GetRegister(M64P_CPU_REG_COP0);
     show_reserved = false;
     for (int i = 0; i < 32; i++)
@@ -374,8 +395,8 @@ void Cop0Tab::RClickEvent(wxCommandEvent &evt)
 
 Cop1Tab::Cop1Tab(wxWindow *parent, int id) : RegisterTab(parent, id)
 {
-    reg_name_len = 30;
-    reg_basewidth = g_number_width * 23 - 10;
+    reg_name_len = g_number_width * 4;
+    reg_basewidth = g_number_width * 22;
     raw_registers_simple = (float **)GetRegister(M64P_CPU_REG_COP1_SIMPLE_PTR);
     raw_registers_double = (double **)GetRegister(M64P_CPU_REG_COP1_DOUBLE_PTR);
     raw_registers_raw = (uint64_t *)GetRegister(M64P_CPU_REG_COP1_FGR_64);
@@ -400,12 +421,21 @@ Cop1Tab::~Cop1Tab()
 void Cop1Tab::Update()
 {
     bool new_additional_regs = (((uint32_t *)GetRegister(M64P_CPU_REG_COP0))[12] & 0x04000000);
-    if (new_additional_regs != additional_regs && mode == cop1_float64)
+    if (new_additional_regs != additional_regs)
     {
         additional_regs = new_additional_regs;
-        for (int i = 0; i < 16; i++)
-            registers[i * 2 + 1]->Show(additional_regs);
-        Reorder();
+        if (mode == cop1_float64)
+        {
+            for (int i = 0; i < 16; i++)
+                registers[i * 2 + 1]->Show(additional_regs);
+            Reorder();
+            Refresh();
+        }
+        else if (mode == cop1_raw)
+        {
+            for (int i = 16; i < 32; i++)
+                registers[i]->Enable(additional_regs == true);
+        }
     }
     UpdateRegs();
 }
@@ -455,18 +485,8 @@ void Cop1Tab::ValueChanged(int id, const wxAny &value)
 
 void Cop1Tab::Reorder()
 {
-    if (mode == cop1_float64 && additional_regs)
-    {
-        for (uint32_t i = 0; i < 16; i++)
-        {
-            registers[i * 2]->SetPosition(CalcItemPos(i));
-        }
-    }
-    else
-    {
-        for (uint32_t i = 0; i < 32; i++)
-            registers[i]->SetPosition(CalcItemPos(i));
-    }
+    for (uint32_t i = 0; i < 32; i++)
+        registers[i]->SetPosition(CalcItemPos(i));
 }
 
 int Cop1Tab::GetAmount()
@@ -480,13 +500,69 @@ int Cop1Tab::GetAmount()
 
 void Cop1Tab::RClickMenu()
 {
+    wxMenu menu;
+
+    wxMenuItem *f32 = new wxMenuItem(&menu, cop1_float32, _("Show as 32-bit floats"), wxEmptyString, wxITEM_CHECK);
+    menu.Append(f32);
+    wxMenuItem *f64 = new wxMenuItem(&menu, cop1_float64, _("Show as 64-bit floats"), wxEmptyString, wxITEM_CHECK);
+    menu.Append(f64);
+    wxMenuItem *raw = new wxMenuItem(&menu, cop1_raw, _("Show as 64-bit integers"), wxEmptyString, wxITEM_CHECK);
+    menu.Append(raw);
+    switch (mode)
+    {
+        case cop1_float32:
+            f32->Check(true);
+        break;
+        case cop1_float64:
+            f64->Check(true);
+        break;
+        case cop1_raw:
+            raw->Check(true);
+        break;
+    }
+
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &Cop1Tab::RClickEvent, this);
+    PopupMenu(&menu);
 }
 
 void Cop1Tab::RClickEvent(wxCommandEvent &evt)
 {
-    switch(evt.GetId())
+    int new_mode = evt.GetId();
+    if (mode == new_mode)
+        return;
+
+    Freeze();
+    switch (mode)
     {
+        case cop1_float64:
+            for (int i = 0; i < 16; i++)
+                registers[i * 2 + 1]->Show(true);
+        break;
+        case cop1_raw:
+            for (int i = 0; i < 32; i++)
+                registers[i]->SetType(REGISTER_FLOAT);
+            for (int i = 16; i < 32; i++)
+                registers[i]->Enable(true);
+        break;
     }
+    switch (new_mode)
+    {
+        case cop1_float64:
+            for (int i = 0; i < 16; i++)
+                registers[i * 2 + 1]->Show(additional_regs == true);
+        break;
+        case cop1_raw:
+            for (int i = 0; i < 32; i++)
+                registers[i]->SetType(REGISTER_INT64);
+            for (int i = 16; i < 32; i++)
+                registers[i]->Enable(additional_regs == true);
+        break;
+    }
+    mode = new_mode;
+    Refresh();
+    Reorder();
+    UpdateRegs();
+    Thaw();
 }
 
 /// ----------------------------------------------
