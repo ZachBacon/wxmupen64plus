@@ -153,6 +153,7 @@ DebuggerFrame::~DebuggerFrame()
 {
     aui->UnInit();
     delete aui;
+    delete breakpoints;
     g_debugger = 0;
 }
 

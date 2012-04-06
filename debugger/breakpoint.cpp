@@ -40,12 +40,7 @@ BreakpointInterface::BreakpointInterface()
 
 BreakpointInterface::~BreakpointInterface()
 {
-    for (auto it = breaks->begin(); it != breaks->end(); ++it)
-    {
-        Remove(it->second);
-    }
-    delete breaks;
-    delete breakmap;
+    Clear();
 }
 
 bool BreakpointInterface::RawAdd(Breakpoint *bpt)
@@ -190,6 +185,15 @@ Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)
 
 void BreakpointInterface::Clear()
 {
+    for (auto it = breaks->begin(); it != breaks->end(); ++it)
+    {
+        Breakpoint *bpt = it->second;
+        
+        if (bpt->id != -1)
+            (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
+
+        delete bpt;
+    }
     breakmap->clear();
     breaks->clear();
 }
