@@ -59,8 +59,10 @@ class RegisterTab : public wxScrolledWindow
         virtual ~RegisterTab();
 
         void Size(wxSizeEvent &evt);
+        void Resize(int new_cols);
 
         void Append(const char *name, RegisterType type, int id = -1);
+        int GetCols() { return cols; }
 
         virtual void ValueChanged(int id, const wxAny &value) = 0;
         virtual void Update() = 0;
@@ -106,6 +108,8 @@ class Cop0Tab : public RegisterTab
 
         void Update();
         void ValueChanged(int id, const wxAny &value);
+        void RClickMenu();
+        void RClickEvent(wxCommandEvent &evt);
 
     protected:
         void Reorder();
@@ -126,6 +130,8 @@ class Cop1Tab : public RegisterTab
         void Update();
         void UpdateRegs();
         void ValueChanged(int id, const wxAny &value);
+        void RClickMenu();
+        void RClickEvent(wxCommandEvent &evt);
 
     protected:
         void Reorder();

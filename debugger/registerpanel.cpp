@@ -216,6 +216,13 @@ void RegisterTab::Size(wxSizeEvent &evt)
     if (new_cols == cols)
         return;
 
+    Resize(new_cols);
+
+    SetSize(size);
+}
+
+void RegisterTab::Resize(int new_cols)
+{
     int entries = GetAmount();
     cols = new_cols;
     rows = entries / cols;
@@ -223,7 +230,6 @@ void RegisterTab::Size(wxSizeEvent &evt)
         rows += 1;
 
     SetVirtualSize(0, 5 + singlereg_height * (rows - 1));
-    SetSize(size);
 
     Reorder();
 }
@@ -329,6 +335,39 @@ int Cop0Tab::GetAmount()
     if (show_reserved)
         return 32;
     return 25;
+}
+
+void Cop0Tab::RClickMenu()
+{
+    wxMenu menu;
+
+    wxMenuItem *toggle_reserved = new wxMenuItem(&menu, cop0_togglereserved, _("Show reserved registers"), wxEmptyString, wxITEM_CHECK);
+    menu.Append(toggle_reserved);
+    toggle_reserved->Check(show_reserved);
+
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &Cop0Tab::RClickEvent, this);
+    PopupMenu(&menu);
+}
+
+void Cop0Tab::RClickEvent(wxCommandEvent &evt)
+{
+    switch(evt.GetId())
+    {
+        case cop0_togglereserved:
+            if (show_reserved)
+                show_reserved = false;
+            else
+                show_reserved = true;
+
+            registers[7]->Show(show_reserved);
+            for (int i = 21; i < 26; i++)
+                registers[i]->Show(show_reserved);
+            registers[31]->Show(show_reserved);
+
+            Resize(GetCols());
+            Refresh();
+        break;
+    }
 }
 
 /// ----------------------------------------------
@@ -437,6 +476,17 @@ int Cop1Tab::GetAmount()
         return 16;
     }
     return 32;
+}
+
+void Cop1Tab::RClickMenu()
+{
+}
+
+void Cop1Tab::RClickEvent(wxCommandEvent &evt)
+{
+    switch(evt.GetId())
+    {
+    }
 }
 
 /// ----------------------------------------------
