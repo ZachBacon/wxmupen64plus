@@ -279,7 +279,7 @@ void RegisterTab::Resize(int new_cols)
     if (entries % cols)
         rows += 1;
 
-    SetVirtualSize(0, 0/*5 + singlereg_height * (rows - 1)*/);
+    SetVirtualSize(0, 5 + singlereg_height * (rows - 1));
 
     Reorder();
 }
@@ -739,6 +739,8 @@ void RiSiTab::Reorder()
         registers[i]->SetPosition(CalcItemPos(i));
     for (uint32_t i = 6; i < 8; i++)
         registers[i]->SetPosition(CalcItemPos(i));
+
+    SetVirtualSize(0, 5 + singlereg_height * GetRows());
 }
 
 wxPoint RiSiTab::CalcTextPos(int index) // this stuff makes sense
