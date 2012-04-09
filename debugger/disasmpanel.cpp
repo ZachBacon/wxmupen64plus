@@ -379,9 +379,7 @@ void DisasmWindow::Resize(wxSizeEvent &evt)
 
     int old_lines = lines;
     lines = (size.y - line_start_y) / line_height + 1;
-    if (lines < old_lines)
-        return;
-    else if (lines > old_lines)
+    if (lines > old_lines || render_buffer->GetWidth() < size.x)
     {
         delete render_buffer;
         render_buffer = new wxBitmap(size);
