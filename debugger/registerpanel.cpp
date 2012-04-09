@@ -741,6 +741,7 @@ void RiSiTab::Reorder()
         registers[i]->SetPosition(CalcItemPos(i));
 
     SetVirtualSize(0, 5 + singlereg_height * GetRows());
+    Refresh();
 }
 
 wxPoint RiSiTab::CalcTextPos(int index) // this stuff makes sense
@@ -763,19 +764,19 @@ wxPoint RiSiTab::CalcItemPos(int index)
 {
     int scrolled = GetViewStart().y;
     int cols = GetCols();
+    if (cols > 3)
+        cols = 3;
     int col, row;
     if (index >= 6)
     {
         index -= 6;
-        if (6 % cols)
-            row = (index) / cols + 3 + 6 / cols;
-        else
-            row = (index) / cols + 2 + 6 / cols;
+        row = index % (6 / cols) + 2 + (6 / cols);
     }
     else
-        row = index / cols + 1;
+        row = index % (6 / cols) + 1;
 
-    col = index % cols;
+    col = index / (6 / cols);
+
 
     return wxPoint(5 + col * (reg_basewidth + reg_name_len), (row - scrolled) * singlereg_height + 2);
 }
