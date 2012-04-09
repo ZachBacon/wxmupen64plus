@@ -9,7 +9,7 @@
 #include "../mupen64plusplus/MupenAPI.h"
 #include "colors.h"
 
-#define singlereg_height (g_textctrl_default.y + 1)
+#define singlereg_height (g_textctrl_default.y + 3)
 
 
 enum
@@ -35,7 +35,36 @@ const char *cop0_names[] =
      "Reserved24", "Reserved25", "PErr", "CacheErr", "TagLo", "TagHi", "ErrorEPC", "Reserved31"
 };
 
-SingleRegister::SingleRegister(RegisterTab *parent_, int id, const char *name, RegisterType type_, wxPoint &pos, int reg_name_len) : wxPanel(parent_, id, pos)
+const char *vi_names[] =
+{
+    "Status", "Origin", "Width", "VIntr", "Current", "Burst", "VSync", "HSync",
+    "Leap", "HStart", "VStart", "VBurst", "XScale", "YScale", "[Delay]"
+};
+
+const char *ai_names[] =
+{
+    "DRAM Addr", "Length", "Control", "Status", "DacRate", "BitRate",
+    "[NextDelay]", "[NextLength]", "[CurrentDelay]", "[CurrentLength]"
+};
+
+const char *pi_names[] =
+{
+    "DRAM Addr", "CartAddr", "ReadLength", "WriteLength", "Status",
+    "Dom1 Latency", "Dom1 PulseW", "Dom1 Page Size", "Dom1 Release",
+    "Dom2 Latency", "Dom2 PulseW", "Dom2 Page Size", "Dom2 Release"
+};
+
+const char *ri_names[] =
+{
+    "Mode", "Config", /*CurrentLoad,*/ "Select", "Refresh", "Latency", "RError"/*, "WError"*/
+};
+
+const char *si_names[] =
+{
+    "DRAM Addr", "Status"
+};
+
+SingleRegister::SingleRegister(RegisterTab *parent_, int id, const char *name, RegisterType type_, const wxPoint &pos, int reg_name_len) : wxPanel(parent_, id, pos)
 {
     parent = parent_;
     type = type_;
@@ -250,7 +279,7 @@ void RegisterTab::Resize(int new_cols)
     if (entries % cols)
         rows += 1;
 
-    SetVirtualSize(0, 5 + singlereg_height * (rows - 1));
+    SetVirtualSize(0, 0/*5 + singlereg_height * (rows - 1)*/);
 
     Reorder();
 }
@@ -259,7 +288,7 @@ wxPoint RegisterTab::CalcItemPos(int index)
 {
     int col = index / rows, row = index % rows;
     int scrolled = GetViewStart().y;
-    return wxPoint(5 + col * (reg_basewidth + reg_name_len), (row - scrolled) * singlereg_height);
+    return wxPoint(5 + col * (reg_basewidth + reg_name_len), (row - scrolled) * singlereg_height + 2);
 }
 
 /// ----------------------------------------------
@@ -279,8 +308,6 @@ GprTab::GprTab(wxWindow *parent, int id) : RegisterTab(parent, id)
 
 GprTab::~GprTab()
 {
-    for (int i = 0; i < 32; i++)
-        delete registers[i];
 }
 
 void GprTab::Update()
@@ -317,9 +344,6 @@ Cop0Tab::Cop0Tab(wxWindow *parent, int id) : RegisterTab(parent, id)
 
 Cop0Tab::~Cop0Tab()
 {
-    for (int i = 0; i < 32; i++)
-        delete registers[i];
-    SetFocus();
 }
 
 void Cop0Tab::Update()
@@ -414,8 +438,6 @@ Cop1Tab::Cop1Tab(wxWindow *parent, int id) : RegisterTab(parent, id)
 
 Cop1Tab::~Cop1Tab()
 {
-    for (int i = 0; i < 32; i++)
-        delete registers[i];
 }
 
 void Cop1Tab::Update()
@@ -567,18 +589,211 @@ void Cop1Tab::RClickEvent(wxCommandEvent &evt)
 
 /// ----------------------------------------------
 
+ViTab::ViTab(wxWindow *parent, int id) : RegisterTab(parent, id)
+{
+    reg_name_len = g_number_width * 13;
+    reg_basewidth = g_number_width * 13;
+    raw_registers = (uint32_t *)GetMemoryPointer(M64P_DBG_PTR_VI_REG);
+    for (int i = 0; i < 15; i++)
+    {
+        registers[i] = new SingleRegister(this, i + 1, vi_names[i], REGISTER_INT32, CalcItemPos(i), reg_name_len);
+    }
+    SetFocus();
+}
+
+ViTab::~ViTab()
+{
+}
+
+void ViTab::Update()
+{
+    for (int i = 0; i < 15; i++)
+        registers[i]->SetInt(raw_registers[i]);
+}
+
+void ViTab::ValueChanged(int id, const wxAny &value)
+{
+    raw_registers[id - 1] = value.As<uint32_t>();
+}
+
+void ViTab::Reorder()
+{
+    for (uint32_t i = 0; i < 15; i++)
+        registers[i]->SetPosition(CalcItemPos(i));
+}
+
+/// ----------------------------------------------
+
+AiTab::AiTab(wxWindow *parent, int id) : RegisterTab(parent, id)
+{
+    reg_name_len = g_number_width * 13;
+    reg_basewidth = g_number_width * 13;
+    raw_registers = (uint32_t *)GetMemoryPointer(M64P_DBG_PTR_AI_REG);
+    for (int i = 0; i < 10; i++)
+    {
+        registers[i] = new SingleRegister(this, i + 1, ai_names[i], REGISTER_INT32, CalcItemPos(i), reg_name_len);
+    }
+    SetFocus();
+}
+
+AiTab::~AiTab()
+{
+}
+
+void AiTab::Update()
+{
+    for (int i = 0; i < 10; i++)
+        registers[i]->SetInt(raw_registers[i]);
+}
+
+void AiTab::ValueChanged(int id, const wxAny &value)
+{
+    raw_registers[id - 1] = value.As<uint32_t>();
+}
+
+void AiTab::Reorder()
+{
+    for (uint32_t i = 0; i < 10; i++)
+        registers[i]->SetPosition(CalcItemPos(i));
+}
+
+/// ----------------------------------------------
+
+PiTab::PiTab(wxWindow *parent, int id) : RegisterTab(parent, id)
+{
+    reg_name_len = g_number_width * 13;
+    reg_basewidth = g_number_width * 13;
+    raw_registers = (uint32_t *)GetMemoryPointer(M64P_DBG_PTR_PI_REG);
+    for (int i = 0; i < 13; i++)
+    {
+        registers[i] = new SingleRegister(this, i + 1, pi_names[i], REGISTER_INT32, CalcItemPos(i), reg_name_len);
+    }
+    SetFocus();
+}
+
+PiTab::~PiTab()
+{
+}
+
+void PiTab::Update()
+{
+    for (int i = 0; i < 13; i++)
+        registers[i]->SetInt(raw_registers[i]);
+}
+
+void PiTab::ValueChanged(int id, const wxAny &value)
+{
+    raw_registers[id - 1] = value.As<uint32_t>();
+}
+
+void PiTab::Reorder()
+{
+    for (uint32_t i = 0; i < 13; i++)
+        registers[i]->SetPosition(CalcItemPos(i));
+}
+
+/// ----------------------------------------------
+
+RiSiTab::RiSiTab(wxWindow *parent, int id) : RegisterTab(parent, id)
+{
+    reg_name_len = g_number_width * 13;
+    reg_basewidth = g_number_width * 13;
+    raw_ri_registers = (uint32_t *)GetMemoryPointer(M64P_DBG_PTR_RI_REG);
+    raw_si_registers = (uint32_t *)GetMemoryPointer(M64P_DBG_PTR_SI_REG);
+    ri_text = new wxStaticText(this, -1, _("RDRAM Interface"), CalcTextPos(0));
+    for (int i = 0; i < 6; i++)
+        registers[i] = new SingleRegister(this, i + 1, ri_names[i], REGISTER_INT32, CalcItemPos(i), reg_name_len);
+    si_text = new wxStaticText(this, -1, _("Serial Interface"), CalcTextPos(1));
+    for (int i = 6; i < 8; i++)
+        registers[i] = new SingleRegister(this, i + 1, si_names[i - 6], REGISTER_INT32, CalcItemPos(i), reg_name_len);
+    SetFocus();
+}
+
+RiSiTab::~RiSiTab()
+{
+}
+
+void RiSiTab::Update()
+{
+    for (int i = 0; i < 6; i++)
+        registers[i]->SetInt(raw_ri_registers[i]);
+    registers[6]->SetInt(raw_si_registers[0]);
+    registers[7]->SetInt(raw_si_registers[3]);
+}
+
+void RiSiTab::ValueChanged(int id, const wxAny &value)
+{
+    if (id == 7)
+        raw_si_registers[0] = value.As<uint32_t>();
+    else if (id == 8)
+        raw_si_registers[3] = value.As<uint32_t>();
+    else
+        raw_ri_registers[id - 1] = value.As<uint32_t>();
+}
+
+void RiSiTab::Reorder()
+{
+    ri_text->SetPosition(CalcTextPos(0));
+    si_text->SetPosition(CalcTextPos(1));
+    for (uint32_t i = 0; i < 6; i++)
+        registers[i]->SetPosition(CalcItemPos(i));
+    for (uint32_t i = 6; i < 8; i++)
+        registers[i]->SetPosition(CalcItemPos(i));
+}
+
+wxPoint RiSiTab::CalcTextPos(int index) // this stuff makes sense
+{
+    int scrolled = GetViewStart().y;
+    if (index == 0)
+        return wxPoint(5, (0 - scrolled) * singlereg_height + 2);
+
+    int cols = GetCols();
+    int row;
+    if (6 % cols)
+        row = 2 + 6 / cols;
+    else
+        row = 1 + 6 / cols;
+
+    return wxPoint(5, (row - scrolled) * singlereg_height + 2);
+}
+
+wxPoint RiSiTab::CalcItemPos(int index)
+{
+    int scrolled = GetViewStart().y;
+    int cols = GetCols();
+    int col, row;
+    if (index >= 6)
+    {
+        index -= 6;
+        if (6 % cols)
+            row = (index) / cols + 3 + 6 / cols;
+        else
+            row = (index) / cols + 2 + 6 / cols;
+    }
+    else
+        row = index / cols + 1;
+
+    col = index % cols;
+
+    return wxPoint(5 + col * (reg_basewidth + reg_name_len), (row - scrolled) * singlereg_height + 2);
+}
+
+/// ----------------------------------------------
+
 RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     notebook = new wxAuiNotebook(this, -1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
 
-    gpr_tab = new GprTab(notebook, -1);
-    cop0_tab = new Cop0Tab(notebook, -1);
-    cop1_tab = new Cop1Tab(notebook, -1);
+    notebook->AddPage(new GprTab(notebook, -1), _("GPR"));
+    notebook->AddPage(new Cop0Tab(notebook, -1), _("COP0"));
+    notebook->AddPage(new Cop1Tab(notebook, -1), _("COP1"));
+    notebook->AddPage(new ViTab(notebook, -1), _("VI"));
+    notebook->AddPage(new AiTab(notebook, -1), _("AI"));
+    notebook->AddPage(new PiTab(notebook, -1), _("PI"));
+    notebook->AddPage(new RiSiTab(notebook, -1), _("RI&SI"));
 
-    notebook->AddPage(gpr_tab, _("GPR"));
-    notebook->AddPage(cop0_tab, _("COP0"));
-    notebook->AddPage(cop1_tab, _("COP1"));
+    updated_panels = 0;
 
     notebook->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_RIGHT_UP, &RegisterPanel::TabRClick, this);
 
@@ -592,15 +807,19 @@ RegisterPanel::~RegisterPanel()
 
 void RegisterPanel::Update(bool vi)
 {
-    if (vi)
-        return;
-
-    gpr_tab->Update();
-    cop0_tab->Update();
-    cop1_tab->Update();
+    int pages = notebook->GetPageCount();
+    for (int i = 0; i < pages; i++)
+    {
+        if (vi && i == 0) // It's pointless to refresh GRP tab
+            continue;
+        RegisterTab *page = (RegisterTab *)notebook->GetPage(i);
+        page->Update();
+    }
 }
 
 void RegisterPanel::TabRClick(wxAuiNotebookEvent &evt)
 {
     ((RegisterTab *)notebook->GetPage(evt.GetSelection()))->RClickMenu();
 }
+
+

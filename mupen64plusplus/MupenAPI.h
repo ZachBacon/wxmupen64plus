@@ -187,6 +187,7 @@ void MemWrite8(unsigned int address, unsigned char value);
 void MemWrite32(unsigned int address, unsigned int value);
 
 void *GetRegister(m64p_dbg_cpu_data type);
+void *GetMemoryPointer(m64p_dbg_memptr_type type);
 
 void DecodeOpcode(unsigned int address, char *op, char *args);
 

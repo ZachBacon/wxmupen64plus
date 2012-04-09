@@ -5,11 +5,11 @@
 #include <vector>
 #include <wx/scrolwin.h>
 
-
 class wxAuiNotebook;
 class wxAuiNotebookEvent;
 class wxTextCtrl;
 class RegisterTab;
+class wxStaticText;
 
 enum RegisterType
 {
@@ -28,7 +28,7 @@ enum RegisterGroup
 class SingleRegister : public wxPanel
 {
     public:
-        SingleRegister(RegisterTab *parent, int id, const char *name, RegisterType type, wxPoint &pos, int reg_name_len);
+        SingleRegister(RegisterTab *parent, int id, const char *name, RegisterType type, const wxPoint &pos, int reg_name_len);
         ~SingleRegister();
         uint64_t GetInt();
         double GetFloat();
@@ -65,6 +65,7 @@ class RegisterTab : public wxScrolledWindow
 
         void Append(const char *name, RegisterType type, int id = -1);
         int GetCols() { return cols; }
+        int GetRows() { return rows; }
 
         virtual void ValueChanged(int id, const wxAny &value) = 0;
         virtual void Update() = 0;
@@ -77,7 +78,7 @@ class RegisterTab : public wxScrolledWindow
         int reg_basewidth;
         virtual void Reorder() = 0;
         virtual int GetAmount() = 0;
-        virtual wxPoint CalcItemPos(int index);
+        wxPoint CalcItemPos(int index);
 
     private:
         char cols;
@@ -148,6 +149,84 @@ class Cop1Tab : public RegisterTab
         uint64_t *raw_registers_raw;
 };
 
+class ViTab : public RegisterTab
+{
+    public:
+        ViTab(wxWindow *parent, int id);
+        ~ViTab();
+
+        void Update();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount() { return 15; }
+
+    private:
+        SingleRegister *registers[15];
+        uint32_t *raw_registers;
+};
+
+class AiTab : public RegisterTab
+{
+    public:
+        AiTab(wxWindow *parent, int id);
+        ~AiTab();
+
+        void Update();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount() { return 10; }
+
+    private:
+        SingleRegister *registers[10];
+        uint32_t *raw_registers;
+};
+
+class PiTab : public RegisterTab
+{
+    public:
+        PiTab(wxWindow *parent, int id);
+        ~PiTab();
+
+        void Update();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount() { return 13; }
+
+    private:
+        SingleRegister *registers[13];
+        uint32_t *raw_registers;
+};
+
+class RiSiTab : public RegisterTab
+{
+    public:
+        RiSiTab(wxWindow *parent, int id);
+        ~RiSiTab();
+
+        void Update();
+        void ValueChanged(int id, const wxAny &value);
+
+    protected:
+        void Reorder();
+        int GetAmount() { return 10; }
+
+        wxPoint CalcItemPos(int index);
+        wxPoint CalcTextPos(int index);
+
+    private:
+        SingleRegister *registers[8];
+        uint32_t *raw_ri_registers;
+        uint32_t *raw_si_registers;
+        wxStaticText *ri_text;
+        wxStaticText *si_text;
+};
+
 class RegisterPanel : public DebugPanel
 {
     public:
@@ -158,9 +237,7 @@ class RegisterPanel : public DebugPanel
         void TabRClick(wxAuiNotebookEvent &evt);
 
     private:
-        RegisterTab *gpr_tab;
-        RegisterTab *cop0_tab;
-        RegisterTab *cop1_tab;
+        uint32_t updated_panels;
         wxAuiNotebook *notebook;
 };
 

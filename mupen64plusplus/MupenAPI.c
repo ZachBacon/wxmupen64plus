@@ -1015,6 +1015,12 @@ void *GetRegister(m64p_dbg_cpu_data type)
 {
     return (*DebugGetCPUDataPtr)(type);
 }
+// -----------------------------------------------------------------------------------------------------------
+
+void *GetMemoryPointer(m64p_dbg_memptr_type type)
+{
+    return (*DebugMemGetPointer)(type);
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
