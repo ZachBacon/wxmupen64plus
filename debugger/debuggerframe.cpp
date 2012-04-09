@@ -827,11 +827,12 @@ void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)
             }
             else
             {
+                pc = evt.GetInt();
+                if (running)
+                    Print(GetBreakReason(pc));
                 pause->Check(true);
                 run->Check(false);
                 running = false;
-                pc = evt.GetInt();
-                Print(GetBreakReason(pc));
                 UpdatePanels();
                 Raise();
             }
