@@ -12,11 +12,14 @@
 
 #include "../mupen64plusplus/MupenAPI.h"
 #include "../mupen64plusplus/osal_preproc.h"
+
 #include "breakpointpanel.h"
 #include "disasmpanel.h"
 #include "memorypanel.h"
 #include "debugconsole.h"
 #include "registerpanel.h"
+#include "memorysearch.h"
+
 #include "breakpoint.h"
 #include "colors.h"
 #include "debugconfig.h"
@@ -43,6 +46,7 @@ enum
     memory_panel_id,
     console_panel_id,
     register_panel_id,
+    memsearch_panel_id,
     last_panel_id,
     state_run_id,
     state_pause_id,
@@ -208,6 +212,14 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             info.MinSize(wxSize(150, 100));
         }
         break;
+        case memsearch_panel_id:
+        {
+            panel = new MemSearchPanel(this, id);
+            info.Caption(_("Memory search"));
+            info.BestSize(wxSize(150, 400));
+            info.MinSize(wxSize(300, 150));
+        }
+        break;
         default:
             return 0;
     }
@@ -251,18 +263,21 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_)
         name = perspective.substr(pos, name_end - pos);
         id = wxNewId();
 
-        if(name == "Memory")
+        if (name == "Memory")
             AddPanel(memory_panel_id, name, id);
-        else if(name == "Disasm")
+        else if (name == "Disasm")
             AddPanel(disasm_panel_id, name, id);
-        else if(name == "Breaks")
+        else if (name == "Breaks")
             AddPanel(break_panel_id, name, id);
-        else if(name == "Console")
+        else if (name == "Console")
             AddPanel(console_panel_id, name, id);
-        else if(name == "MainConsole")
+        else if (name == "MainConsole")
             output = (DebugConsole *)AddPanel(console_panel_id, name, id);
-        else if(name == "Registers")
+        else if (name == "Registers")
             AddPanel(register_panel_id, name, id);
+        else if (name == "MemSearch")
+            AddPanel(memsearch_panel_id, name, id);
+
 
         id_end = perspective.find_first_of(";|", name_end);
         char buf[16];
@@ -297,6 +312,9 @@ void DebuggerFrame::MenuAddPanel(wxCommandEvent &evt)
         break;
         case register_panel_id:
             name = "Registers";
+        break;
+        case memsearch_panel_id:
+            name = "MemSearch";
         break;
         default:
             return;
@@ -673,6 +691,7 @@ void DebuggerFrame::CreateMenubar()
     viewmenu->Append(register_panel_id, _("Registers\tCtrl-R"));
     viewmenu->Append(disasm_panel_id, _("Disassembly\tCtrl-D"));
     viewmenu->Append(memory_panel_id, _("Memory\tCtrl-M"));
+    viewmenu->Append(memsearch_panel_id, _("Memory search\tCtrl-S")); // Todo: maybe these hotkeys aren't the best possibilities?
 
     optmenu->Append(run_on_boot_menu);
     optmenu->Append(runtime_update_menu);

@@ -199,7 +199,7 @@ def build(bld):
     debugger_sources = ['debugger/breakpoint.cpp', 'debugger/breakpointpanel.cpp', 'debugger/colors.cpp',
                         'debugger/debugconsole.cpp', 'debugger/debuggerframe.cpp', 'debugger/debugpanel.cpp',
                         'debugger/disasmpanel.cpp', 'debugger/dv_treelist.cpp', 'debugger/memorypanel.cpp',
-                        'debugger/registerpanel.cpp', 'debugger/debugconfig.cpp']
+                        'debugger/registerpanel.cpp', 'debugger/debugconfig.cpp', 'debugger/memorysearch.cpp']
     bld.program(features='c cxx cxxprogram',
                 cxxflags=build_flags+['-std=gnu++0x'],
                 cflags=build_flags+['-Wfatal-errors'],
