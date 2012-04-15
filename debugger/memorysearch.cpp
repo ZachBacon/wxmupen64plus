@@ -26,16 +26,18 @@ enum
 
 MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(address), length(len)
 {
-    if (!(address & 0x3)) // already aligned
+    if (!(start_address & 0x3)) // already aligned
     {
-        realdata = (uint8_t *)malloc(length);
-        memcpy(realdata, data_, length);
+        if (len & 0x3)
+            len = (len + 4) & ~0x3;
+        realdata = (uint8_t *)malloc(len);
+        memcpy(realdata, data_, len);
         data = realdata;
     }
     else
     {
         realdata = (uint8_t *)malloc((length + 4) & ~0x3);
-        memcpy(data, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
+        memcpy(realdata, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
         data = realdata + (start_address & 0x3);
     }
 }
@@ -239,7 +241,6 @@ void MemSearch::Filter(compare op, bool initial_filter)
         {
             MemChunk new_chunk((rdram + new_chunk_beg - 1), j - (new_chunk_beg - 1) + chunk.start_address, new_chunk_beg - 1);
             new_result.AddChunk(new_chunk);
-            new_chunk_beg = 0;
         }
     }
 
@@ -344,6 +345,36 @@ type atot(const char *str)
 }
 
 template<>
+int8_t atot<int8_t>(const char *str)
+{
+    return atoi(str);
+}
+
+template<>
+int16_t atot<int16_t>(const char *str)
+{
+    return atoi(str);
+}
+
+template<>
+int32_t atot<int32_t>(const char *str)
+{
+    return atoi(str);
+}
+
+template<>
+int64_t atot<int64_t>(const char *str)
+{
+    return strtoll(str, 0, 10);
+}
+
+template<>
+uint64_t atot<uint64_t>(const char *str)
+{
+    return strtoull(str, 0, 16);
+}
+
+template<>
 float atot<float>(const char *str)
 {
     return atof(str);
@@ -363,11 +394,7 @@ wxString ValueFormat(uint8_t *data)
 
 wxString I64Format(uint8_t *data)
 {
-    int64_t val = magicswap<int64_t>(data);
-    if (val >> 32)
-        return "A lot"; // TODO: D:
-
-    return wxString::Format("%d", (int32_t)(val && ~0));
+    return wxString::Format("%lld", magicswap<int64_t>(data));
 }
 
 wxString U64Format(uint8_t *data)
@@ -377,7 +404,6 @@ wxString U64Format(uint8_t *data)
 }
 
 char deci[] = "%d", h8[] = "%02X", h16[] = "%04X", h32[] = "%08X", fl[] = "%f"; // sigh
-
 
 template<typename type_, class formatfunc>
 void MemSearchPanel::Filter(formatfunc valueformat)
@@ -581,6 +607,8 @@ void MemSearchPanel::RClickMenu(wxContextMenuEvent &evt)
         undo->Enable(false);
     if (!search.CanRedo())
         redo->Enable(false);
+    if (first_filter)
+        clear->Enable(false);
 
     menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &MemSearchPanel::RClickEvent, this);
     PopupMenu(&menu);
@@ -594,6 +622,7 @@ void MemSearchPanel::RClickEvent(wxCommandEvent &evt)
         case menu_clear:
             search.Clear();
             list->DeleteAllItems();
+            choice_valuetype->Enable();
             radio_old->SetLabel(_("Anything"));
             first_filter = true;
         break;
