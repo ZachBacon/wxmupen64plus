@@ -58,6 +58,7 @@ MemChunk &MemChunk::operator=(MemChunk &&other)
     start_address = other.start_address;
     length = other.length;
     other.realdata = 0;
+    return *this;
 }
 
 MemChunk::~MemChunk()
@@ -76,6 +77,7 @@ MemSearchResult &MemSearchResult::operator=(MemSearchResult &&other)
 {
     chunks = move(other.chunks);
     mem_usage = other.mem_usage;
+    return *this;
 }
 
 void MemSearchResult::AddChunk(MemChunk &chunk)
