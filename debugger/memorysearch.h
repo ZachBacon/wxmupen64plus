@@ -22,6 +22,7 @@ class MemChunk
     public:
         MemChunk() {}
         MemChunk(MemChunk &&other);
+        MemChunk &operator=(MemChunk &&other);
         MemChunk(void *data, uint32_t length, uint32_t address);
         ~MemChunk();
 
@@ -40,6 +41,7 @@ class MemSearchResult
     public:
         MemSearchResult() { mem_usage = 0; }
         MemSearchResult(MemSearchResult &&other);
+        MemSearchResult &operator=(MemSearchResult &&other);
         ~MemSearchResult() {}
 
         vector<MemChunk> *GetChunks() { return &chunks; }

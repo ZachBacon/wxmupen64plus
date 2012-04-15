@@ -51,6 +51,15 @@ MemChunk::MemChunk(MemChunk &&other)
     other.realdata = 0;
 }
 
+MemChunk &MemChunk::operator=(MemChunk &&other)
+{
+    data = other.data;
+    realdata = other.realdata;
+    start_address = other.start_address;
+    length = other.length;
+    other.realdata = 0;
+}
+
 MemChunk::~MemChunk()
 {
     if (realdata)
@@ -58,6 +67,12 @@ MemChunk::~MemChunk()
 }
 
 MemSearchResult::MemSearchResult(MemSearchResult &&other)
+{
+    chunks = move(other.chunks);
+    mem_usage = other.mem_usage;
+}
+
+MemSearchResult &MemSearchResult::operator=(MemSearchResult &&other)
 {
     chunks = move(other.chunks);
     mem_usage = other.mem_usage;
@@ -671,6 +686,7 @@ void MemSearchPanel::RClickEvent(wxCommandEvent &evt)
         break;
     }
 }
+
 
 
 
