@@ -572,39 +572,27 @@ void DebuggerFrame::LoadGameValues()
         {
             if (osal_insensitive_strcmp(section.name, "breakpoint") == 0 && section.num_values >= 4)
             {
-                uint32_t address = 0, length = 0, type = 0;
+                uint32_t address, length, type;
                 wxString name;
-                bool enabled = true;
-                for (int i = 0; i < section.num_values; i++)
+
+                name = wxString::FromUTF8(section.GetValue("name", ""));
+                address = strtoul(section.GetValue("address", "0"), 0, 16);
+                length = strtoul(section.GetValue("length", "1"), 0, 16);
+                const char *type_str = section.GetValue("type", "x");
+                while (type_str[0] != 0)
                 {
-                    if (osal_insensitive_strcmp(section.keys[i], "name") == 0)
-                        name = wxString::FromUTF8(section.values[i]);
-                    else if (osal_insensitive_strcmp(section.keys[i], "address") == 0)
-                        address = strtoul(section.values[i], 0, 16);
-                    else if (osal_insensitive_strcmp(section.keys[i], "length") == 0)
-                        length = strtoul(section.values[i], 0, 16);
-                    else if (osal_insensitive_strcmp(section.keys[i], "type") == 0)
-                    {
-                        const char *type_str = section.values[i];
-                        while (type_str[0] != 0)
-                        {
-                            if (type_str[0] == 'x')
-                                type |= BREAK_TYPE_EXECUTE;
-                            else if (type_str[0] == 'r')
-                                type |= BREAK_TYPE_READ;
-                            else if (type_str[0] == 'w')
-                                type |= BREAK_TYPE_WRITE;
-                            type_str++;
-                        }
-                    }
-                    else if (osal_insensitive_strcmp(section.keys[i], "enabled") == 0)
-                        enabled = osal_insensitive_strcmp(section.values[i], "true") == 0;
+                    if (type_str[0] == 'x')
+                        type |= BREAK_TYPE_EXECUTE;
+                    else if (type_str[0] == 'r')
+                        type |= BREAK_TYPE_READ;
+                    else if (type_str[0] == 'w')
+                        type |= BREAK_TYPE_WRITE;
+                    type_str++;
                 }
-                if (!name || !length || !type)
-                    continue;
+
                 Breakpoint *bpt = new Breakpoint(name, address, length, type);
                 AddBreakpoint(bpt);
-                if (!enabled)
+                if (!osal_insensitive_strcmp(section.GetValue("enabled", "true"), "true") == 0)
                     EnableBreakpoint(bpt, false);
             }
         }

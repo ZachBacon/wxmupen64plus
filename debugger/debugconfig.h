@@ -2,18 +2,23 @@
 #define DEBUG_CONFIG_H
 
 #include <stdio.h>
+#include <wx/string.h>
 
 /** These are desgined for quick  read/write for small non-unique sections,
     and the sections will be invalid once class is deleted. **/
 
 #define DCONF_MAX_VAL 8
 
-struct DebugConfigSection
+class DebugConfigSection
 {
-    const char *name;
-    const char *keys[DCONF_MAX_VAL];
-    const char *values[DCONF_MAX_VAL];
-    int num_values;
+    public:
+        DebugConfigSection() {}
+        const char *GetValue(const char *key, const char *def);
+
+        const char *name;
+        const char *keys[DCONF_MAX_VAL];
+        const char *values[DCONF_MAX_VAL];
+        int num_values;
 };
 
 class DebugConfigIn
@@ -41,6 +46,7 @@ class DebugConfigOut
 
     private:
         FILE *file;
+        wxString filename;
 };
 
 #endif // DEBUG_CONFIG_H

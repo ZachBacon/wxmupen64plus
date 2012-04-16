@@ -1,4 +1,15 @@
 #include "debugconfig.h"
+#include "../mupen64plusplus/osal_preproc.h"
+
+const char *DebugConfigSection::GetValue(const char *key, const char *def)
+{
+    for (int i = 0; i < num_values; i++)
+    {
+        if (osal_insensitive_strcmp(key, keys[i]) == 0)
+            return values[i];
+    }
+    return def;
+}
 
 DebugConfigIn::DebugConfigIn(const char *filename)
 {
@@ -90,14 +101,19 @@ bool DebugConfigIn::GetNextSection(DebugConfigSection *out)
 }
 
 
-DebugConfigOut::DebugConfigOut(const char *filename)
+DebugConfigOut::DebugConfigOut(const char *filename_) : filename(filename_)
 {
-    file = fopen(filename, "w");
+    file = fopen(filename + ".tmp", "w");
 }
 
 DebugConfigOut::~DebugConfigOut()
 {
-    fclose(file);
+    if (file)
+    {
+        fclose(file);
+        remove(filename);
+        rename(filename + ".tmp", filename);
+    }
 }
 
 void DebugConfigOut::WriteSection(DebugConfigSection *sect)
