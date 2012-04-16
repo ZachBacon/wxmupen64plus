@@ -177,7 +177,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             panel = new BreakpointPanel(this, id);
             info.Caption(_("Breakpoints"));
             info.BestSize(wxSize(150, 400));
-            info.MinSize(wxSize(100, 150));
         }
         break;
         case disasm_panel_id:
@@ -185,7 +184,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             panel = new DisasmPanel(this, id);
             info.Caption(_("Disassembly"));
             info.BestSize(wxSize(350, 400));
-            info.MinSize(wxSize(350, 150));
         }
         break;
         case memory_panel_id:
@@ -193,7 +191,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             panel = new MemoryPanel(this, id);
             info.Caption(_("Memory"));
             info.BestSize(wxSize(350, 400));
-            info.MinSize(wxSize(350, 150));
         }
         break;
         case console_panel_id:
@@ -201,7 +198,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             panel = new DebugConsole(this, id);
             info.Caption(_("Console"));
             info.BestSize(wxSize(300, 500));
-            info.MinSize(wxSize(150, 100));
         }
         break;
         case register_panel_id:
@@ -209,7 +205,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             panel = new RegisterPanel(this, id);
             info.Caption(_("Registers"));
             info.BestSize(wxSize(300, 500));
-            info.MinSize(wxSize(150, 100));
         }
         break;
         case memsearch_panel_id:
@@ -217,7 +212,6 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
             panel = new MemSearchPanel(this, id);
             info.Caption(_("Memory search"));
             info.BestSize(wxSize(150, 400));
-            info.MinSize(wxSize(300, 150));
         }
         break;
         default:
