@@ -43,6 +43,7 @@ class DebugConfigOut
         ~DebugConfigOut();
 
         void WriteSection(DebugConfigSection *sect);
+        void WriteComment(const char *comment);
 
     private:
         FILE *file;

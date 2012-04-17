@@ -39,16 +39,17 @@ bool DebugConfigIn::GetNextSection(DebugConfigSection *out)
     if (pos == eof)
         return false;
 
+    // Fun
     while (pos != eof)
     {
         char *start = pos;
-        while (pos != eof && *pos != '\n')
+        while (pos != eof && *pos != '\n')                          // separate the current line
             pos++;
-        while (start != pos && *start == ' ')
+        while (start != pos && (*start == ' ' || *start == '\x09')) // ignore leading spaces and tabs
             start++;
-        if (start != pos)
+        if (start != pos && *start != '#')                          // ignore empty lines and comments
         {
-            if (*start++ != '[')
+            if (*start++ != '[')                                    // didn't start with section, assume corrupted
                 return false;
             char *end = pos - 1;
             while (end != start && *end == ' ')
@@ -58,7 +59,7 @@ bool DebugConfigIn::GetNextSection(DebugConfigSection *out)
             end[0] = 0;
             out->name = start;
             pos++;
-            break;
+            break;                                                  // section title found, go on
         }
         pos++;
     }
@@ -69,13 +70,13 @@ bool DebugConfigIn::GetNextSection(DebugConfigSection *out)
     while (pos != eof && out->num_values != DCONF_MAX_VAL)
     {
         char *start = pos;
-        while (pos != eof && *pos != '\n')
+        while (pos != eof && *pos != '\n')                          // separate the current line
             pos++;
-        while (start != pos && *start == ' ')
+        while (start != pos && (*start == ' ' || *start == '\x09')) // ignore leading spaces and tabs
             start++;
-        if (start != pos)
+        if (start != pos && *start != '#')                          // ignore empty lines and comments
         {
-            if (*start == '[')
+            if (*start == '[')                                      // new section, so the current one ends here
             {
                 pos = start;
                 return true;
@@ -88,10 +89,10 @@ bool DebugConfigIn::GetNextSection(DebugConfigSection *out)
                 eq++;
             if (*eq == '=')
             {
-                eq[0] = 0;
-                end[1] = 0;
+                eq[0] = 0;                                          // as long as the first character isn't #, keys
+                end[1] = 0;                                         // can contain anything but = or newline
                 out->keys[out->num_values] = start;
-                out->values[out->num_values] = eq + 1;
+                out->values[out->num_values] = eq + 1;              // values can contain anything expect newlines
                 out->num_values++;
             }
         }
@@ -122,4 +123,9 @@ void DebugConfigOut::WriteSection(DebugConfigSection *sect)
     for (int i = 0; i < sect->num_values; i++)
         fprintf(file, "%s=%s\n", sect->keys[i], sect->values[i]);
     fputc('\n', file);
+}
+
+void DebugConfigOut::WriteComment(const char *comment)
+{
+    fprintf(file, "# %s\n", comment);
 }

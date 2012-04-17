@@ -872,7 +872,7 @@ std::string ConfigParam::getStringValue()
         throw std::runtime_error(errmsg);
     }
 
-    const int BUFFER_SIZE = 2048; // TODO: Bad
+    const int BUFFER_SIZE = 256;
     char buffer[BUFFER_SIZE];
 
     m64p_error result = getStringConfigParam(m_parent_section, m_param_name.c_str(),

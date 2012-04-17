@@ -85,6 +85,7 @@ m64p_error GetVideoExtension(char videoExtension[], const int videoExtensionLen)
 extern ptr_CoreShutdown  CoreShutdown;
 extern ptr_CoreStartup   CoreStartup;
 
+const char *GetUserConfigPath();
 const char *GetUserDataPath();
 
 /**
@@ -176,6 +177,7 @@ void osdNewMessage(const char* message);
 m64p_error SetDebuggingCallbacks(void (*init)(void), void (*update)(unsigned int), void (*vi)(void));
 m64p_error SetRunState(int state);
 m64p_error DebuggerStep();
+int GetDebugState(m64p_dbg_state state);
 
 int MemIsValid(unsigned int address);
 

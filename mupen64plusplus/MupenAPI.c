@@ -931,6 +931,13 @@ void osdNewMessage(const char* message)
 
 // -----------------------------------------------------------------------------------------------------------
 
+const char *GetUserConfigPath()
+{
+    return (*PtrConfigGetUserConfigPath)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 const char *GetUserDataPath()
 {
     return (*PtrConfigGetUserDataPath)();
@@ -955,6 +962,13 @@ m64p_error SetRunState(int state)
 m64p_error DebuggerStep()
 {
     return (*DebugStep)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+int GetDebugState(m64p_dbg_state state)
+{
+    return (*DebugGetState)(state);
 }
 
 // -----------------------------------------------------------------------------------------------------------

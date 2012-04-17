@@ -24,6 +24,7 @@ class DebugPanel;
 class Breakpoint;
 class BreakpointInterface;
 class wxMenu;
+class DebugConfigIn;
 
 // This code assumes that there won't be multiple DebuggerFrames,
 // as it makes implementing debug callbacks a lot easier..
@@ -62,7 +63,6 @@ class DebuggerFrame : public wxFrame
         void MenuAppendMemoryFollow(wxMenu *menu);
         void MenuAppendDisasmFollow(wxMenu *menu);
         bool DoFollow(int id, uint32_t address);
-
 
         void ProcessCallback(wxCommandEvent &evt);
 
@@ -116,9 +116,10 @@ class DebuggerFrame : public wxFrame
 
         void LoadConfig();
         void SaveConfig();
-        bool LoadAui(const wxString &perspective);
+        bool LoadAui(const wxString &perspective, DebugConfigIn *config);
         void LoadGameValues();
         void SaveGameValues();
+
         bool runtime_update;
         char run_on_boot; // 0 = nope; 1 = yea; 2 = yea, done
 
@@ -126,7 +127,6 @@ class DebuggerFrame : public wxFrame
         wxMenuItem *runtime_update_menu;
 
         wxAuiManager *aui;
-        ConfigSection *config;
 };
 
 

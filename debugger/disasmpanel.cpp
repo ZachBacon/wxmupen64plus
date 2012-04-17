@@ -395,6 +395,9 @@ void DisasmWindow::Paint(wxPaintEvent &evt)
 
 void DisasmWindow::Render()
 {
+    if (!lines)
+        return;
+
     data = parent->RequestData(lines);
 
     wxMemoryDC dc(*render_buffer);

@@ -258,7 +258,7 @@ void DebuggerFrame::PaneClosed(wxAuiManagerEvent &evt)
     }
 }
 
-bool DebuggerFrame::LoadAui(const wxString &perspective_)
+bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
 {
     wxString perspective = perspective_;
     aui = new wxAuiManager(this);
@@ -476,111 +476,79 @@ const BreakContainer *DebuggerFrame::GetBreakpoints()
 
 void DebuggerFrame::SaveConfig()
 {
-    ptr_vector<ConfigSection>& config = wxGetApp().getConfig();
-    for (int n = 0; n < config.size(); n++)
-    {
-        if (config[n]->m_section_name == "UI-wx-debugger")
-        {
-            ConfigParam *perspective = config[n]->getParamWithName("Layout");
-            wxString perspective_string = aui->SavePerspective();
-            perspective->setStringValue((const char *)perspective_string.c_str());
+    DebugConfigOut config(wxString::Format("%swxmupen-debugger.cfg", GetUserConfigPath()));
 
-            char buf[32];
-            wxRect rect = GetRect();
-            sprintf(buf, "%d,%d,%d,%d", rect.x, rect.y, rect.width, rect.height);
-            config[n]->getParamWithName("Window")->setStringValue(buf);
+    config.WriteComment("This file does not need to be modified by hand, everything should be editable through GUI.");
+    config.WriteComment("If you wish to do it though, be careful, as a single syntax error will cause rest of the file to be ignored.");
+    config.WriteComment("Also, [Main] has to be the first section or else nothing will be loaded.\n");
 
-            config[n]->getParamWithName("RunOnBoot")->setBoolValue(run_on_boot != 0);
-            config[n]->getParamWithName("RuntimeUpdate")->setBoolValue(runtime_update);
-        }
-    }
+    DebugConfigSection section;
+    section.name = "Main";
+    section.num_values = 5;
+
+    wxString perspective_string = aui->SavePerspective();
+    section.keys[0] = "Layout";
+    section.values[0] = perspective_string.c_str();
+
+    wxRect rect = GetRect();
+    section.keys[1] = "Window";
+    char buf[32];
+    sprintf(buf, "%d,%d,%d,%d", rect.x, rect.y, rect.width, rect.height);
+    section.values[1] = buf;
+
+    section.keys[2] = "Maximized";
+    (IsMaximized()) ? (section.values[2] = "True") : (section.values[2] = "False");
+
+    section.keys[3] = "RunOnBoot";
+    (run_on_boot != 0) ? (section.values[3] = "True") : (section.values[3] = "False");
+
+    section.keys[4] = "RuntimeUpdate";
+    (runtime_update) ? (section.values[4] = "True") : (section.values[4] = "False");
+
+    config.WriteSection(&section);
 }
 
 void DebuggerFrame::LoadConfig()
 {
-    config = 0;
-    unsigned int warnings = 0;
-    ConfigParam *param;
-
-    ptr_vector<ConfigSection>& conf = wxGetApp().getConfig();
-    for (int n = 0; n < conf.size(); n++)
+    DebugConfigIn config(wxString::Format("%swxmupen-debugger.cfg", GetUserConfigPath()));
+    DebugConfigSection sect;
+    if(!config.GetNextSection(&sect))
     {
-        if (conf[n]->m_section_name == "UI-wx-debugger")
-        {
-            config = conf[n];
-            debugger_config = conf[n]->m_handle;
-        }
-        else if (conf[n]->m_section_name == "Core")
-        {
-            if (conf[n]->getParamWithName("R4300Emulator")->getIntValue() == 2)
-                warnings |= 0x1;
-        }
+        Print("Config error");
+        run_on_boot = false;
+        runtime_update = true;
+        LoadAui("", 0);
     }
-    if (!config)
-    {
-        if ((*PtrConfigOpenSection)("UI-wx-debugger", &debugger_config) != M64ERR_SUCCESS)
-            throw std::runtime_error("Could not create debugger section in the config file.");
-
-        config = new ConfigSection("UI-wx-debugger", debugger_config);
-        conf.push_back(config);
-    }
-
-    param = config->getParamWithName("Window");
-    if (!param)
-    {
-        char buf[32];
-        wxRect rect = GetRect();
-        sprintf(buf, "%d,%d,%d,%d", rect.x, rect.y, rect.width, rect.height);
-        config->addNewParam("Window", "Window position and size (x,y,w,h)", "", M64TYPE_STRING);
-    }
-    else
+    else if (osal_insensitive_strcmp(sect.name, "Main") == 0)
     {
         wxRect rect;
-        // Can't do just "value = param->getStringValue().c_str()", since the string would be destructed before sscanf
-        std::string str = param->getStringValue();
-        const char *value = str.c_str();
+        const char *value = sect.GetValue("Window", "100,100,500,500");
         sscanf(value, "%d,%d,%d,%d", &rect.x, &rect.y, &rect.width, &rect.height);
         SetSize(rect);
-    }
 
-    param = config->getParamWithName("RunOnBoot");
-    if (!param)
+        if (osal_insensitive_strcmp(sect.GetValue("RunOnBoot", "False"), "True") == 0)
+            run_on_boot = true;
+        else
+            run_on_boot = false;
+
+        if (osal_insensitive_strcmp(sect.GetValue("RuntimeUpdate", "True"), "True") == 0)
+            runtime_update = true;
+        else
+            runtime_update = false;
+
+        LoadAui(sect.GetValue("Layout", ""), &config);
+    }
+    else
     {
         run_on_boot = false;
-        config->addNewParam("RunOnBoot", "Runs the game when it is started", false, M64TYPE_BOOL);
-    }
-
-    else // I just don't like casting bool to a number and vice versa
-    {
-        if(param->getBoolValue())
-            run_on_boot = 1;
-        else
-            run_on_boot = 0;
-    }
-    run_on_boot_menu->Check(run_on_boot == 1);
-
-    param = config->getParamWithName("RuntimeUpdate");
-    if (!param)
-    {
         runtime_update = true;
-        config->addNewParam("RuntimeUpdate", "Updates values while running", true, M64TYPE_BOOL);
+        LoadAui("", 0);
     }
-    else
-        runtime_update = param->getBoolValue();
+
+    run_on_boot_menu->Check(run_on_boot == 1);
     runtime_update_menu->Check(runtime_update);
 
-
-    param = config->getParamWithName("Layout");
-    if (!param)
-    {
-        config->addNewParam("Layout", "Layout of the debugger", "", M64TYPE_STRING);
-        LoadAui("");
-    }
-    else
-    {
-        LoadAui(param->getStringValue());
-    }
-    if (warnings & 0x1)
+    if (GetDebugState(M64P_DBG_CPU_DYNACORE) == 2)
         Print("WARNING: Dynamic recompiler limits debugging features, please use interpreter");
 }
 
