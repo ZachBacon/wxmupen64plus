@@ -16,6 +16,7 @@ class wxStaticText;
 class wxTextCtrl;
 class wxButton;
 class wxCheckBox;
+class wxDataViewEvent;
 
 class MemChunk
 {
@@ -92,6 +93,7 @@ class MemSearchPanel : public DebugPanel
 
         void RClickMenu(wxContextMenuEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
+        void ItemRClick(wxDataViewEvent &evt);
         void RadioEvent(wxCommandEvent &evt);
         void FilterEvent(wxCommandEvent &evt);
 

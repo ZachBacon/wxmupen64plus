@@ -346,6 +346,7 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type) : DebugP
     SetSizer(sizer);
 
     list->Bind(wxEVT_CONTEXT_MENU, &MemSearchPanel::RClickMenu, this);
+    list->Bind(wxEVT_COMMAND_DATAVIEW_ITEM_CONTEXT_MENU, &MemSearchPanel::ItemRClick, this);
     radio_old->Bind(wxEVT_COMMAND_RADIOBUTTON_SELECTED, &MemSearchPanel::RadioEvent, this);
     radio_custom->Bind(wxEVT_COMMAND_RADIOBUTTON_SELECTED, &MemSearchPanel::RadioEvent, this);
     btn_filter->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MemSearchPanel::FilterEvent, this);
@@ -606,6 +607,33 @@ void MemSearchPanel::RadioEvent(wxCommandEvent &evt)
     }
 }
 
+
+void MemSearchPanel::ItemRClick(wxDataViewEvent &evt)
+{
+    wxMenu menu;
+    wxMenuItem *clear, *undo, *redo;
+    clear = new wxMenuItem(&menu, menu_clear, _("Reset"));
+    undo = new wxMenuItem(&menu, menu_undo, _("Undo"));
+    redo = new wxMenuItem(&menu, menu_redo, _("Redo"));
+
+    // Remove result maybe?
+    // Somewhat difficult to implement with current code though..
+
+    menu.Append(undo);
+    menu.Append(redo);
+    menu.AppendSeparator();
+    menu.Append(clear);
+
+    if (!search.CanUndo())
+        undo->Enable(false);
+    if (!search.CanRedo())
+        redo->Enable(false);
+    if (first_filter)
+        clear->Enable(false);
+
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &MemSearchPanel::RClickEvent, this);
+    PopupMenu(&menu);
+}
 
 void MemSearchPanel::RClickMenu(wxContextMenuEvent &evt)
 {
