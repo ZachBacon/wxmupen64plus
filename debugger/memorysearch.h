@@ -87,7 +87,7 @@ class MemSearch
 class MemSearchPanel : public DebugPanel
 {
     public:
-        MemSearchPanel(DebuggerFrame *parent, int id = -1);
+        MemSearchPanel(DebuggerFrame *parent, int id, int type);
         ~MemSearchPanel();
 
         void RClickMenu(wxContextMenuEvent &evt);

@@ -3,17 +3,27 @@
 
 #include <wx/frame.h>
 #include <unordered_map>
+#include <vector>
 
 #include "main.h"
 #include "breakpoint.h"
 
+#define PANELJMP_MAX_ID_PER_TYPE 50
+#define ASMJMP_ID_START 300
+#define MEMJMP_ID_START (ASMJMP_ID_START + PANELJMP_MAX_ID_PER_TYPE)
+#define PANELJMP_ID_LAST (MEMJMP_ID_START + PANELJMP_MAX_ID_PER_TYPE)
+
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_DEBUG_EVENT, -1);
 
 class wxAuiManager;
+class wxAuiManagerEvent;
+class MemoryPanel;
+class DisasmPanel;
 class DebugConsole;
 class DebugPanel;
 class Breakpoint;
 class BreakpointInterface;
+class wxMenu;
 
 // This code assumes that there won't be multiple DebuggerFrames,
 // as it makes implementing debug callbacks a lot easier..
@@ -26,8 +36,6 @@ class DebuggerFrame : public wxFrame
         virtual ~DebuggerFrame();
 
         void Reset();
-
-        void ConsoleClosed(DebugConsole *console);
 
         void Run();
         void Step();
@@ -51,6 +59,11 @@ class DebuggerFrame : public wxFrame
         DebugConsole *GetMainOutput() { return output; }
         void SetMainOutput(DebugConsole *output_) { output = output_; }
 
+        void MenuAppendMemoryFollow(wxMenu *menu);
+        void MenuAppendDisasmFollow(wxMenu *menu);
+        bool DoFollow(int id, uint32_t address);
+
+
         void ProcessCallback(wxCommandEvent &evt);
 
         void Print(const wxString &msg);
@@ -66,6 +79,7 @@ class DebuggerFrame : public wxFrame
         void MenuOption(wxCommandEvent &evt);
         void PaneTitleRClick(wxMouseEvent &evt);
         void PaneTitleEvent(wxCommandEvent &evt);
+        void PaneClosed(wxAuiManagerEvent &evt);
 
     private:
         static void DebuggerInit();
@@ -82,6 +96,9 @@ class DebuggerFrame : public wxFrame
 
         DebugPanel *AddPanel(int type, wxString &name, int id = 0);
         DebugConsole *output;
+        std::vector<MemoryPanel *> mempanels;
+        std::vector<DisasmPanel *> disasmpanels;
+
         bool vi_break;
         char vi_count;
         bool inited;

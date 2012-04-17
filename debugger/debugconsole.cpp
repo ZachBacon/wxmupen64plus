@@ -67,7 +67,7 @@ void DebugConsole::InitCommands()
     (*commands)["ni"] = nicmd;
 }
 
-DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_, id)
+DebugConsole::DebugConsole(DebuggerFrame *parent_, int id, int type) : DebugPanel(parent_, id, type)
 {
     if (!commands)
         InitCommands();
@@ -86,7 +86,6 @@ DebugConsole::DebugConsole(DebuggerFrame *parent_, int id) : DebugPanel(parent_,
 
 DebugConsole::~DebugConsole()
 {
-    parent->ConsoleClosed(this);
 }
 
 void DebugConsole::CmdTextDebug(wxString &cmd)

@@ -13,7 +13,7 @@ class Breakpoint;
 class BreakpointPanel : public DebugPanel
 {
     public:
-        BreakpointPanel(DebuggerFrame *parent, int id = -1);
+        BreakpointPanel(DebuggerFrame *parent, int id, int type);
         virtual ~BreakpointPanel();
 
         void Update(bool vi);

@@ -40,7 +40,7 @@ enum
     remove_break
 };
 
-MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
+MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL), *subsizer = new wxBoxSizer(wxHORIZONTAL);
     data = 0;
@@ -95,8 +95,12 @@ void MemoryPanel::SetPosition(uint32_t offset, int size)
 
 void MemoryPanel::Goto(wxCommandEvent &evt)
 {
-    uint32_t offset = strtoul(offset_chooser->GetValue(), 0, 16);
-    memory->Goto(offset);
+    Goto(strtoul(offset_chooser->GetValue(), 0, 16));
+}
+
+void MemoryPanel::Goto(uint32_t address)
+{
+    memory->Goto(address);
 }
 
 uint8_t *MemoryPanel::RequestData(int size, int relative_offset)

@@ -30,7 +30,7 @@
 #define scrollbar_thumb_defpos (scrollbar_size - scrollbar_thumb) / 2
 #define scroll_multiplier 1
 
-DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
+DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL), *subsizer = new wxBoxSizer(wxVERTICAL);
     address = 0;

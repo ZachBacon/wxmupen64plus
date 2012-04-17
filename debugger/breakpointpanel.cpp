@@ -316,7 +316,7 @@ class BreakDataModel : public DataViewTreeListModel
 };
 
 
-BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
+BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
 {
     filter = BREAK_FILTER_ALL;
 

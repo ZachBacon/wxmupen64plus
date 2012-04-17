@@ -297,7 +297,7 @@ enum
     cmp_eq = 0, cmp_ne, cmp_gt, cmp_lt, cmp_ge, cmp_le
 };
 
-MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
+MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
 {
     first_filter = true;
 

@@ -10,7 +10,7 @@ class CommandMap;
 class DebugConsole : public DebugPanel
 {
     public:
-        DebugConsole(DebuggerFrame *parent, int id = -1);
+        DebugConsole(DebuggerFrame *parent, int id, int type);
         ~DebugConsole();
         void Print(const wxString &msg);
         void Command(wxCommandEvent &evt);

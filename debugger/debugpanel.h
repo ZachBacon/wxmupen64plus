@@ -17,7 +17,7 @@ enum BreakUpdateCause
 class DebugPanel : public wxPanel
 {
     public:
-        DebugPanel(DebuggerFrame *parent, int id = -1);
+        DebugPanel(DebuggerFrame *parent, int id, int type);
         virtual ~DebugPanel();
 
         virtual void Update(bool vi) {}
@@ -25,13 +25,16 @@ class DebugPanel : public wxPanel
         void Print(const wxString &msg);
 
         DebuggerFrame *GetParent() { return parent; }
-
+        int GetType() { return type; }
 
         virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update) {}
 
     protected:
         DebuggerFrame *parent;
+
+    private:
         DebugConsole *output;
+        int type;
 };
 
 #endif // DEBUGPANEL_H

@@ -63,7 +63,7 @@ class MemoryWindow : public wxWindow
 class MemoryPanel : public DebugPanel
 {
     public:
-        MemoryPanel(DebuggerFrame *parent, int id = -1);
+        MemoryPanel(DebuggerFrame *parent, int id, int type);
         virtual ~MemoryPanel();
 
         void Update(bool vi);
@@ -71,6 +71,7 @@ class MemoryPanel : public DebugPanel
         void Select(int newpos);
         void SetValue(int pos, int value);
         void Goto(wxCommandEvent &evt);
+        void Goto(uint32_t address);
 
         void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 

@@ -230,7 +230,7 @@ class RiSiTab : public RegisterTab
 class RegisterPanel : public DebugPanel
 {
     public:
-        RegisterPanel(DebuggerFrame *parent, int id = -1);
+        RegisterPanel(DebuggerFrame *parent, int id, int type);
         virtual ~RegisterPanel();
 
         void Update(bool vi);

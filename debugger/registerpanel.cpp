@@ -783,7 +783,7 @@ wxPoint RiSiTab::CalcItemPos(int index)
 
 /// ----------------------------------------------
 
-RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id) : DebugPanel(parent, id)
+RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     notebook = new wxAuiNotebook(this, -1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);

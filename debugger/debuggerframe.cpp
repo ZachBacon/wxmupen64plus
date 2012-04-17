@@ -128,6 +128,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuAddPanel, this, break_panel_id, last_panel_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuState, this, state_run_id, last_state_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuOption, this, run_on_boot_opt_id, last_opt_id - 1);
+    Bind(wxEVT_AUI_PANE_CLOSE, &DebuggerFrame::PaneClosed, this);
     Bind(wxMUPEN_DEBUG_EVENT, wxCommandEventHandler(DebuggerFrame::ProcessCallback), this, 1, 3);
     Bind(wxEVT_RIGHT_UP, &DebuggerFrame::PaneTitleRClick, this);
 }
@@ -174,42 +175,44 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
     {
         case break_panel_id:
         {
-            panel = new BreakpointPanel(this, id);
+            panel = new BreakpointPanel(this, id, type);
             info.Caption(_("Breakpoints"));
             info.BestSize(wxSize(150, 400));
         }
         break;
         case disasm_panel_id:
         {
-            panel = new DisasmPanel(this, id);
+            panel = new DisasmPanel(this, id, type);
             info.Caption(_("Disassembly"));
             info.BestSize(wxSize(350, 400));
+            disasmpanels.push_back((DisasmPanel *)panel);
         }
         break;
         case memory_panel_id:
         {
-            panel = new MemoryPanel(this, id);
+            panel = new MemoryPanel(this, id, type);
             info.Caption(_("Memory"));
             info.BestSize(wxSize(350, 400));
+            mempanels.push_back((MemoryPanel *)panel);
         }
         break;
         case console_panel_id:
         {
-            panel = new DebugConsole(this, id);
+            panel = new DebugConsole(this, id, type);
             info.Caption(_("Console"));
             info.BestSize(wxSize(300, 500));
         }
         break;
         case register_panel_id:
         {
-            panel = new RegisterPanel(this, id);
+            panel = new RegisterPanel(this, id, type);
             info.Caption(_("Registers"));
             info.BestSize(wxSize(300, 500));
         }
         break;
         case memsearch_panel_id:
         {
-            panel = new MemSearchPanel(this, id);
+            panel = new MemSearchPanel(this, id, type);
             info.Caption(_("Memory search"));
             info.BestSize(wxSize(150, 400));
         }
@@ -219,6 +222,40 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
     }
     aui->AddPane(panel, info);
     return panel;
+}
+
+void DebuggerFrame::PaneClosed(wxAuiManagerEvent &evt)
+{
+    DebugPanel *pane = (DebugPanel *)evt.GetPane()->window;
+    switch (pane->GetType())
+    {
+        case disasm_panel_id:
+            for (auto it = disasmpanels.begin(); it != disasmpanels.end(); ++it)
+            {
+                if (*it == pane)
+                {
+                    disasmpanels.erase(it);
+                    return;
+                }
+            }
+            Print("Error: Did not have closed pane in disasmpanels");
+        break;
+        case memory_panel_id:
+            for (auto it = mempanels.begin(); it != mempanels.end(); ++it)
+            {
+                if (*it == pane)
+                {
+                    mempanels.erase(it);
+                    return;
+                }
+            }
+            Print("Error: Did not have closed pane in mempanels");
+        break;
+        case console_panel_id:
+        if (pane == output)
+            output = 0;
+        break;
+    }
 }
 
 bool DebuggerFrame::LoadAui(const wxString &perspective_)
@@ -649,6 +686,63 @@ void DebuggerFrame::SaveGameValues()
     }
 }
 
+void DebuggerFrame::MenuAppendMemoryFollow(wxMenu *menu)
+{
+    int size = mempanels.size();
+    if (!size)
+        return;
+    if (size == 1)
+    {
+        wxMenuItem *jmp = new wxMenuItem(menu, MEMJMP_ID_START, _("Memory follow"));
+        menu->Append(jmp);
+    }
+    else
+    {
+        wxMenu *submenu = new wxMenu;
+        for (int i = 0; i < size && i < PANELJMP_MAX_ID_PER_TYPE; i++)
+        {
+            wxMenuItem *jmp = new wxMenuItem(menu, MEMJMP_ID_START + i, aui->GetPane(mempanels[i]).caption);
+            submenu->Append(jmp);
+        }
+        menu->AppendSubMenu(submenu, _("Memory follow"));
+    }
+}
+
+void DebuggerFrame::MenuAppendDisasmFollow(wxMenu *menu)
+{
+    int size = disasmpanels.size();
+    if (!size)
+        return;
+    if (size == 1)
+    {
+        wxMenuItem *jmp = new wxMenuItem(menu, ASMJMP_ID_START, _("Disassembly follow"));
+        menu->Append(jmp);
+    }
+    else
+    {
+        wxMenu *submenu = new wxMenu;
+        for (int i = 0; i < size && i < PANELJMP_MAX_ID_PER_TYPE; i++)
+        {
+            wxMenuItem *jmp = new wxMenuItem(menu, ASMJMP_ID_START + i, aui->GetPane(disasmpanels[i]).caption);
+            submenu->Append(jmp);
+        }
+        menu->AppendSubMenu(submenu, _("Disassembly follow"));
+    }
+}
+
+bool DebuggerFrame::DoFollow(int id, uint32_t address)
+{
+    if (id < ASMJMP_ID_START || id >PANELJMP_ID_LAST)
+        return false;
+
+    if (id > MEMJMP_ID_START)
+        mempanels[id % PANELJMP_MAX_ID_PER_TYPE]->Goto(address);
+    else // asm
+        disasmpanels[id]->Goto(address, 0);
+
+    return true;
+}
+
 void DebuggerFrame::CreateMenubar()
 {
     wxMenu *filemenu = new wxMenu, *viewmenu = new wxMenu, *statemenu = new wxMenu, *optmenu = new wxMenu;
@@ -757,14 +851,6 @@ void DebuggerFrame::ViBreak()
 {
     vi_break = true;
     Run();
-}
-
-void DebuggerFrame::ConsoleClosed(DebugConsole *console)
-{
-    if (console == output)
-    {
-        output = 0;
-    }
 }
 
 void DebuggerFrame::Print(const wxString &msg)
