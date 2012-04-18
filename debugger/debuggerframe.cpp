@@ -521,10 +521,15 @@ void DebuggerFrame::LoadConfig()
     }
     else if (osal_insensitive_strcmp(sect.name, "Main") == 0)
     {
-        wxRect rect;
-        const char *value = sect.GetValue("Window", "100,100,500,500");
-        sscanf(value, "%d,%d,%d,%d", &rect.x, &rect.y, &rect.width, &rect.height);
-        SetSize(rect);
+        if (osal_insensitive_strcmp(sect.GetValue("Maximized", "False"), "True") == 0)
+            Maximize();
+        else
+        {
+            wxRect rect;
+            const char *value = sect.GetValue("Window", "100,100,500,500");
+            sscanf(value, "%d,%d,%d,%d", &rect.x, &rect.y, &rect.width, &rect.height);
+            SetSize(rect);
+        }
 
         if (osal_insensitive_strcmp(sect.GetValue("RunOnBoot", "False"), "True") == 0)
             run_on_boot = true;
