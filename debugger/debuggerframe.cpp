@@ -110,7 +110,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
         throw std::runtime_error("Attemped to create a second DebuggerFrame");
 
     output = 0;
-    next_id = 0;
+    next_id = time(0);
     inited = false;
     vi_break = false;
     vi_count = 0;
@@ -162,27 +162,25 @@ DebuggerFrame::~DebuggerFrame()
     g_debugger = 0;
 }
 
-DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
+DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigSection &config)
 {
     wxAuiPaneInfo info;
     info.Top();
     DebugPanel *panel;
-    if (!id)
-        id = wxNewId();
-    name << '_' << id;
+
     info.Name(name);
     switch (type)
     {
         case break_panel_id:
         {
-            panel = new BreakpointPanel(this, id, type);
+            panel = new BreakpointPanel(this, -1, type, config);
             info.Caption(_("Breakpoints"));
             info.BestSize(wxSize(150, 400));
         }
         break;
         case disasm_panel_id:
         {
-            panel = new DisasmPanel(this, id, type);
+            panel = new DisasmPanel(this, -1, type, config);
             info.Caption(_("Disassembly"));
             info.BestSize(wxSize(350, 400));
             disasmpanels.push_back((DisasmPanel *)panel);
@@ -190,7 +188,7 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
         break;
         case memory_panel_id:
         {
-            panel = new MemoryPanel(this, id, type);
+            panel = new MemoryPanel(this, -1, type, config);
             info.Caption(_("Memory"));
             info.BestSize(wxSize(350, 400));
             mempanels.push_back((MemoryPanel *)panel);
@@ -198,21 +196,21 @@ DebugPanel *DebuggerFrame::AddPanel(int type, wxString &name, int id)
         break;
         case console_panel_id:
         {
-            panel = new DebugConsole(this, id, type);
+            panel = new DebugConsole(this, -1, type);
             info.Caption(_("Console"));
             info.BestSize(wxSize(300, 500));
         }
         break;
         case register_panel_id:
         {
-            panel = new RegisterPanel(this, id, type);
+            panel = new RegisterPanel(this, -1, type, config);
             info.Caption(_("Registers"));
             info.BestSize(wxSize(300, 500));
         }
         break;
         case memsearch_panel_id:
         {
-            panel = new MemSearchPanel(this, id, type);
+            panel = new MemSearchPanel(this, -1, type, config);
             info.Caption(_("Memory search"));
             info.BestSize(wxSize(150, 400));
         }
@@ -276,47 +274,33 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
         aui->DetachPane(&testpanel);
     }
 
-    size_t pos = 0, name_end, id_end;
-    int id;
-    wxString name;
-    while ((pos = perspective.find("name=", pos)) != perspective.npos)
+    DebugConfigSection config_section;
+
+    while (config->GetNextSection(&config_section))
     {
-        pos += 5;
-        size_t state_pos = perspective.find("state=", pos);
-        if (state_pos != perspective.npos)
-        {
-            const char *cstring = perspective.c_str() + state_pos + 6;
-            uint32_t state = atoi(cstring);
-            if (state & wxAuiPaneInfo::wxAuiPaneState::optionHidden) // If the pane is hidden, don't load it
-                continue; // I don't get how they become hidden in the first place <.<
-        }
-        name_end = perspective.find('_', pos);
-        name = perspective.substr(pos, name_end - pos);
-        id = wxNewId();
+        char name[32];
+        strncpy(name, config_section.name, 32);
+        char *type_end = strchr(name, '_');
+        if (!type_end)
+            continue;
+        type_end[0] = 0;
 
-        if (name == "Memory")
-            AddPanel(memory_panel_id, name, id);
-        else if (name == "Disasm")
-            AddPanel(disasm_panel_id, name, id);
-        else if (name == "Breaks")
-            AddPanel(break_panel_id, name, id);
-        else if (name == "Console")
-            AddPanel(console_panel_id, name, id);
-        else if (name == "MainConsole")
-            output = (DebugConsole *)AddPanel(console_panel_id, name, id);
-        else if (name == "Registers")
-            AddPanel(register_panel_id, name, id);
-        else if (name == "MemSearch")
-            AddPanel(memsearch_panel_id, name, id);
-
-
-        id_end = perspective.find_first_of(";|", name_end);
-        char buf[16];
-        sprintf(buf, "%d", id);
-        perspective.replace(name_end + 1, id_end - name_end - 1, buf);
+        if (osal_insensitive_strcmp(name, "Memory") == 0)
+            AddPanel(memory_panel_id, config_section.name, config_section);
+        else if (osal_insensitive_strcmp(name, "Disasm") == 0)
+            AddPanel(disasm_panel_id, config_section.name, config_section);
+        else if (osal_insensitive_strcmp(name, "Breaks") == 0)
+            AddPanel(break_panel_id, config_section.name, config_section);
+        else if (osal_insensitive_strcmp(name, "Console") == 0)
+            AddPanel(console_panel_id, config_section.name, config_section);
+        else if (osal_insensitive_strcmp(name, "MainConsole") == 0)
+            output = (DebugConsole *)AddPanel(console_panel_id, config_section.name, config_section);
+        else if (osal_insensitive_strcmp(name, "Registers") == 0)
+            AddPanel(register_panel_id, config_section.name, config_section);
+        else if (osal_insensitive_strcmp(name, "MemSearch") == 0)
+            AddPanel(memsearch_panel_id, config_section.name, config_section);
     }
     aui->LoadPerspective(perspective);
-    RefreshPanels();
     return true;
 }
 
@@ -350,7 +334,11 @@ void DebuggerFrame::MenuAddPanel(wxCommandEvent &evt)
         default:
             return;
     }
-    wxPanel *panel = AddPanel(type, name);
+    name << "_" << ++next_id;
+
+    DebugConfigSection empty_sect;
+    empty_sect.num_values = 0;
+    wxPanel *panel = AddPanel(type, name, empty_sect);
     if (!output && type == console_panel_id)
         output = (DebugConsole *)panel;
     aui->Update();
@@ -505,7 +493,17 @@ void DebuggerFrame::SaveConfig()
     section.keys[4] = "RuntimeUpdate";
     (runtime_update) ? (section.values[4] = "True") : (section.values[4] = "False");
 
-    config.WriteSection(&section);
+    config.WriteSection(section);
+
+    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.GetCount(); i++)
+    {
+        DebugPanel *panel = (DebugPanel *)(panes.Item(i).window);
+        section.name = panes.Item(i).name;
+        section.num_values = 0;
+        panel->SaveConfig(section);
+        config.WriteSection(section);
+    }
 }
 
 void DebuggerFrame::LoadConfig()
@@ -655,7 +653,7 @@ void DebuggerFrame::SaveGameValues()
         else
             section.values[4] = "False";
 
-        vals.WriteSection(&section);
+        vals.WriteSection(section);
     }
 }
 

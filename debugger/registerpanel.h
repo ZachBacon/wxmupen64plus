@@ -230,8 +230,10 @@ class RiSiTab : public RegisterTab
 class RegisterPanel : public DebugPanel
 {
     public:
-        RegisterPanel(DebuggerFrame *parent, int id, int type);
+        RegisterPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~RegisterPanel();
+
+        void SaveConfig(DebugConfigSection &config);
 
         void Update(bool vi);
         void TabRClick(wxAuiNotebookEvent &evt);

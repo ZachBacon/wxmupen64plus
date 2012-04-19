@@ -12,6 +12,7 @@
 #include "debuggerframe.h"
 #include "breakpoint.h"
 #include "colors.h"
+#include "debugconfig.h"
 #include "../mupen64plusplus/MupenAPI.h"
 
 #ifdef DrawText
@@ -30,7 +31,7 @@
 #define scrollbar_thumb_defpos (scrollbar_size - scrollbar_thumb) / 2
 #define scroll_multiplier 1
 
-DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
+DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL), *subsizer = new wxBoxSizer(wxVERTICAL);
     address = 0;
@@ -40,6 +41,7 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(p
     scroll_accum_delta = 0;
 
     code = new DisasmWindow(this, -1);
+
     scrollbar = new wxScrollBar(this, -1, wxDefaultPosition, wxDefaultSize, wxSB_VERTICAL);
     scrollbar->SetScrollbar(scrollbar_thumb_defpos, scrollbar_thumb, scrollbar_size, 0x40);
     scroll_thumbpos = scrollbar_thumb_defpos;
@@ -99,6 +101,12 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(p
 DisasmPanel::~DisasmPanel()
 {
 }
+
+void DisasmPanel::SaveConfig(DebugConfigSection &config)
+{
+
+}
+
 
 void DisasmPanel::Update(bool vi)
 {

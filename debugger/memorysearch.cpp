@@ -11,7 +11,9 @@
 #include <wx/button.h>
 #include <wx/statline.h>
 #include <wx/checkbox.h>
+
 #include "../mupen64plusplus/MupenAPI.h"
+#include "debugconfig.h"
 
 enum
 {
@@ -297,7 +299,7 @@ enum
     cmp_eq = 0, cmp_ne, cmp_gt, cmp_lt, cmp_ge, cmp_le
 };
 
-MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
+MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
     first_filter = true;
 
@@ -322,8 +324,8 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type) : DebugP
     wxStaticLine *line2 = new wxStaticLine(filterpanel, -1);
     btn_filter = new wxButton(filterpanel, -1, _("Search"));
 
-    choice_valuetype->Select(0);
-    choice_cmp->Select(0);
+    choice_valuetype->Select(atoi(config.GetValue("ValueType", 0)));
+    choice_cmp->Select(atoi(config.GetValue("Compare", 0)));
     previous_choice = 0;
     radio_custom->SetValue(true);
     current_radio = radio_custom_id;
@@ -354,6 +356,18 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type) : DebugP
 
 MemSearchPanel::~MemSearchPanel()
 {
+}
+
+void MemSearchPanel::SaveConfig(DebugConfigSection &config)
+{
+    config.num_values = 2;
+    char cmp_buf[8], type_buf[8];
+    sprintf(cmp_buf, "%d", choice_cmp->GetSelection());
+    config.keys[0] = "Compare";
+    config.values[0] = cmp_buf;
+    sprintf(type_buf, "%d", choice_valuetype->GetSelection());
+    config.keys[1] = "ValueType";
+    config.values[1] = type_buf;
 }
 
 template<typename type>

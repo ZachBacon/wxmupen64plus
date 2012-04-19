@@ -7,6 +7,8 @@
 /** These are desgined for quick  read/write for small non-unique sections,
     and the sections will be invalid once class is deleted. **/
 
+// If needed, constant array can just be replaced with std::vector or something
+// However, this implementation has only one memory allocation per file (and nobody cares)
 #define DCONF_MAX_VAL 8
 
 class DebugConfigSection
@@ -42,7 +44,7 @@ class DebugConfigOut
         DebugConfigOut(const char *filename);
         ~DebugConfigOut();
 
-        void WriteSection(DebugConfigSection *sect);
+        void WriteSection(DebugConfigSection &sect);
         void WriteComment(const char *comment);
 
     private:

@@ -12,9 +12,10 @@ class wxScrollBar;
 class DisasmPanel : public DebugPanel
 {
     public:
-        DisasmPanel(DebuggerFrame *parent, int id, int type);
+        DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~DisasmPanel();
 
+        void SaveConfig(DebugConfigSection &config);
         void Update(bool vi);
         void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 

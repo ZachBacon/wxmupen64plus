@@ -8,6 +8,7 @@
 
 #include "../mupen64plusplus/MupenAPI.h"
 #include "colors.h"
+#include "debugconfig.h"
 
 #define singlereg_height (g_textctrl_default.y + 3)
 
@@ -783,7 +784,7 @@ wxPoint RiSiTab::CalcItemPos(int index)
 
 /// ----------------------------------------------
 
-RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
+RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     notebook = new wxAuiNotebook(this, -1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
@@ -796,6 +797,8 @@ RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id, int type) : DebugPan
     notebook->AddPage(new PiTab(notebook, -1), _("PI"));
     notebook->AddPage(new RiSiTab(notebook, -1), _("RI&SI"));
 
+    notebook->SetSelection(atoi(config.GetValue("Tab", "0")));
+
     updated_panels = 0;
 
     notebook->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_RIGHT_UP, &RegisterPanel::TabRClick, this);
@@ -807,6 +810,16 @@ RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id, int type) : DebugPan
 RegisterPanel::~RegisterPanel()
 {
 }
+
+void RegisterPanel::SaveConfig(DebugConfigSection &config)
+{
+    config.num_values = 1;
+    char buf[8];
+    sprintf(buf, "%d", notebook->GetSelection());
+    config.keys[0] = "Tab";
+    config.values[0] = buf;
+}
+
 
 void RegisterPanel::Update(bool vi)
 {

@@ -25,6 +25,7 @@ class Breakpoint;
 class BreakpointInterface;
 class wxMenu;
 class DebugConfigIn;
+class DebugConfigSection;
 
 // This code assumes that there won't be multiple DebuggerFrames,
 // as it makes implementing debug callbacks a lot easier..
@@ -94,7 +95,7 @@ class DebuggerFrame : public wxFrame
 
         int next_id;
 
-        DebugPanel *AddPanel(int type, wxString &name, int id = 0);
+        DebugPanel *AddPanel(int type, const wxString &name, DebugConfigSection &config);
         DebugConsole *output;
         std::vector<MemoryPanel *> mempanels;
         std::vector<DisasmPanel *> disasmpanels;

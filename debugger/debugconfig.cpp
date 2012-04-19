@@ -117,11 +117,11 @@ DebugConfigOut::~DebugConfigOut()
     }
 }
 
-void DebugConfigOut::WriteSection(DebugConfigSection *sect)
+void DebugConfigOut::WriteSection(DebugConfigSection &sect)
 {
-    fprintf(file, "[%s]\n", sect->name);
-    for (int i = 0; i < sect->num_values; i++)
-        fprintf(file, "%s=%s\n", sect->keys[i], sect->values[i]);
+    fprintf(file, "[%s]\n", sect.name);
+    for (int i = 0; i < sect.num_values; i++)
+        fprintf(file, "%s=%s\n", sect.keys[i], sect.values[i]);
     fputc('\n', file);
 }
 

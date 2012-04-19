@@ -6,6 +6,7 @@
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/menu.h>
+#include "debugconfig.h"
 
 #include "debuggerframe.h"
 #include "colors.h"
@@ -40,7 +41,7 @@ enum
     remove_break
 };
 
-MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
+MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL), *subsizer = new wxBoxSizer(wxHORIZONTAL);
     data = 0;
@@ -57,6 +58,10 @@ MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(p
 
     memory = new MemoryWindow(this, -1);
 
+    uint32_t addr = strtoul(config.GetValue("Address", "80000000"), 0, 16);
+    Goto(addr);
+    offset_chooser->SetValue(wxString::Format("%08X", addr));
+
     current_position = 0;
 
     sizer->Add(subpanel, 0, wxEXPAND);
@@ -69,6 +74,15 @@ MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(p
 
     goto_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MemoryPanel::Goto, this);
     offset_chooser->Bind(wxEVT_COMMAND_TEXT_ENTER, &MemoryPanel::Goto, this);
+}
+
+void MemoryPanel::SaveConfig(DebugConfigSection &config)
+{
+    config.num_values = 1;
+    char buf[16];
+    sprintf(buf, "%08X", memory->GetAddress());
+    config.keys[0] = "Address";
+    config.values[0] = buf;
 }
 
 void MemoryPanel::Update(bool vi)
@@ -135,7 +149,7 @@ MemoryWindow::MemoryWindow(MemoryPanel *parent_, int id) : wxWindow(parent_, id,
     rows = 0;
     cols = 0;
     render_buffer = 0;
-    offset = 0;
+    address = 0;
     offsets_changed = true;
     selected = -1;
     Bind(wxEVT_PAINT, &MemoryWindow::PaintEvent, this);
@@ -152,12 +166,12 @@ MemoryWindow::~MemoryWindow()
 
 void MemoryWindow::Goto(uint32_t pos)
 {
-    if (offset == pos)
+    if (address == pos)
         return;
     offsets_changed = true;
-    data = parent->RequestData(cols * rows, pos - offset);
-    offset = pos;
-    if (!MemIsValid(offset + selected))
+    data = parent->RequestData(cols * rows, pos - address);
+    address = pos;
+    if (!MemIsValid(address + selected))
         Deselect();
     Draw();
 }
@@ -195,29 +209,29 @@ void MemoryWindow::RClickMenu(wxMouseEvent &evt)
     if (selected != -1)
     {
         wxMenu menu;
-        if (!parent->GetParent()->FindBreakpoint(offset + selected))
+        if (!parent->GetParent()->FindBreakpoint(address + selected))
         {
             wxMenuItem *rb1, *rb2, *rb4, *wb1, *wb2, *wb4;
             rb1 = new wxMenuItem(&menu, read_break_1, _("Read breakpoint (1 byte)"));
             menu.Append(rb1);
-            if ((offset + selected) % 2 == 0)
+            if ((address + selected) % 2 == 0)
             {
                 rb2 = new wxMenuItem(&menu, read_break_2, _("Read breakpoint (2 bytes)"));
                 menu.Append(rb2);
             }
-            if ((offset + selected) % 4 == 0)
+            if ((address + selected) % 4 == 0)
             {
                 rb4 = new wxMenuItem(&menu, read_break_4, _("Read breakpoint (4 bytes)"));
                 menu.Append(rb4);
             }
             wb1 = new wxMenuItem(&menu, write_break_1, _("Write breakpoint (1 byte)"));
             menu.Append(wb1);
-            if ((offset + selected) % 2 == 0)
+            if ((address + selected) % 2 == 0)
             {
                 wb2 = new wxMenuItem(&menu, write_break_2, _("Write breakpoint (2 bytes)"));
                 menu.Append(wb2);
             }
-            if ((offset + selected) % 4 == 0)
+            if ((address + selected) % 4 == 0)
             {
                 wb4 = new wxMenuItem(&menu, write_break_4, _("Write breakpoint (4 bytes)"));
                 menu.Append(wb4);
@@ -240,12 +254,12 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
     DebuggerFrame *parent_frame = parent->GetParent();
     if (id == remove_break)
     {
-        parent_frame->DeleteBreakpoint(parent_frame->FindBreakpoint(offset + selected));
+        parent_frame->DeleteBreakpoint(parent_frame->FindBreakpoint(address + selected));
         Draw();
     }
     else
     {
-        int address = offset + selected, length, type;
+        int selected_address = address + selected, length, type;
         switch (id)
         {
             case read_break_1:
@@ -281,7 +295,7 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
         else
             name.Printf("Write (%X)", length);
 
-        Breakpoint *bpt = new Breakpoint(name, address, length, type);
+        Breakpoint *bpt = new Breakpoint(name, selected_address, length, type);
         if(!parent_frame->AddBreakpoint(bpt))
             parent->Print("Unable to add a new breakpoint");
     }
@@ -329,17 +343,17 @@ void MemoryWindow::Deselect()
 void MemoryWindow::Select(int pos)
 {
     editing = false;
-    if (!MemIsValid(offset + pos))
+    if (!MemIsValid(address + pos))
         return;
     if (pos < 0)
     {
         int offset_change = (pos - cols) / cols * cols;
         if(!(pos % cols))
             offset_change += cols;
-        if(offset + offset_change < 0)
-            offset_change = 0 - offset;
+        if(address + offset_change < 0)
+            offset_change = 0 - address;
 
-        offset += offset_change;
+        address += offset_change;
         data = parent->RequestData(display_size, offset_change);
         pos = (cols + pos % cols) % cols;
     }
@@ -348,9 +362,9 @@ void MemoryWindow::Select(int pos)
         int offset_change = (pos - display_size + 1) / cols * cols + cols;
         if(!((pos + 1) % cols))
             offset_change -= cols;
-        if(offset + offset_change + display_size < offset) // overflow
-            offset_change = 0 - offset - display_size;
-        offset += offset_change;
+        if(address + offset_change + display_size < address) // overflow
+            offset_change = 0 - address - display_size;
+        address += offset_change;
         data = parent->RequestData(display_size, offset_change);
         pos = pos % cols + cols * (rows - 1);
     }
@@ -446,7 +460,7 @@ void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg, const char *v
         dc->SetBrush(*bg);
         dc->DrawRectangle(point.x - value_border_w / 2, point.y + value_border_h / 2, value_width + value_border_w, value_height + value_border_h);
     }
-    else if (Breakpoint *bpt = parent->GetParent()->FindBreakpoint(offset + pos))
+    else if (Breakpoint *bpt = parent->GetParent()->FindBreakpoint(address + pos))
     {
         dc->SetPen(*wxTRANSPARENT_PEN);
         int type = bpt->GetType(), count = 0;
@@ -495,7 +509,7 @@ void MemoryWindow::DrawValue(wxDC *dc, int pos, const wxBrush *bg, const char *v
         }
     }
     char buf[4];
-    if (!MemIsValid(offset + pos))
+    if (!MemIsValid(address + pos))
         value = "--";
     else if (!value)
     {
@@ -528,7 +542,7 @@ void MemoryWindow::RenderOffsets(wxDC *dc)
     for (int i = 0; i < rows; i++)
     {
         char buf[16];
-        sprintf(buf, "%08X", offset + i * cols);
+        sprintf(buf, "%08X", address + i * cols);
         dc->DrawText(buf, offset_start_x, offset_start_y + data_inc_y * i);
     }
     offsets_changed = false;
@@ -566,6 +580,9 @@ void MemoryWindow::Render(wxDC *dc)
 
 void MemoryWindow::Draw()
 {
+    if (!render_buffer)
+        return;
+
     // Destroy memorydc before using bitmap :p
     {
         wxMemoryDC dc(*render_buffer);

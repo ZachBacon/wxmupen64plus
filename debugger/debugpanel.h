@@ -3,6 +3,7 @@
 
 #include <wx/panel.h>
 
+class DebugConfigSection;
 class DebuggerFrame;
 class DebugConsole;
 class Breakpoint;
@@ -28,6 +29,8 @@ class DebugPanel : public wxPanel
         int GetType() { return type; }
 
         virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update) {}
+
+        virtual void SaveConfig(DebugConfigSection &config) {}
 
     protected:
         DebuggerFrame *parent;

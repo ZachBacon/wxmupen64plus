@@ -33,6 +33,7 @@ class MemoryWindow : public wxWindow
         void Select(int pos);
         void Deselect();
         void Goto(uint32_t offset);
+        uint32_t GetAddress() { return address; }
 
         void Update();
 
@@ -54,7 +55,7 @@ class MemoryWindow : public wxWindow
         int cols;
         int memory_size;
         int display_size; // memory_size rounded down to nearest cols
-        uint32_t offset;
+        uint32_t address;
         int selected;
         uint8_t *data;
         MemoryPanel *parent;
@@ -63,7 +64,7 @@ class MemoryWindow : public wxWindow
 class MemoryPanel : public DebugPanel
 {
     public:
-        MemoryPanel(DebuggerFrame *parent, int id, int type);
+        MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~MemoryPanel();
 
         void Update(bool vi);
@@ -74,6 +75,8 @@ class MemoryPanel : public DebugPanel
         void Goto(uint32_t address);
 
         void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
+
+        void SaveConfig(DebugConfigSection &config);
 
         uint8_t *RequestData(int size, int relative_offset = 0);
     private:

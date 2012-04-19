@@ -11,6 +11,7 @@
 #include "breakpoint.h"
 #include "debuggerframe.h"
 #include "dv_treelist.h"
+#include "debugconfig.h"
 #include "../mupen64plusplus/MupenAPI.h"
 #include "../mupen64plusplus/osal_preproc.h"
 
@@ -316,9 +317,9 @@ class BreakDataModel : public DataViewTreeListModel
 };
 
 
-BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id, int type) : DebugPanel(parent, id, type)
+BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
-    filter = BREAK_FILTER_ALL;
+    filter = atoi(config.GetValue("Filter", "256"));
 
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     list = new wxDataViewCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxDV_VERT_RULES | wxDV_MULTIPLE | wxWANTS_CHARS);
@@ -348,6 +349,15 @@ BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id, int type) : Debu
 BreakpointPanel::~BreakpointPanel()
 {
 
+}
+
+void BreakpointPanel::SaveConfig(DebugConfigSection &config)
+{
+    config.num_values = 1;
+    char filter_buf[8];
+    sprintf(filter_buf, "%d", filter);
+    config.keys[0] = "Filter";
+    config.values[0] = filter_buf;
 }
 
 bool BreakpointPanel::FilterTest(Breakpoint *bpt)
