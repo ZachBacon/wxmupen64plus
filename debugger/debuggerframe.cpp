@@ -9,7 +9,6 @@
 #include <wx/dir.h>
 #include <stdexcept>
 
-
 #include "../mupen64plusplus/MupenAPI.h"
 #include "../mupen64plusplus/osal_preproc.h"
 
@@ -24,10 +23,7 @@
 #include "colors.h"
 #include "debugconfig.h"
 
-extern ptr_ConfigOpenSection PtrConfigOpenSection; // lazy
-
 DebuggerFrame *DebuggerFrame::g_debugger = 0;
-m64p_handle DebuggerFrame::debugger_config = 0;
 wxPoint DebuggerFrame::g_aui_pos = wxDefaultPosition;
 
 enum

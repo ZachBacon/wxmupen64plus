@@ -33,7 +33,7 @@ Cmd breakcmd = { &DebugConsole::CmdBreak, "\"b|break|breakpoint <opt>\" Manipula
 If there are multiple breakpoints with same name, all are affected\
 Type can be w, r, or x (write, read, execute) or any combination of above." };
 Cmd helpcmd = { &DebugConsole::CmdHelp, "\"h|help|?\" Helps poor people" };
-Cmd vibreakcmd = { &DebugConsole::CmdViBreak, "\"vi|vibreak\" Breaks at the next vertical interrupt. Used mainly for debugging the debugger" };
+Cmd vibreakcmd = { &DebugConsole::CmdViBreak, "\"vi|vibreak\" Breaks at the next vertical interrupt." };
 Cmd clearcmd = { &DebugConsole::CmdCls, "\"cls|clear\" Clears this output screen" };
 Cmd textcmd = { &DebugConsole::CmdTextDebug, "\"text\" Displays informative information" };
 Cmd nicmd = { &DebugConsole::CmdNi, "\"ni\" Shows when next interrupt will happen" };

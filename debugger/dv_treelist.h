@@ -38,6 +38,7 @@ class DataViewTreeListModel : public wxDataViewModel
     public:
         DataViewTreeListModel(int cols);
         virtual ~DataViewTreeListModel();
+
         bool IsContainer(const wxDataViewItem &item) const;
         wxDataViewItem GetParent(const wxDataViewItem &item_) const;
         unsigned int GetChildren(const wxDataViewItem &item_, wxDataViewItemArray &children) const;
@@ -46,7 +47,6 @@ class DataViewTreeListModel : public wxDataViewModel
         void AddItem(void *value, dvtlModelItem *parent = 0);
         void RemoveItem(void *value);
         dvtlModelItem *FindItem(void *value);
-
         void Clear();
 
     protected:

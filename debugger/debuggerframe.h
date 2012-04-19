@@ -38,7 +38,6 @@ class DebuggerFrame : public wxFrame
         virtual ~DebuggerFrame();
 
         void Reset();
-
         void Run();
         void Step();
         void Pause();
@@ -55,24 +54,21 @@ class DebuggerFrame : public wxFrame
         const BreakContainer *GetBreakpoints();
 
         void RefreshPanels();
-
         uint32_t GetPc() { return pc; }
 
         DebugConsole *GetMainOutput() { return output; }
         void SetMainOutput(DebugConsole *output_) { output = output_; }
+        void Print(const wxString &msg);
 
         void MenuAppendMemoryFollow(wxMenu *menu);
         void MenuAppendDisasmFollow(wxMenu *menu);
         bool DoFollow(int id, uint32_t address);
 
-        void ProcessCallback(wxCommandEvent &evt);
-
-        void Print(const wxString &msg);
-
         static bool Exists() { return g_debugger != 0; }
         static void Delete();
         static void GameClosed();
 
+        void ProcessCallback(wxCommandEvent &evt);
         void Close(wxCloseEvent &evt);
         void MenuClose(wxCommandEvent &evt);
         void MenuAddPanel(wxCommandEvent &evt);
@@ -86,26 +82,25 @@ class DebuggerFrame : public wxFrame
         static void DebuggerInit();
         static void DebuggerUpdate(unsigned int pc);
         static void DebuggerVi();
+
         static DebuggerFrame *g_debugger;
-        static m64p_handle debugger_config;
-
-        wxString GetBreakReason(uint32_t pc);
-
         static wxPoint g_aui_pos;
 
-        int next_id;
-
         DebugPanel *AddPanel(int type, const wxString &name, DebugConfigSection &config);
+
+        int next_id;
         DebugConsole *output;
         std::vector<MemoryPanel *> mempanels;
         std::vector<DisasmPanel *> disasmpanels;
+
+        void UpdatePanels(bool vi = false);
+        wxString GetBreakReason(uint32_t pc);
 
         bool vi_break;
         char vi_count;
         bool inited;
         bool running;
         uint32_t pc;
-        void UpdatePanels(bool vi = false);
         BreakpointInterface *breakpoints;
 
         DebugPanel *PaneTitleHitTest(const wxPoint &pos);
@@ -114,6 +109,8 @@ class DebuggerFrame : public wxFrame
         void CreateMenubar();
         wxMenuItem *run;
         wxMenuItem *pause;
+        wxMenuItem *run_on_boot_menu;
+        wxMenuItem *runtime_update_menu;
 
         void LoadConfig();
         void SaveConfig();
@@ -121,13 +118,9 @@ class DebuggerFrame : public wxFrame
         void LoadGameValues();
         void SaveGameValues();
 
+        wxAuiManager *aui;
         bool runtime_update;
         char run_on_boot; // 0 = nope; 1 = yea; 2 = yea, done
-
-        wxMenuItem *run_on_boot_menu;
-        wxMenuItem *runtime_update_menu;
-
-        wxAuiManager *aui;
 };
 
 

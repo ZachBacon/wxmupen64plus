@@ -33,7 +33,6 @@ class DisasmPanel : public DebugPanel
         void GotoPc(wxCommandEvent &evt);
         void Goto(uint32_t address, int mode); // 0 = center, 1 = up
 
-
     private:
         DisasmWindow *code;
 

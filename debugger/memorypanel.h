@@ -40,16 +40,17 @@ class MemoryWindow : public wxWindow
         int GetSelected() { return selected; }
 
     private:
-        wxBitmap *render_buffer;
-        uint8_t new_value;
-        bool editing;
         void Render(wxDC *dc);
         void RenderOffsets(wxDC *dc);
         void RenderValues(wxDC *dc);
         void DrawValue(wxDC *dc, int pos, const wxBrush *bg = 0, const char *value = 0);
-        bool offsets_changed;
 
         wxPoint GetValuePosition(int index);
+
+        wxBitmap *render_buffer;
+        uint8_t new_value;
+        bool editing;
+        bool offsets_changed;
 
         int rows;
         int cols;
@@ -67,19 +68,19 @@ class MemoryPanel : public DebugPanel
         MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~MemoryPanel();
 
+        void SaveConfig(DebugConfigSection &config);
         void Update(bool vi);
+        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 
         void Select(int newpos);
         void SetValue(int pos, int value);
         void Goto(wxCommandEvent &evt);
         void Goto(uint32_t address);
 
-        void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
-
-        void SaveConfig(DebugConfigSection &config);
-
         uint8_t *RequestData(int size, int relative_offset = 0);
+
     private:
+        void Select(int row, int col);
         void SetPosition(uint32_t offset, int size);
 
         MemoryWindow *memory;
@@ -92,7 +93,6 @@ class MemoryPanel : public DebugPanel
         int current_col;
         uint32_t current_position;
 
-        void Select(int row, int col);
         uint8_t *data;
 };
 
