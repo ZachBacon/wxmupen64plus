@@ -272,29 +272,32 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
 
     DebugConfigSection config_section;
 
-    while (config->GetNextSection(&config_section))
+    if (config)
     {
-        char name[32];
-        strncpy(name, config_section.name, 32);
-        char *type_end = strchr(name, '_');
-        if (!type_end)
-            continue;
-        type_end[0] = 0;
+        while (config->GetNextSection(&config_section))
+        {
+            char name[32];
+            strncpy(name, config_section.name, 32);
+            char *type_end = strchr(name, '_');
+            if (!type_end)
+                continue;
+            type_end[0] = 0;
 
-        if (osal_insensitive_strcmp(name, "Memory") == 0)
-            AddPanel(memory_panel_id, config_section.name, config_section);
-        else if (osal_insensitive_strcmp(name, "Disasm") == 0)
-            AddPanel(disasm_panel_id, config_section.name, config_section);
-        else if (osal_insensitive_strcmp(name, "Breaks") == 0)
-            AddPanel(break_panel_id, config_section.name, config_section);
-        else if (osal_insensitive_strcmp(name, "Console") == 0)
-            AddPanel(console_panel_id, config_section.name, config_section);
-        else if (osal_insensitive_strcmp(name, "MainConsole") == 0)
-            output = (DebugConsole *)AddPanel(console_panel_id, config_section.name, config_section);
-        else if (osal_insensitive_strcmp(name, "Registers") == 0)
-            AddPanel(register_panel_id, config_section.name, config_section);
-        else if (osal_insensitive_strcmp(name, "MemSearch") == 0)
-            AddPanel(memsearch_panel_id, config_section.name, config_section);
+            if (osal_insensitive_strcmp(name, "Memory") == 0)
+                AddPanel(memory_panel_id, config_section.name, config_section);
+            else if (osal_insensitive_strcmp(name, "Disasm") == 0)
+                AddPanel(disasm_panel_id, config_section.name, config_section);
+            else if (osal_insensitive_strcmp(name, "Breaks") == 0)
+                AddPanel(break_panel_id, config_section.name, config_section);
+            else if (osal_insensitive_strcmp(name, "Console") == 0)
+                AddPanel(console_panel_id, config_section.name, config_section);
+            else if (osal_insensitive_strcmp(name, "MainConsole") == 0)
+                output = (DebugConsole *)AddPanel(console_panel_id, config_section.name, config_section);
+            else if (osal_insensitive_strcmp(name, "Registers") == 0)
+                AddPanel(register_panel_id, config_section.name, config_section);
+            else if (osal_insensitive_strcmp(name, "MemSearch") == 0)
+                AddPanel(memsearch_panel_id, config_section.name, config_section);
+        }
     }
     aui->LoadPerspective(perspective);
     return true;
@@ -504,14 +507,9 @@ void DebuggerFrame::LoadConfig()
 {
     DebugConfigIn config(wxString::Format("%swxmupen-debugger.cfg", GetUserConfigPath()));
     DebugConfigSection sect;
-    if(!config.GetNextSection(&sect))
-    {
-        Print("Config error");
-        run_on_boot = false;
-        runtime_update = true;
-        LoadAui("", 0);
-    }
-    else if (osal_insensitive_strcmp(sect.name, "Main") == 0)
+
+    config.GetNextSection(&sect);
+    if (osal_insensitive_strcmp(sect.name, "Main") == 0)
     {
         if (osal_insensitive_strcmp(sect.GetValue("Maximized", "False"), "True") == 0)
             Maximize();

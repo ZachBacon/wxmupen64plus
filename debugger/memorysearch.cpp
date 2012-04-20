@@ -324,8 +324,8 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
     wxStaticLine *line2 = new wxStaticLine(filterpanel, -1);
     btn_filter = new wxButton(filterpanel, -1, _("Search"));
 
-    choice_valuetype->Select(atoi(config.GetValue("ValueType", 0)));
-    choice_cmp->Select(atoi(config.GetValue("Compare", 0)));
+    choice_valuetype->Select(atoi(config.GetValue("ValueType", "0")));
+    choice_cmp->Select(atoi(config.GetValue("Compare", "0")));
     previous_choice = 0;
     radio_custom->SetValue(true);
     current_radio = radio_custom_id;

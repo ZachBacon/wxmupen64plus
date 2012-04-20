@@ -23,5 +23,6 @@ void DebugPanel::Print(const wxString &msg)
 
 void DebugPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
+    section.num_values = 0;
     config.WriteSection(section);
 }
