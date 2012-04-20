@@ -319,7 +319,7 @@ class BreakDataModel : public DataViewTreeListModel
 
 BreakpointPanel::BreakpointPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
-    filter = atoi(config.GetValue("Filter", "256"));
+    filter = atoi(config.GetValue("Filter", "255"));
 
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     list = new wxDataViewCtrl(this, -1, wxDefaultPosition, wxDefaultSize, wxDV_VERT_RULES | wxDV_MULTIPLE | wxWANTS_CHARS);
@@ -351,13 +351,14 @@ BreakpointPanel::~BreakpointPanel()
 
 }
 
-void BreakpointPanel::SaveConfig(DebugConfigSection &config)
+void BreakpointPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
-    config.num_values = 1;
+    section.num_values = 1;
     char filter_buf[8];
     sprintf(filter_buf, "%d", filter);
-    config.keys[0] = "Filter";
-    config.values[0] = filter_buf;
+    section.keys[0] = "Filter";
+    section.values[0] = filter_buf;
+    config.WriteSection(section);
 }
 
 bool BreakpointPanel::FilterTest(Breakpoint *bpt)

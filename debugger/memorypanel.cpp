@@ -76,13 +76,14 @@ MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSec
     offset_chooser->Bind(wxEVT_COMMAND_TEXT_ENTER, &MemoryPanel::Goto, this);
 }
 
-void MemoryPanel::SaveConfig(DebugConfigSection &config)
+void MemoryPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
-    config.num_values = 1;
+    section.num_values = 1;
     char buf[16];
     sprintf(buf, "%08X", memory->GetAddress());
-    config.keys[0] = "Address";
-    config.values[0] = buf;
+    section.keys[0] = "Address";
+    section.values[0] = buf;
+    config.WriteSection(section);
 }
 
 void MemoryPanel::Update(bool vi)

@@ -3,6 +3,7 @@
 
 #include <wx/panel.h>
 
+class DebugConfigOut;
 class DebugConfigSection;
 class DebuggerFrame;
 class DebugConsole;
@@ -21,7 +22,7 @@ class DebugPanel : public wxPanel
         DebugPanel(DebuggerFrame *parent, int id, int type);
         virtual ~DebugPanel();
 
-        virtual void SaveConfig(DebugConfigSection &config) {}
+        virtual void SaveConfig(DebugConfigOut &config, DebugConfigSection &section);
         virtual void Update(bool vi) {}
         virtual void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update) {}
 

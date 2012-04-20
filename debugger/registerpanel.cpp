@@ -330,12 +330,12 @@ void GprTab::Reorder()
 
 /// ----------------------------------------------
 
-Cop0Tab::Cop0Tab(wxWindow *parent, int id) : RegisterTab(parent, id)
+Cop0Tab::Cop0Tab(wxWindow *parent, int id, int config) : RegisterTab(parent, id)
 {
     reg_name_len = g_number_width * 13;
     reg_basewidth = g_number_width * 13;
     raw_registers = (uint32_t *)GetRegister(M64P_CPU_REG_COP0);
-    show_reserved = false;
+    show_reserved = config & 0x1;
     for (int i = 0; i < 32; i++)
     {
         wxPoint pos = CalcItemPos(i);
@@ -418,21 +418,24 @@ void Cop0Tab::RClickEvent(wxCommandEvent &evt)
 
 /// ----------------------------------------------
 
-Cop1Tab::Cop1Tab(wxWindow *parent, int id) : RegisterTab(parent, id)
+Cop1Tab::Cop1Tab(wxWindow *parent, int id, int config) : RegisterTab(parent, id)
 {
     reg_name_len = g_number_width * 4;
     reg_basewidth = g_number_width * 22;
     raw_registers_simple = (float **)GetRegister(M64P_CPU_REG_COP1_SIMPLE_PTR);
     raw_registers_double = (double **)GetRegister(M64P_CPU_REG_COP1_DOUBLE_PTR);
     raw_registers_raw = (uint64_t *)GetRegister(M64P_CPU_REG_COP1_FGR_64);
-    mode = cop1_float32;
+    mode = config;
+    RegisterType reg_type;
+    (mode == cop1_raw) ? (reg_type = REGISTER_INT64) : (reg_type = REGISTER_FLOAT);
     additional_regs = (((uint32_t *)GetRegister(M64P_CPU_REG_COP0))[12] & 0x04000000);
+
     for (int i = 0; i < 32; i++)
     {
         char buf[8];
         sprintf(buf, "F%d", i);
         wxPoint pos = CalcItemPos(i);
-        registers[i] = new SingleRegister(this, i + 1, buf, REGISTER_FLOAT, pos, reg_name_len);
+        registers[i] = new SingleRegister(this, i + 1, buf, reg_type, pos, reg_name_len);
     }
     SetFocus();
 }
@@ -790,8 +793,8 @@ RegisterPanel::RegisterPanel(DebuggerFrame *parent, int id, int type, DebugConfi
     notebook = new wxAuiNotebook(this, -1, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
 
     notebook->AddPage(new GprTab(notebook, -1), _("GPR"));
-    notebook->AddPage(new Cop0Tab(notebook, -1), _("COP0"));
-    notebook->AddPage(new Cop1Tab(notebook, -1), _("COP1"));
+    notebook->AddPage(cop0tab = new Cop0Tab(notebook, -1, atoi(config.GetValue("Cop0", "0"))), _("COP0"));
+    notebook->AddPage(cop1tab = new Cop1Tab(notebook, -1, atoi(config.GetValue("Cop1", "0"))), _("COP1"));
     notebook->AddPage(new ViTab(notebook, -1), _("VI"));
     notebook->AddPage(new AiTab(notebook, -1), _("AI"));
     notebook->AddPage(new PiTab(notebook, -1), _("PI"));
@@ -811,13 +814,21 @@ RegisterPanel::~RegisterPanel()
 {
 }
 
-void RegisterPanel::SaveConfig(DebugConfigSection &config)
+void RegisterPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
-    config.num_values = 1;
-    char buf[8];
-    sprintf(buf, "%d", notebook->GetSelection());
-    config.keys[0] = "Tab";
-    config.values[0] = buf;
+    section.num_values = 3;
+    char tab_buf[8], c0_buf[8], c1_buf[8];
+
+    sprintf(tab_buf, "%d", notebook->GetSelection());
+    sprintf(c0_buf, "%d", cop0tab->GetConfig());
+    sprintf(c1_buf, "%d", cop1tab->GetConfig());
+    section.keys[0] = "Tab";
+    section.values[0] = tab_buf;
+    section.keys[1] = "Cop0";
+    section.values[1] = c0_buf;
+    section.keys[2] = "Cop1";
+    section.values[2] = c1_buf;
+    config.WriteSection(section);
 }
 
 

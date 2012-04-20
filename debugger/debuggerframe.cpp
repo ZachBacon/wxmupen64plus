@@ -496,9 +496,7 @@ void DebuggerFrame::SaveConfig()
     {
         DebugPanel *panel = (DebugPanel *)(panes.Item(i).window);
         section.name = panes.Item(i).name;
-        section.num_values = 0;
-        panel->SaveConfig(section);
-        config.WriteSection(section);
+        panel->SaveConfig(config, section);
     }
 }
 

@@ -358,16 +358,17 @@ MemSearchPanel::~MemSearchPanel()
 {
 }
 
-void MemSearchPanel::SaveConfig(DebugConfigSection &config)
+void MemSearchPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
-    config.num_values = 2;
+    section.num_values = 2;
     char cmp_buf[8], type_buf[8];
     sprintf(cmp_buf, "%d", choice_cmp->GetSelection());
-    config.keys[0] = "Compare";
-    config.values[0] = cmp_buf;
+    section.keys[0] = "Compare";
+    section.values[0] = cmp_buf;
     sprintf(type_buf, "%d", choice_valuetype->GetSelection());
-    config.keys[1] = "ValueType";
-    config.values[1] = type_buf;
+    section.keys[1] = "ValueType";
+    section.values[1] = type_buf;
+    config.WriteSection(section);
 }
 
 template<typename type>

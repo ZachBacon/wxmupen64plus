@@ -106,13 +106,15 @@ class GprTab : public RegisterTab
 class Cop0Tab : public RegisterTab
 {
     public:
-        Cop0Tab(wxWindow *parent, int id);
+        Cop0Tab(wxWindow *parent, int id, int config);
         ~Cop0Tab();
 
         void Update();
         void ValueChanged(int id, const wxAny &value);
         void RClickMenu();
         void RClickEvent(wxCommandEvent &evt);
+
+        int GetConfig() { return show_reserved; }
 
     protected:
         void Reorder();
@@ -127,7 +129,7 @@ class Cop0Tab : public RegisterTab
 class Cop1Tab : public RegisterTab
 {
     public:
-        Cop1Tab(wxWindow *parent, int id);
+        Cop1Tab(wxWindow *parent, int id, int config);
         ~Cop1Tab();
 
         void Update();
@@ -135,6 +137,8 @@ class Cop1Tab : public RegisterTab
         void ValueChanged(int id, const wxAny &value);
         void RClickMenu();
         void RClickEvent(wxCommandEvent &evt);
+
+        int GetConfig() { return mode; }
 
     protected:
         void Reorder();
@@ -233,7 +237,7 @@ class RegisterPanel : public DebugPanel
         RegisterPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~RegisterPanel();
 
-        void SaveConfig(DebugConfigSection &config);
+        void SaveConfig(DebugConfigOut &config, DebugConfigSection &section);
 
         void Update(bool vi);
         void TabRClick(wxAuiNotebookEvent &evt);
@@ -241,6 +245,9 @@ class RegisterPanel : public DebugPanel
     private:
         uint32_t updated_panels;
         wxAuiNotebook *notebook;
+
+        Cop0Tab *cop0tab;
+        Cop1Tab *cop1tab;
 };
 
 #endif // REGISTERPANEL_H

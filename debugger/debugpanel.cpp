@@ -1,6 +1,7 @@
 #include "debugpanel.h"
 #include "debuggerframe.h"
 #include "debugconsole.h"
+#include "debugconfig.h"
 
 DebugPanel::DebugPanel(DebuggerFrame *parent_, int id, int type_) : wxPanel(parent_, id), type(type_)
 {
@@ -18,4 +19,9 @@ void DebugPanel::Print(const wxString &msg)
         output->Print(msg);
     else
         parent->Print(msg);
+}
+
+void DebugPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
+{
+    config.WriteSection(section);
 }

@@ -102,12 +102,6 @@ DisasmPanel::~DisasmPanel()
 {
 }
 
-void DisasmPanel::SaveConfig(DebugConfigSection &config)
-{
-
-}
-
-
 void DisasmPanel::Update(bool vi)
 {
     if (!vi)

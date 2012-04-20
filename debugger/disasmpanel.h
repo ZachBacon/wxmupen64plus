@@ -15,7 +15,6 @@ class DisasmPanel : public DebugPanel
         DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~DisasmPanel();
 
-        void SaveConfig(DebugConfigSection &config);
         void Update(bool vi);
         void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 

@@ -16,7 +16,7 @@ class BreakpointPanel : public DebugPanel
         BreakpointPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~BreakpointPanel();
 
-        void SaveConfig(DebugConfigSection &config);
+        void SaveConfig(DebugConfigOut &config, DebugConfigSection &section);
         void Update(bool vi);
         void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause reason, bool last_update);
 

@@ -68,7 +68,7 @@ class MemoryPanel : public DebugPanel
         MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config);
         virtual ~MemoryPanel();
 
-        void SaveConfig(DebugConfigSection &config);
+        void SaveConfig(DebugConfigOut &config, DebugConfigSection &section);
         void Update(bool vi);
         void BreakpointUpdate(Breakpoint *bpt, BreakUpdateCause cause, bool last_update);
 
