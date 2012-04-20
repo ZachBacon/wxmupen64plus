@@ -58,11 +58,10 @@ MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSec
 
     memory = new MemoryWindow(this, -1);
 
+    current_position = 0;
     uint32_t addr = strtoul(config.GetValue("Address", "80000000"), 0, 16);
     Goto(addr);
     offset_chooser->SetValue(wxString::Format("%08X", addr));
-
-    current_position = 0;
 
     sizer->Add(subpanel, 0, wxEXPAND);
     sizer->Add(memory, 1, wxEXPAND);
@@ -551,9 +550,6 @@ void MemoryWindow::RenderOffsets(wxDC *dc)
 
 void MemoryWindow::Render(wxDC *dc)
 {
-    if (!data)
-        return;
-
     dc->SetTextForeground(g_color_text_default);
     if (offsets_changed)
     {
