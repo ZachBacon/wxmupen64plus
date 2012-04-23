@@ -112,6 +112,8 @@ class MemSearchPanel : public DebugPanel
 
         wxStaticText *text_newvalue;
         wxChoice *choice_cmp;
+        wxTextCtrl *address_low;
+        wxTextCtrl *address_hi;
         wxRadioButton *radio_old;
         wxRadioButton *radio_custom;
         wxTextCtrl *custom_value;

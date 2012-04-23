@@ -305,7 +305,6 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
 {
     first_filter = true;
 
-
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL), *filtersizer = new wxBoxSizer(wxVERTICAL);
 
     list = new wxDataViewListCtrl(this, -1);
@@ -316,7 +315,26 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
 
     wxStaticText *text_searchfor = new wxStaticText(filterpanel, -1, _("Search for.."));
     choice_valuetype = new wxChoice(filterpanel, -1, wxDefaultPosition, wxDefaultSize, sizeof(valuetype_choices) / sizeof(wxString), valuetype_choices);
+
+    wxStaticText *text_range = new wxStaticText(filterpanel, -1, _("Range"));
     wxStaticLine *line = new wxStaticLine(filterpanel, -1);
+
+    int addr_ctrl_size = choice_valuetype->GetSize().x / 2 - 3;
+
+    wxPanel *addresspanel = new wxPanel(filterpanel, -1);
+    wxBoxSizer *addrsizer = new wxBoxSizer(wxHORIZONTAL);
+    address_low = new wxTextCtrl(addresspanel, -1);
+    address_hi = new wxTextCtrl(addresspanel, -1);
+    address_low->SetValue(config.GetValue("LowAddr", "0"));
+    address_hi->SetValue(config.GetValue("HighAddr", "3fffff"));
+    address_low->SetMinSize(wxSize(addr_ctrl_size, -1));
+    address_hi->SetMinSize(wxSize(addr_ctrl_size, -1));
+
+    addrsizer->Add(address_low, 0, wxEXPAND);
+    addrsizer->Add(address_hi, 0, wxEXPAND | wxLEFT, 5);
+    addresspanel->SetSizer(addrsizer);
+
+    int tmp = choice_valuetype->GetSize().x;
 
     text_newvalue = new wxStaticText(filterpanel, -1, _("New value.."));
     choice_cmp = new wxChoice(filterpanel, -1, wxDefaultPosition, wxDefaultSize, sizeof(cmp_choices) / sizeof(wxString), cmp_choices);
@@ -334,6 +352,8 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
 
     filtersizer->Add(text_searchfor, 0, wxEXPAND);
     filtersizer->Add(choice_valuetype, 0, wxEXPAND | wxTOP | wxBOTTOM, 2);
+    filtersizer->Add(text_range, 0, wxEXPAND);
+    filtersizer->Add(addresspanel, 0, wxEXPAND);
     filtersizer->Add(line, 0, wxEXPAND | wxALL, 2);
     filtersizer->Add(text_newvalue, 0, wxEXPAND);
     filtersizer->Add(choice_cmp, 0, wxEXPAND | wxTOP | wxBOTTOM, 2);
@@ -362,7 +382,7 @@ MemSearchPanel::~MemSearchPanel()
 
 void MemSearchPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
-    section.num_values = 2;
+    section.num_values = 4;
     char cmp_buf[8], type_buf[8];
     sprintf(cmp_buf, "%d", choice_cmp->GetSelection());
     section.keys[0] = "Compare";
@@ -370,6 +390,12 @@ void MemSearchPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &sect
     sprintf(type_buf, "%d", choice_valuetype->GetSelection());
     section.keys[1] = "ValueType";
     section.values[1] = type_buf;
+    wxString lowaddr = address_low->GetValue();
+    section.keys[2] = "LowAddr";
+    section.values[2] = lowaddr;
+    wxString highaddr = address_hi->GetValue();
+    section.keys[3] = "HighAddr";
+    section.values[3] = highaddr;
     config.WriteSection(section);
 }
 
@@ -540,7 +566,16 @@ void MemSearchPanel::FilterEvent(wxCommandEvent &evt)
             choice_cmp->Enable(true);
         }
 
-        search.NewSearch(0, 0x7fffff);
+        uint32_t low_addr = strtoul(address_low->GetValue(), 0, 16);
+        uint32_t high_addr = strtoul(address_hi->GetValue(), 0, 16);
+        if (low_addr > 0x7fffff)
+            low_addr = 0x7fffff;
+        if (high_addr > 0x7fffff)
+            high_addr = 0x7fffff;
+        if (low_addr > high_addr)
+            search.NewSearch(high_addr, low_addr);
+        else
+            search.NewSearch(low_addr, high_addr);
 
         choice_valuetype->Enable(false);
         radio_old->SetLabel(_("Old value"));
@@ -584,7 +619,7 @@ void MemSearchPanel::FilterEvent(wxCommandEvent &evt)
     else
     {
         wxVector<wxVariant> value;
-        value.push_back("(Everything)");
+        value.push_back("(All values)");
         value.push_back(wxEmptyString);
         list->AppendItem(value);
         first_filter = false;
@@ -685,6 +720,7 @@ void MemSearchPanel::RClickEvent(wxCommandEvent &evt)
             search.Clear();
             list->DeleteAllItems();
             choice_valuetype->Enable();
+            previous_choice = choice_cmp->GetSelection();
             radio_old->SetLabel(_("Anything"));
             first_filter = true;
         break;
