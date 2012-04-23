@@ -24,13 +24,15 @@ class DisasmPanel : public DebugPanel
         void MouseScroll(wxMouseEvent &evt);
         void Scroll(int amt);
 
+        void ToggleBreakpoint(uint32_t bpt_address);
+
         void CodeDClick(wxMouseEvent &evt);
         void Run(wxCommandEvent &evt);
         void Pause(wxCommandEvent &evt);
         void Step(wxCommandEvent &evt);
         void Goto(wxCommandEvent &evt);
         void GotoPc(wxCommandEvent &evt);
-        void Goto(uint32_t address, int mode); // 0 = center, 1 = up
+        void Goto(uint32_t new_address, int mode); // 0 = center, 1 = up
 
     private:
         DisasmWindow *code;
@@ -64,7 +66,8 @@ class DisasmWindow : public wxWindow
         void Resize(wxSizeEvent &evt);
         void Render();
         void Paint(wxPaintEvent &evt);
-        void MouseClick(wxMouseEvent &evt);
+        void MouseClickEvt(wxMouseEvent &evt);
+        void MouseClick(const wxPoint &pos);
 
         void Select(uint32_t address, bool add_to_selection);
         void Deselect();
@@ -75,6 +78,9 @@ class DisasmWindow : public wxWindow
         uint32_t GetPos() { return address; }
 
         int AddressHitTest(const wxPoint &pos);
+
+        void RClickMenu(wxContextMenuEvent &evt);
+        void RClickEvent(wxCommandEvent &evt);
 
     private:
         uint32_t address;

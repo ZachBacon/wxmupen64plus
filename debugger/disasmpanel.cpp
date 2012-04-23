@@ -8,6 +8,8 @@
 #include <wx/scrolbar.h>
 #include <wx/stattext.h>
 #include <wx/statline.h>
+#include <wx/clipbrd.h>
+#include <wx/menu.h>
 
 #include "debuggerframe.h"
 #include "breakpoint.h"
@@ -30,6 +32,13 @@
 #define scrollbar_thumb 10 // Though now they have nice 0x4, 0x100 and (almost) 0x1000 scroll steps
 #define scrollbar_thumb_defpos (scrollbar_size - scrollbar_thumb) / 2
 #define scroll_multiplier 1
+
+enum
+{
+    menu_id_copyins = 2,
+    menu_id_copyaddr,
+    menu_id_break,
+};
 
 DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
@@ -262,6 +271,24 @@ const char **DisasmPanel::RequestData(int lines)
     return data;
 }
 
+void DisasmPanel::ToggleBreakpoint(uint32_t bpt_address)
+{
+    Breakpoint *bpt = parent->FindBreakpoint(bpt_address);
+    if (bpt)
+    {
+        // Let's touch only breakpoints that could have been added by this code
+        if (bpt->GetLength() == 4 && bpt->GetAddress() == bpt_address && bpt->GetType() == BREAK_TYPE_EXECUTE)
+            parent->DeleteBreakpoint(bpt);
+        else
+            return;
+    }
+    else
+    {
+        bpt = new Breakpoint(data[(bpt_address - code->GetPos()) / 4], bpt_address, 4, BREAK_TYPE_EXECUTE);
+        parent->AddBreakpoint(bpt);
+    }
+}
+
 void DisasmPanel::CodeDClick(wxMouseEvent &evt)
 {
     int line = code->AddressHitTest(evt.GetPosition());
@@ -272,20 +299,7 @@ void DisasmPanel::CodeDClick(wxMouseEvent &evt)
     if (!MemIsValid(address))
         return;
 
-    Breakpoint *bpt = parent->FindBreakpoint(address);
-    if (bpt)
-    {
-        // Let's touch only breakpoints that could have been added by this code
-        if (bpt->GetLength() == 4 && bpt->GetAddress() == address && bpt->GetType() == BREAK_TYPE_EXECUTE)
-            parent->DeleteBreakpoint(bpt);
-        else
-            return;
-    }
-    else
-    {
-        bpt = new Breakpoint(data[line], address, 4, BREAK_TYPE_EXECUTE);
-        parent->AddBreakpoint(bpt);
-    }
+    ToggleBreakpoint(address);
 }
 
 /// ------------------------------------------------------------------------------
@@ -303,7 +317,8 @@ DisasmWindow::DisasmWindow(DisasmPanel *parent_, int id) : wxWindow(parent_, id,
 
     Bind(wxEVT_SIZE, &DisasmWindow::Resize, this);
     Bind(wxEVT_PAINT, &DisasmWindow::Paint, this);
-    Bind(wxEVT_LEFT_DOWN, &DisasmWindow::MouseClick, this);
+    Bind(wxEVT_LEFT_DOWN, &DisasmWindow::MouseClickEvt, this);
+    Bind(wxEVT_CONTEXT_MENU, &DisasmWindow::RClickMenu, this);
 }
 
 DisasmWindow::~DisasmWindow()
@@ -356,10 +371,8 @@ void DisasmWindow::Deselect()
     Render();
 }
 
-void DisasmWindow::MouseClick(wxMouseEvent &evt)
+void DisasmWindow::MouseClick(const wxPoint &pos)
 {
-    evt.Skip();
-    wxPoint pos = evt.GetPosition();
     if (pos.y < line_start_y - 2 || pos.x < opcode_start_x)
     {
         Deselect();
@@ -368,6 +381,70 @@ void DisasmWindow::MouseClick(wxMouseEvent &evt)
     int row = (pos.y - line_start_y - 2) / line_height;
     Select(address + row * 4, wxGetKeyState(WXK_SHIFT));
 }
+
+void DisasmWindow::MouseClickEvt(wxMouseEvent &evt)
+{
+    evt.Skip();
+    MouseClick(evt.GetPosition());
+}
+
+void DisasmWindow::RClickMenu(wxContextMenuEvent &evt)
+{
+    wxPoint pos = evt.GetPosition();
+    if (pos != wxDefaultPosition)
+    {
+        pos = ScreenToClient(pos);
+        MouseClick(pos);
+        if (select_start == 0x1)
+            return;
+    }
+    else
+    {
+        if (select_start == 0x1)
+            return;
+
+        pos = wxPoint(opcode_start_x, line_start_y + (select_start - address) / 4 * line_height);
+    }
+
+    wxMenu menu;
+    wxMenuItem *copy_addr, *copy_ins, *set_break;
+
+    copy_addr = new wxMenuItem(&menu, menu_id_copyaddr, _("Copy address"));
+    copy_ins = new wxMenuItem(&menu, menu_id_copyins, _("Copy instruction"));
+    set_break = new wxMenuItem(&menu, menu_id_break, _("Toggle breakpoint"));
+
+    menu.Append(copy_addr);
+    menu.Append(copy_ins);
+    menu.Append(set_break);
+
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &DisasmWindow::RClickEvent, this);
+    PopupMenu(&menu, pos);
+}
+
+void DisasmWindow::RClickEvent(wxCommandEvent &evt)
+{
+    switch (evt.GetId())
+    {
+        case menu_id_copyaddr:
+            if (wxTheClipboard->Open())
+            {
+                wxTheClipboard->SetData(new wxTextDataObject(wxString::Format("%08X", select_start)));
+                wxTheClipboard->Close();
+            }
+        break;
+        case menu_id_copyins:
+            if (wxTheClipboard->Open())
+            {
+                wxTheClipboard->SetData(new wxTextDataObject(data[(select_start - address) / 4]));
+                wxTheClipboard->Close();
+            }
+        break;
+        case menu_id_break:
+            parent->ToggleBreakpoint(select_start); // I don't think there is reason to care about multiselection..
+        break;
+    }
+}
+
 
 void DisasmWindow::Goto(uint32_t addr)
 {
