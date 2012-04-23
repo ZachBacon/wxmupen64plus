@@ -119,9 +119,10 @@ void MemSearch::NewSearch(uint32_t beg, uint32_t end)
 {
     MemSearchResult base;
     uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
-    MemChunk everything(rdram + beg, end - beg, 0);
+    MemChunk everything(rdram + beg, end - beg + 1, 0);
     base.AddChunk(everything);
     undo_list.push_back(move(base));
+    undo_memusage += (end - beg + 1);
     undo_pos++;
 }
 
@@ -277,6 +278,7 @@ void MemSearch::Filter(compare op, bool initial_filter)
     {
         undo_memusage -= undo_list[0].MemUsage();
         undo_list.erase(undo_list.begin());
+        undo_pos--;
     }
 
     undo_memusage += new_memusage;
