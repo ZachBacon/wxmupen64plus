@@ -29,6 +29,7 @@
 #include "wxvidext.h"
 #include "main.h"
 
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <wx/stream.h>
@@ -73,7 +74,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
     m_defaultRspPlugin = defaultRspPlugin;
     m_curr_rom_size = -1;
     m_is_a_rom_open = false;
-
+    
     m64p_error result = AttachCoreLib(CoreLibFilepath);
     if (result != M64ERR_SUCCESS)
     {
@@ -84,7 +85,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg << result;
         throw CoreNotFoundException(errmsg.str());
     }
-
+    
     result = InitCore(&StateCallback, this, datapath);
     if (result != M64ERR_SUCCESS)
     {
@@ -92,7 +93,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     result = OpenConfigurationHandles(defaultPluginPath, defaultVideoPlugin, defaultAudioPlugin,
                                      defaultInputPlugin, defaultRspPlugin);
     if (result != M64ERR_SUCCESS)
@@ -103,7 +104,7 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     char videoExtension[16];
     result = GetVideoExtension(videoExtension, 16);
     if (result != M64ERR_SUCCESS)
@@ -136,14 +137,14 @@ Mupen64PlusPlus::Mupen64PlusPlus(const char *CoreLibFilepath, const char* defaul
 #endif
         }
     }
-
+    
     if (useVideoExtension())
     {
         printf("************ will call installWxVideoExtension ************\n");
         result = installWxVideoExtension();
         if (result != M64ERR_SUCCESS)
         {
-            throw std::runtime_error("[Mupen64PlusPlus::Mupen64PlusPlus] Can't init video extension");
+            throw std::runtime_error("[Mupen64PlusPlus::Mupen64PlusPlus] Can't init video extension");        
         }
     }
 }
@@ -200,36 +201,36 @@ int Mupen64PlusPlus::loadPlugins()
     g_AudioPlugin = audioPlugin;
     g_InputPlugin = inputPlugin;
     g_RspPlugin   = rspPlugin;
-
+    
     int plugins = PluginSearchLoad(getConfigUI());
-
+    
     printf("\nLoading plugins from %s\n", g_PluginDir);
-    printf("    GFX <%s> : %s\n",   g_GfxPlugin,   ((plugins & 0x1) != 0 ? "OK" : "/!\\ Could not load"));
-    printf("    Audio <%s> : %s\n", g_AudioPlugin, ((plugins & 0x2) != 0 ? "OK" : "/!\\ Could not load"));
-    printf("    Input <%s> : %s\n", g_InputPlugin, ((plugins & 0x4) != 0 ? "OK" : "/!\\ Could not load"));
-    printf("    RSP <%s> : %s\n",   g_RspPlugin,   ((plugins & 0x8) != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    GFX <%s> : %s\n",   g_GfxPlugin,   (plugins & 0x1 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    Audio <%s> : %s\n", g_AudioPlugin, (plugins & 0x2 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    Input <%s> : %s\n", g_InputPlugin, (plugins & 0x4 != 0 ? "OK" : "/!\\ Could not load"));
+    printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
     printf("\n");
-
+    
     if (plugins != 15 and m_defaultPluginPath != g_PluginDir)
     {
         // if loading plugins failed, try if default path works any better (this is especially needed on OS X
         // where the application can be moved around, and thus break the path stored in the config)
         g_PluginDir = m_defaultPluginPath.c_str();
-
+        
         printf("Since some plugins failed to load, I'm checking whether '%s' would be any better\n",
                m_defaultPluginPath.c_str());
-
+        
         plugins = PluginSearchLoad(getConfigUI());
-        printf("    GFX <%s> : %s\n",   g_GfxPlugin,   ((plugins & 0x1) != 0 ? "OK" : "/!\\ Could not load"));
-        printf("    Audio <%s> : %s\n", g_AudioPlugin, ((plugins & 0x2) != 0 ? "OK" : "/!\\ Could not load"));
-        printf("    Input <%s> : %s\n", g_InputPlugin, ((plugins & 0x4) != 0 ? "OK" : "/!\\ Could not load"));
-        printf("    RSP <%s> : %s\n",   g_RspPlugin,   ((plugins & 0x8) != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    GFX <%s> : %s\n",   g_GfxPlugin,   (plugins & 0x1 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    Audio <%s> : %s\n", g_AudioPlugin, (plugins & 0x2 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    Input <%s> : %s\n", g_InputPlugin, (plugins & 0x4 != 0 ? "OK" : "/!\\ Could not load"));
+        printf("    RSP <%s> : %s\n",   g_RspPlugin,   (plugins & 0x8 != 0 ? "OK" : "/!\\ Could not load"));
         printf("\n");
-
+        
         if (plugins == 15)
         {
             printf("<%s> indeed seems better, I'm remembering it in the config.\n\n", g_PluginDir);
-
+            
             // store updated path in config
             m64p_handle uisection = getConfigUI();
             setStringConfigParam(uisection, "PluginDir", g_PluginDir);
@@ -240,7 +241,7 @@ int Mupen64PlusPlus::loadPlugins()
             plugins = PluginSearchLoad(getConfigUI());
         }
     }
-
+    
     return plugins;
 }
 
@@ -255,8 +256,8 @@ void ParameterListCallback(void* sectionHandle, const char* ParamName, m64p_type
 
     ConfigParam* param = new ConfigParam(*section);
     const char* help = getParameterHelp(section, ParamName);
-    param->setDetails(ParamType, ParamName, help);
-
+    param->setDetails(ParamType, ParamName, help);    
+    
     (*g_config_sections)[g_config_sections->size() - 1]->m_parameters.push_back(param);
 }
 
@@ -301,14 +302,14 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
 {
     // SDL_Quit();
     printf("==== load rom ====\n");
-
+    
     wxFFileInputStream input(filename);
     if (not input.IsOk() or not input.CanRead())
     {
         throw std::runtime_error(("[Mupen64PlusPlus::loadRom] failed to open file '" +
                                   filename + "'").ToStdString());
     }
-
+    
     wxFile thefile;
     if (not thefile.Open(filename))
     {
@@ -325,12 +326,12 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
         char buffer[BUFFER_SIZE];
         size_t size;
         int t = 0;
-
+        
         //printf("Will read ROM\n");
         do
         {
             size = input.Read(buffer, BUFFER_SIZE).LastRead();
-
+            
             total += size;
             t++;
             if (t > 100)
@@ -342,9 +343,9 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
                     dialog->Update(int(std::min(1.0f, total/float(rom_size))*80.0f));
                 }
             }
-
+            
             memoryImage.Write(buffer, size);
-
+            
             if (memoryImage.LastWrite() != size)
             {
                 delete[] rom_buf;
@@ -353,23 +354,23 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
         }
         while (size > 0 and not input.Eof() and input.IsOk() and input.CanRead());
     }
-
+    
     wxStreamBuffer* buffer = memoryImage.GetOutputStreamBuffer();
-
+    
     m_curr_rom_size = buffer->GetBufferSize();
     m64p_error result = ::openRom(total, buffer->GetBufferStart());
-
+    
     delete[] rom_buf;
-
+    
     if (dialog != NULL) dialog->Update(90);
-
+    
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Loading ROM failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     if (attachPlugins)
     {
         result = ::attachPlugins();
@@ -380,9 +381,9 @@ void Mupen64PlusPlus::loadRom(wxString filename, bool attachPlugins, wxProgressD
             throw std::runtime_error(errmsg);
         }
     }
-
+    
     m_is_a_rom_open = true;
-
+    
     if (dialog != NULL) dialog->Update(100);
 }
 
@@ -400,16 +401,16 @@ void Mupen64PlusPlus::closeRom(bool detachPlugins)
             throw std::runtime_error(errmsg);
         }
     }
-
+    
     m64p_error result = ::closeRom();
-
+    
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Closing ROM failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     m_is_a_rom_open = false;
 }
 
@@ -456,16 +457,16 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
 {
     m64p_rom_header header;
     m64p_rom_settings settings;
-
+    
     m64p_error result = getCurrentRomHeader(&header);
-
+    
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Reading ROM header failed with error : ";
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     result = getRomSettings(&settings);
     if (result != M64ERR_SUCCESS)
     {
@@ -473,9 +474,9 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     RomInfo out;
-
+        
     unsigned short countrycode = header.Country_code;
     out.manufacturer = header.Manufacturer_ID;
     out.name = header.Name;
@@ -484,7 +485,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo()
     out.CRC2 = header.CRC2;
     out.size = m_curr_rom_size;
     out.country = getCountryName(countrycode);
-
+    
     return out;
 }
 
@@ -494,7 +495,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
 {
     m64p_rom_header header;
     m64p_error result = getRomHeader(path.utf8_str(), &header);
-
+    
     if (result != M64ERR_SUCCESS)
     {
         std::string errmsg = "Reading ROM header failed with error : ";
@@ -503,7 +504,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
     }
 
     RomInfo out;
-
+    
     // TODO: add support for reading compressed ROMs
     if (header.init_PI_BSB_DOM1_LAT_REG == 31 and
         header.init_PI_BSB_DOM1_PGS_REG == 139)
@@ -519,7 +520,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
         out.format = FORMAT_ZIP;
         out.name = _("(Zipped)");
     }
-    else
+    else 
     {
         unsigned short countrycode = header.Country_code;
         out.manufacturer = header.Manufacturer_ID;
@@ -527,7 +528,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
         out.CRC2 = header.CRC2;
         out.size = m_curr_rom_size;
         out.country = getCountryName(countrycode);
-
+        
         if (header.init_PI_BSB_DOM1_LAT_REG == 128 and
              header.init_PI_BSB_DOM1_PGS_REG == 55 and
              header.init_PI_BSB_DOM1_PWD_REG == 18 and
@@ -557,7 +558,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
                          (const char*)path.utf8_str() );
         }
     }
-
+    
     /*
     printf("==== Header of '%s' ====\n", (const char*)path.utf8_str());
     printf("init_PI_BSB_DOM1_LAT_REG : %i\n", (int)header.init_PI_BSB_DOM1_LAT_REG);
@@ -576,7 +577,7 @@ Mupen64PlusPlus::RomInfo Mupen64PlusPlus::getRomInfo(wxString path)
     printf("Cartridge_ID : %u \n", header.Cartridge_ID);
     printf("Country_code : %u \n", header.Country_code);
     */
-
+    
     return out;
 }
 
@@ -591,7 +592,7 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
         virtual ExitCode Entry()
         {
             //SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-
+            
             m64p_error result = ::runEmulation();
             if (result != M64ERR_SUCCESS)
             {
@@ -602,14 +603,14 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
             return 0;
         }
     };
-
+    
     if (asynchronous or useVideoExtension())
     {
         EmuThread* t = new EmuThread();
         if (t->Create() != wxTHREAD_NO_ERROR)
         {
             delete t;
-            throw std::runtime_error("Can't create the emulation thread");
+            throw std::runtime_error("Can't create the emulation thread");        
         }
         else
         {
@@ -624,7 +625,7 @@ void Mupen64PlusPlus::runEmulation(bool asynchronous)
     {
         // FIXME: why do I need this?
         if (not useVideoExtension()) SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO);
-
+        
         m64p_error result = ::runEmulation();
         if (result != M64ERR_SUCCESS)
         {
@@ -683,13 +684,13 @@ m64p_emu_state Mupen64PlusPlus::getEmulationState()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
-
+    
     /*
      *  M64EMU_STOPPED = 1,
      *  M64EMU_RUNNING,
      *  M64EMU_PAUSED
      */
-
+    
     return (m64p_emu_state)val;
 }
 
@@ -750,7 +751,7 @@ void Mupen64PlusPlus::takeScreenshot()
 // -----------------------------------------------------------------------------------------------------------
 
 void Mupen64PlusPlus::onStateChanged(m64p_core_param param_type, int new_value)
-{
+{    
     switch (param_type)
     {
         case M64CORE_SAVESTATE_SLOT:
@@ -758,14 +759,14 @@ void Mupen64PlusPlus::onStateChanged(m64p_core_param param_type, int new_value)
             if (m_listener != NULL) m_listener->onSaveSlotChanged(new_value);
             break;
         }
-
+        
         case M64CORE_EMU_STATE:
         {
             m64p_emu_state state = (m64p_emu_state)new_value;
             if (m_listener != NULL) m_listener->onStateChanged(state);
             break;
         }
-
+        
         default:
             // we don't care for other types
             break;
@@ -874,7 +875,7 @@ std::string ConfigParam::getStringValue()
 
     const int BUFFER_SIZE = 256;
     char buffer[BUFFER_SIZE];
-
+    
     m64p_error result = getStringConfigParam(m_parent_section, m_param_name.c_str(),
                                              buffer, BUFFER_SIZE);
     if (result != M64ERR_SUCCESS)
@@ -1005,7 +1006,7 @@ void ConfigSection::addNewParam(const char* name, const char* help, wxVariant va
         case M64TYPE_BOOL:
             result = createBoolConfigParam(m_handle, name, value.GetBool(), help);
             break;
-
+    
         case M64TYPE_INT:
             result = createIntConfigParam(m_handle, name, value.GetLong(), help);
             break;

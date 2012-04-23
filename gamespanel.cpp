@@ -127,10 +127,8 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
 
     buttons->AddStretchSpacer();
 
-#if defined DATADIR_WXDATA
-    wxString datadir = "./wxdata/";
-#elif defined DATADIR
-    wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
+#ifdef WXDATADIR
+    wxString datadir = wxString(WXDATADIR) + wxFileName::GetPathSeparator();
 #else
     wxString datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
 #endif

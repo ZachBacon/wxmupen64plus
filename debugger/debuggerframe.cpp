@@ -7,6 +7,7 @@
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/dir.h>
+#include <wx/msgdlg.h>
 #include <stdexcept>
 
 #include "../mupen64plusplus/MupenAPI.h"
@@ -111,9 +112,16 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     vi_break = false;
     vi_count = 0;
     pc = 0;
+
+    if (SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate,
+                              &DebuggerFrame::DebuggerVi) == M64ERR_UNSUPPORTED)
+    {
+        wxMessageBox(_("Debugger was enabled in config, but the core library was not built with debugger support"));
+        // Well, nothing explodes if there is no additional error handling so why bother?
+    }
+
     breakpoints = new BreakpointInterface;
 
-    SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate, &DebuggerFrame::DebuggerVi);
     InitDrawingValues();
     g_debugger = this;
 

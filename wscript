@@ -135,7 +135,7 @@ def build(bld):
         build_flags += ['-O2','-DNEBUG=1']
 
     if len(bld.env['datadir']) > 0:
-        build_flags += ['-DDATADIR="' + bld.env['datadir'] + '"']
+        build_flags += ['-DWXDATADIR="' + bld.env['datadir'] + '"']
     if len(bld.env['libdir']) > 0:
         build_flags += ['-DLIBDIR="' + bld.env['libdir'] + '"']
     if len(bld.env['bindir']) > 0:
