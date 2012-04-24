@@ -326,7 +326,7 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
     address_low = new wxTextCtrl(addresspanel, -1);
     address_hi = new wxTextCtrl(addresspanel, -1);
     address_low->SetValue(config.GetValue("LowAddr", "0"));
-    address_hi->SetValue(config.GetValue("HighAddr", "3fffff"));
+    address_hi->SetValue(config.GetValue("HighAddr", "3FFFFF"));
     address_low->SetMinSize(wxSize(addr_ctrl_size, -1));
     address_hi->SetMinSize(wxSize(addr_ctrl_size, -1));
 
@@ -578,6 +578,8 @@ void MemSearchPanel::FilterEvent(wxCommandEvent &evt)
             search.NewSearch(low_addr, high_addr);
 
         choice_valuetype->Enable(false);
+        address_low->Enable(false);
+        address_hi->Enable(false);
         radio_old->SetLabel(_("Old value"));
     }
     if (!first_filter || current_radio != radio_old_id) // Anything else than anything
