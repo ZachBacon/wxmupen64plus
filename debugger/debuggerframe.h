@@ -74,9 +74,10 @@ class DebuggerFrame : public wxFrame
         void MenuAddPanel(wxCommandEvent &evt);
         void MenuState(wxCommandEvent &evt);
         void MenuOption(wxCommandEvent &evt);
+        void MenuAuiMode(wxCommandEvent &evt);
         void PaneTitleRClick(wxMouseEvent &evt);
         void PaneTitleEvent(wxCommandEvent &evt);
-        void PaneClosed(wxAuiManagerEvent &evt);
+        void PaneCloseEvent(wxAuiManagerEvent &evt);
 
     private:
         static void DebuggerInit();
@@ -111,6 +112,8 @@ class DebuggerFrame : public wxFrame
         wxMenuItem *pause;
         wxMenuItem *run_on_boot_menu;
         wxMenuItem *runtime_update_menu;
+        wxMenuItem *floatpanes_menu;
+        wxMenuItem *lockpanes_menu;
 
         void LoadConfig();
         void SaveConfig();
@@ -118,7 +121,11 @@ class DebuggerFrame : public wxFrame
         void LoadGameValues();
         void SaveGameValues();
 
+        void SafeAuiUpdate();
+        void PaneClosed(DebugPanel *pane);
+
         wxAuiManager *aui;
+        uint8_t aui_mode; // 1 and larger = float new panes, 2 and larger = lock main window
         bool runtime_update;
         char run_on_boot; // 0 = nope; 1 = yea; 2 = yea, done
 };

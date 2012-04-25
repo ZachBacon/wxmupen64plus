@@ -334,8 +334,6 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
     addrsizer->Add(address_hi, 0, wxEXPAND | wxLEFT, 5);
     addresspanel->SetSizer(addrsizer);
 
-    int tmp = choice_valuetype->GetSize().x;
-
     text_newvalue = new wxStaticText(filterpanel, -1, _("New value.."));
     choice_cmp = new wxChoice(filterpanel, -1, wxDefaultPosition, wxDefaultSize, sizeof(cmp_choices) / sizeof(wxString), cmp_choices);
     radio_old = new wxRadioButton(filterpanel, radio_old_id, _("Anything"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
@@ -353,7 +351,7 @@ MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugCon
     filtersizer->Add(text_searchfor, 0, wxEXPAND);
     filtersizer->Add(choice_valuetype, 0, wxEXPAND | wxTOP | wxBOTTOM, 2);
     filtersizer->Add(text_range, 0, wxEXPAND);
-    filtersizer->Add(addresspanel, 0, wxEXPAND);
+    filtersizer->Add(addresspanel, 0, wxEXPAND | wxBOTTOM, 2);
     filtersizer->Add(line, 0, wxEXPAND | wxALL, 2);
     filtersizer->Add(text_newvalue, 0, wxEXPAND);
     filtersizer->Add(choice_cmp, 0, wxEXPAND | wxTOP | wxBOTTOM, 2);

@@ -45,15 +45,22 @@ enum
     register_panel_id,
     memsearch_panel_id,
     last_panel_id,
+
     state_run_id,
     state_pause_id,
     state_step_id,
     state_vibreak_id,
     last_state_id,
+
     run_on_boot_opt_id,
     runtime_update_opt_id,
     last_opt_id,
+
     pane_rename_id,
+
+    auimode_floatnew_id,
+    auimode_lock_id,
+    last_auimode_id
 };
 
 class SimpleTextEntryDialog : public wxDialog
@@ -112,6 +119,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     vi_break = false;
     vi_count = 0;
     pc = 0;
+    aui_mode = 0;
 
     if (SetDebuggingCallbacks(&DebuggerFrame::DebuggerInit, &DebuggerFrame::DebuggerUpdate,
                               &DebuggerFrame::DebuggerVi) == M64ERR_UNSUPPORTED)
@@ -132,7 +140,8 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuAddPanel, this, break_panel_id, last_panel_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuState, this, state_run_id, last_state_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuOption, this, run_on_boot_opt_id, last_opt_id - 1);
-    Bind(wxEVT_AUI_PANE_CLOSE, &DebuggerFrame::PaneClosed, this);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuAuiMode, this, auimode_floatnew_id, last_auimode_id - 1);
+    Bind(wxEVT_AUI_PANE_CLOSE, &DebuggerFrame::PaneCloseEvent, this);
     Bind(wxMUPEN_DEBUG_EVENT, wxCommandEventHandler(DebuggerFrame::ProcessCallback), this, 1, 3);
     Bind(wxEVT_RIGHT_UP, &DebuggerFrame::PaneTitleRClick, this);
 }
@@ -169,7 +178,11 @@ DebuggerFrame::~DebuggerFrame()
 DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigSection &config)
 {
     wxAuiPaneInfo info;
-    info.Top();
+    if (aui_mode >= 1)
+        info.Float();
+    else
+        info.Top();
+
     DebugPanel *panel;
 
     info.Name(name);
@@ -179,14 +192,14 @@ DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigS
         {
             panel = new BreakpointPanel(this, -1, type, config);
             info.Caption(_("Breakpoints"));
-            info.BestSize(wxSize(150, 400));
+            info.BestSize(wxSize(350, 200));
         }
         break;
         case disasm_panel_id:
         {
             panel = new DisasmPanel(this, -1, type, config);
             info.Caption(_("Disassembly"));
-            info.BestSize(wxSize(350, 400));
+            info.BestSize(wxSize(350, 200));
             disasmpanels.push_back((DisasmPanel *)panel);
         }
         break;
@@ -194,7 +207,7 @@ DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigS
         {
             panel = new MemoryPanel(this, -1, type, config);
             info.Caption(_("Memory"));
-            info.BestSize(wxSize(350, 400));
+            info.BestSize(wxSize(350, 200));
             mempanels.push_back((MemoryPanel *)panel);
         }
         break;
@@ -202,7 +215,7 @@ DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigS
         {
             panel = new DebugConsole(this, -1, type);
             info.Caption(_("Console"));
-            info.BestSize(wxSize(300, 500));
+            info.BestSize(wxSize(300, 200));
         }
         break;
         case register_panel_id:
@@ -216,7 +229,7 @@ DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigS
         {
             panel = new MemSearchPanel(this, -1, type, config);
             info.Caption(_("Memory search"));
-            info.BestSize(wxSize(150, 400));
+            info.BestSize(wxSize(400, 200));
         }
         break;
         default:
@@ -226,9 +239,8 @@ DebugPanel *DebuggerFrame::AddPanel(int type, const wxString &name, DebugConfigS
     return panel;
 }
 
-void DebuggerFrame::PaneClosed(wxAuiManagerEvent &evt)
+void DebuggerFrame::PaneClosed(DebugPanel *pane)
 {
-    DebugPanel *pane = (DebugPanel *)evt.GetPane()->window;
     switch (pane->GetType())
     {
         case disasm_panel_id:
@@ -258,6 +270,25 @@ void DebuggerFrame::PaneClosed(wxAuiManagerEvent &evt)
             output = 0;
         break;
     }
+}
+
+void DebuggerFrame::PaneCloseEvent(wxAuiManagerEvent &evt)
+{
+    PaneClosed((DebugPanel *)evt.GetPane()->window);
+}
+
+void DebuggerFrame::SafeAuiUpdate()
+{
+    if (aui_mode >= 2) // Stuff breaks otherwise
+    {
+        double old_constraint[2];
+        aui->GetDockSizeConstraint(&old_constraint[0], &old_constraint[1]);
+        aui->SetDockSizeConstraint(1, 1);
+        aui->Update();
+        aui->SetDockSizeConstraint(old_constraint[0], old_constraint[1]);
+    }
+    else
+        aui->Update();
 }
 
 bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
@@ -308,6 +339,24 @@ bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
         }
     }
     aui->LoadPerspective(perspective);
+
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
+    for (uint32_t i = 0; i < panes.size(); i++)
+    {
+        wxAuiPaneInfo &pane = panes.Item(i);
+        if (aui_mode >= 2 && !(pane.state & wxAuiPaneInfo::wxAuiPaneState::optionFloating))
+        {
+            pane.BestSize(pane.rect.GetSize());
+            pane.Floatable(false); // Perspective string doesn't store floatable status?
+        }
+        if (pane.state & wxAuiPaneInfo::wxAuiPaneState::optionHidden) // Why does this happen..
+        {
+            DebugPanel *pane_wnd = (DebugPanel *)pane.window;
+            aui->DetachPane(pane_wnd);
+            PaneClosed(pane_wnd);
+            //delete pane_wnd; // Not sure at all if this needs to be done, but it seems to cause crashes
+        }
+    }
     return true;
 }
 
@@ -348,12 +397,13 @@ void DebuggerFrame::MenuAddPanel(wxCommandEvent &evt)
     wxPanel *panel = AddPanel(type, name, empty_sect);
     if (!output && type == console_panel_id)
         output = (DebugConsole *)panel;
-    aui->Update();
+
+    SafeAuiUpdate();
 }
 
 DebugPanel *DebuggerFrame::PaneTitleHitTest(const wxPoint &pos)
 {
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     uint32_t count = panes.GetCount();
     for (uint32_t i = 0; i < count; i++)
     {
@@ -396,7 +446,7 @@ void DebuggerFrame::PaneTitleEvent(wxCommandEvent &evt)
         if (dlg.ShowModal() == wxID_OK)
         {
             info.Caption(dlg.GetValue());
-            aui->Update();
+            SafeAuiUpdate();
         }
     }
 }
@@ -406,7 +456,7 @@ bool DebuggerFrame::AddBreakpoint(Breakpoint *bpt)
     if (!breakpoints->Add(bpt))
         return false;
 
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_ADDED, true);
@@ -418,7 +468,7 @@ void DebuggerFrame::DeleteBreakpoint(Breakpoint *bpt, bool last_update)
 {
     breakpoints->Delete(bpt);
 
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_REMOVED, last_update);
@@ -435,7 +485,7 @@ void DebuggerFrame::EnableBreakpoint(Breakpoint *bpt, bool enable, bool last_upd
     else
         breakpoints->Disable(bpt);
 
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED, last_update);
@@ -446,7 +496,7 @@ bool DebuggerFrame::EditBreakpoint(Breakpoint *bpt, const wxString &name, uint32
 {
     if (!breakpoints->Update(bpt, name, address, length, type))
         return false;
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->BreakpointUpdate(bpt, BREAK_CHANGED, true);
@@ -479,7 +529,9 @@ void DebuggerFrame::SaveConfig()
 
     DebugConfigSection section;
     section.name = "Main";
-    section.num_values = 5;
+    section.num_values = 6;
+
+    char buf[32], auimode_buf[4];
 
     wxString perspective_string = aui->SavePerspective();
     section.keys[0] = "Layout";
@@ -487,7 +539,6 @@ void DebuggerFrame::SaveConfig()
 
     wxRect rect = GetRect();
     section.keys[1] = "Window";
-    char buf[32];
     sprintf(buf, "%d,%d,%d,%d", rect.x, rect.y, rect.width, rect.height);
     section.values[1] = buf;
 
@@ -500,9 +551,13 @@ void DebuggerFrame::SaveConfig()
     section.keys[4] = "RuntimeUpdate";
     (runtime_update) ? (section.values[4] = "True") : (section.values[4] = "False");
 
+    section.keys[5] = "PaneMode";
+    sprintf(auimode_buf, "%d", aui_mode);
+    section.values[5] = auimode_buf;
+
     config.WriteSection(section);
 
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         DebugPanel *panel = (DebugPanel *)(panes.Item(i).window);
@@ -539,6 +594,8 @@ void DebuggerFrame::LoadConfig()
         else
             runtime_update = false;
 
+        aui_mode = atoi(sect.GetValue("PaneMode", "0"));
+
         LoadAui(sect.GetValue("Layout", ""), &config);
     }
     else
@@ -548,6 +605,9 @@ void DebuggerFrame::LoadConfig()
         LoadAui("", 0);
     }
 
+    floatpanes_menu->Check(aui_mode >= 1);
+    floatpanes_menu->Enable(aui_mode <= 1);
+    lockpanes_menu->Check(aui_mode >= 2);
     run_on_boot_menu->Check(run_on_boot == 1);
     runtime_update_menu->Check(runtime_update);
 
@@ -725,6 +785,9 @@ void DebuggerFrame::CreateMenubar()
     wxMenuItem *separator1 = new wxMenuItem(statemenu);
     wxMenuItem *step = new wxMenuItem(statemenu, state_step_id, _("Step\tF7"));
 
+    floatpanes_menu = new wxMenuItem(viewmenu, auimode_floatnew_id, _("Float new panes"), wxEmptyString, wxITEM_CHECK);
+    lockpanes_menu = new wxMenuItem(viewmenu, auimode_lock_id, _("Lock pane sizes"), wxEmptyString, wxITEM_CHECK);
+
     run_on_boot_menu = new wxMenuItem(optmenu, run_on_boot_opt_id, _("Run on boot"), wxEmptyString, wxITEM_CHECK);
     runtime_update_menu = new wxMenuItem(optmenu, runtime_update_opt_id, _("Update values while running"), wxEmptyString, wxITEM_CHECK);
 
@@ -739,6 +802,9 @@ void DebuggerFrame::CreateMenubar()
     viewmenu->Append(disasm_panel_id, _("Disassembly\tCtrl-D"));
     viewmenu->Append(memory_panel_id, _("Memory\tCtrl-M"));
     viewmenu->Append(memsearch_panel_id, _("Memory search\tCtrl-S")); // Todo: maybe these hotkeys aren't the best possibilities?
+    viewmenu->AppendSeparator();
+    viewmenu->Append(floatpanes_menu);
+    viewmenu->Append(lockpanes_menu);
 
     optmenu->Append(run_on_boot_menu);
     optmenu->Append(runtime_update_menu);
@@ -772,8 +838,6 @@ void DebuggerFrame::MenuState(wxCommandEvent &evt)
         case state_vibreak_id:
             ViBreak();
         break;
-        default:
-        return;
     }
 }
 
@@ -794,9 +858,56 @@ void DebuggerFrame::MenuOption(wxCommandEvent &evt)
                 runtime_update = true;
 
         break;
-        default:
+    }
+}
+
+void DebuggerFrame::MenuAuiMode(wxCommandEvent &evt)
+{
+    switch (evt.GetId())
+    {
+        case auimode_floatnew_id:
+            aui_mode ^= 1;
+        break;
+        case auimode_lock_id:
+            aui_mode ^= 2;
+
+            wxAuiPaneInfoArray &panes = aui->GetAllPanes();
+            if (aui_mode >= 2)
+            {
+                for (uint32_t i = 0; i < panes.GetCount(); i++)
+                {
+                    wxAuiPaneInfo &pane = panes.Item(i);
+                    if (!(pane.state & wxAuiPaneInfo::wxAuiPaneState::optionFloating))
+                    {
+                        pane.DockFixed(true);
+                        pane.Floatable(false);
+                        pane.BestSize(pane.rect.GetSize()); // Without this and SetDockSizeConstraint unlocking will bug
+                    }
+                }
+                aui->Update();
+            }
+            else
+            {
+                for (uint32_t i = 0; i < panes.GetCount(); i++)
+                {
+                    wxAuiPaneInfo &pane = panes.Item(i);
+                    if (!(pane.state & wxAuiPaneInfo::wxAuiPaneState::optionFloating))
+                    {
+                        pane.DockFixed(false);
+                        pane.Floatable(true);
+                    }
+                }
+                double old_constraint[2];
+                aui->GetDockSizeConstraint(&old_constraint[0], &old_constraint[1]);
+                aui->SetDockSizeConstraint(1, 1);
+                aui->Update();
+                aui->SetDockSizeConstraint(old_constraint[0], old_constraint[1]);
+            }
         break;
     }
+    floatpanes_menu->Check(aui_mode >= 1);
+    floatpanes_menu->Enable(aui_mode <= 1);
+    lockpanes_menu->Check(aui_mode >= 2);
 }
 
 void DebuggerFrame::Run()
@@ -839,7 +950,7 @@ void DebuggerFrame::MenuClose(wxCommandEvent &evt)
 
 void DebuggerFrame::UpdatePanels(bool vi)
 {
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->Update(vi);
@@ -939,7 +1050,7 @@ void DebuggerFrame::Reset()
 
     breakpoints->Clear();
 
-    wxAuiPaneInfoArray panes = aui->GetAllPanes();
+    wxAuiPaneInfoArray &panes = aui->GetAllPanes();
     for (uint32_t i = 0; i < panes.GetCount(); i++)
     {
         ((DebugPanel *)(panes.Item(i).window))->Reset();
