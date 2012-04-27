@@ -779,7 +779,7 @@ void MemSearchPanel::RadioEvent(wxCommandEvent &evt)
             if (first_filter)
             {
                 previous_choice = choice_cmp->GetSelection();
-                choice_cmp->Select(0);
+                choice_cmp->Select(cmp_eq);
                 choice_cmp->Enable(false);
             }
         break;
@@ -852,6 +852,12 @@ void MemSearchPanel::Clear()
     radio_old->SetLabel(_("Anything"));
     first_filter = true;
     displaying_values = false;
+    if (current_radio == radio_old_id)
+    {
+        previous_choice = choice_cmp->GetSelection();
+        choice_cmp->Select(cmp_eq);
+        choice_cmp->Enable(false);
+    }
 }
 
 void MemSearchPanel::RClickEvent(wxCommandEvent &evt)
