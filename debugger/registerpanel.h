@@ -18,13 +18,6 @@ enum RegisterType
     REGISTER_FLOAT,
 };
 
-enum RegisterGroup
-{
-    REGISTER_GPR = 1,
-    REGISTER_COP0,
-    REGISTER_COP1
-};
-
 class SingleRegister : public wxPanel
 {
     public:

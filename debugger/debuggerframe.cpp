@@ -27,6 +27,48 @@
 DebuggerFrame *DebuggerFrame::g_debugger = 0;
 wxPoint DebuggerFrame::g_aui_pos = wxDefaultPosition;
 
+enum R4300opcodes
+{
+    // other opcodes..
+    cop0_op = 16,
+    cop1_op = 17,
+    beql    = 20,   // branch equal likely
+    bnel    = 21,   // branch not equal likely
+    blezl   = 22,   // branch less than or equal to zero likely (signed)
+    bgtzl   = 23,   // branch greater than zero likely (signed)
+    daddi   = 24,   // dword add immediate
+    daddiu  = 25,   // dword add immediate unsigned
+
+    ldl     = 26,   // load dword left
+    ldr     = 27,   // load dword rigt
+    lb      = 32,   // load byte
+    lh      = 33,   // load hword
+    lwl     = 34,   // load word left
+    lw      = 35,   // load word
+    lbu     = 36,   // load byte unsigned
+    lhu     = 37,   // load hword unsigned
+    lwr     = 38,   // load word right
+    lwu     = 39,   // load word unsigned
+    sb      = 40,   // store byte
+    sh      = 41,   // store hword
+    swl     = 42,   // store word left
+    sw      = 43,   // store word
+    sdl     = 44,   // store dword left
+    sdr     = 45,   // store dword right
+    swr     = 46,   // store word right
+    cache   = 47,   // cache (duh)
+    ll      = 48,   // load linked word (atomic)
+    lwc1    = 49,   // load word to cop1
+    lld     = 52,   // load linked dword (atomic)
+    ldc1    = 53,   // load word to cop1
+    ld      = 55,   // load dword
+    sc      = 56,   // store conditional word (atomic)
+    swc1    = 57,   // store word from cop1
+    scd     = 60,   // store conditional dword (atomic)
+    sdc1    = 61,   // store dword from
+    sd      = 63,   // store dword
+};
+
 enum
 {
     DEBUG_INIT = 1,
@@ -967,8 +1009,66 @@ wxString DebuggerFrame::GetBreakReason(uint32_t pc)
     Breakpoint *bpt = FindBreakpoint(pc);
     if (bpt && (bpt->GetType() & BREAK_TYPE_EXECUTE))
         return wxString::Format("Hit breakpoint \"%s\"", bpt->GetName());
-    else
-        return wxString::Format("Paused at %08X", pc);
+
+    uint32_t instruction = MemRead32(pc);
+    int16_t offset = instruction & 0xffff;
+    uint8_t base = (instruction >> 21) & 0x1f;
+    uint32_t address = (uint32_t)ReadRegister(M64P_CPU_REG_REG, base) + offset;
+    if (MemIsValid(address))
+    {
+        bool write_ins = true;
+        switch (instruction >> 26) // opcode
+        {
+            case ld:
+            case ldl:
+            case ldr:
+            case ldc1:
+            case lld:
+                write_ins = false;
+            case sd:
+            case sdl:
+            case sdr:
+            case sdc1:
+            case scd:
+                bpt = breakpoints->Find(address, 8);
+            break;
+            case lw:
+            case lwu:
+            case lwl:
+            case lwr:
+            case lwc1:
+            case ll:
+                write_ins = false;
+            case sw:
+            case swl:
+            case swr:
+            case swc1:
+            case sc:
+                bpt = breakpoints->Find(address, 4);
+            break;
+            case lh:
+            case lhu:
+                write_ins = false;
+            case sh:
+                bpt = breakpoints->Find(address, 2);
+            break;
+            case lb:
+            case lbu:
+                write_ins = false;
+            case sb:
+                bpt = breakpoints->Find(address, 1);
+            break;
+        }
+        if (bpt)
+        {
+            if (write_ins && (bpt->GetType() & BREAK_TYPE_WRITE))
+                return wxString::Format("Hit write breakpoint \"%s\" at %08X", bpt->GetName(), pc);
+            else if (bpt->GetType() & BREAK_TYPE_READ)
+                return wxString::Format("Hit read breakpoint \"%s\" at %08X", bpt->GetName(), pc);
+        }
+    }
+
+    return wxString::Format("Paused at %08X", pc);
 }
 
 void DebuggerFrame::ProcessCallback(wxCommandEvent &evt)

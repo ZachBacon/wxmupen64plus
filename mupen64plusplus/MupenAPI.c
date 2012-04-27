@@ -978,6 +978,25 @@ int MemIsValid(unsigned int address)
     int flags = (*DebugMemGetMemInfo)(M64P_DBG_MEM_FLAGS, address);
     if (flags & 0x1 || flags & 0x2) // The api headers were lacking
         return 1;
+
+    // io addresses aren't included in the previous check
+    if (address >= 0xa0000000)
+        address -= 0x20000000;
+    if ((address >= 0x83f00000 && address < 0x8480001c) &&
+        ((address >= 0x83f00000 && address < 0x83f00028) ||
+         (address >= 0x84000000 && address < 0x84002000) ||
+         (address >= 0x84040000 && address < 0x84040020) ||
+         (address >= 0x84080000 && address < 0x84080008) ||
+         (address >= 0x84100000 && address < 0x84100020) ||
+         (address >= 0x84200000 && address < 0x84200010) ||
+         (address >= 0x84300000 && address < 0x84300010) ||
+         (address >= 0x84400000 && address < 0x84400038) ||
+         (address >= 0x84500000 && address < 0x84500018) ||
+         (address >= 0x84600000 && address < 0x84600034) ||
+         (address >= 0x84700000 && address < 0x84700020) ||
+         (address >= 0x84800000 && address < 0x8480001c)))
+        return 1;
+
     return 0;
 }
 
@@ -1029,6 +1048,23 @@ void *GetRegister(m64p_dbg_cpu_data type)
 {
     return (*DebugGetCPUDataPtr)(type);
 }
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned long long ReadRegister(m64p_dbg_cpu_data type, unsigned char index)
+{
+    switch (type)
+    {
+        case M64P_CPU_REG_REG:
+        case M64P_CPU_REG_COP1_FGR_64:
+            return ((unsigned long long *)GetRegister(type))[index];
+        default:
+            return ((unsigned long *)GetRegister(type))[index];
+        break;
+    }
+    return 0;
+}
+
 // -----------------------------------------------------------------------------------------------------------
 
 void *GetMemoryPointer(m64p_dbg_memptr_type type)
@@ -1042,3 +1078,4 @@ void DecodeOpcode(unsigned int addr, char *op, char *args)
 {
     (*DebugDecodeOp)(MemRead32(addr), op, args, addr);
 }
+
