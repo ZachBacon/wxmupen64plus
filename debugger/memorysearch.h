@@ -18,6 +18,8 @@ class wxButton;
 class wxCheckBox;
 class wxDataViewEvent;
 
+typedef wxString (*formatfunc)(uint8_t *);
+
 class MemChunk
 {
     public:
@@ -46,7 +48,7 @@ class MemSearchResult
         ~MemSearchResult() {}
 
         vector<MemChunk> *GetChunks() { return &chunks; }
-        void AddChunk(MemChunk &chunk);
+        void AddChunk(void *data, uint32_t length, uint32_t address);
         uint32_t MemUsage() { return mem_usage; }
 
     private:
@@ -92,6 +94,7 @@ class MemSearchPanel : public DebugPanel
         ~MemSearchPanel();
 
         void SaveConfig(DebugConfigOut &config, DebugConfigSection &section);
+        void Update(bool vi);
 
         void RClickMenu(wxContextMenuEvent &evt);
         void RClickEvent(wxCommandEvent &evt);
@@ -99,9 +102,13 @@ class MemSearchPanel : public DebugPanel
         void RadioEvent(wxCommandEvent &evt);
         void FilterEvent(wxCommandEvent &evt);
 
+        void Clear();
+
     private:
-        template<typename type, class formatfunc> void Filter(formatfunc);
-        template<class formatfunc> void UpdateList(uint32_t value_size, formatfunc);
+        template<typename type> void Filter();
+        void GenerateList();
+        void UpdateList();
+        void UpdateVisibleList();
 
         SearchType type;
         MemSearch search;
@@ -109,6 +116,9 @@ class MemSearchPanel : public DebugPanel
         wxDataViewListCtrl *list;
 
         wxChoice *choice_valuetype;
+
+        uint8_t value_size;
+        formatfunc valueformat;
 
         wxStaticText *text_newvalue;
         wxChoice *choice_cmp;
@@ -122,6 +132,7 @@ class MemSearchPanel : public DebugPanel
         short current_radio;
         short previous_choice;
         bool first_filter;
+        bool displaying_values;
 };
 
 

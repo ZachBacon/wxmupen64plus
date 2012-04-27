@@ -31,41 +31,66 @@ MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(
     if (!(start_address & 0x3)) // already aligned
     {
         if (len & 0x3)
-            len = (len + 4) & ~0x3;
-        realdata = (uint8_t *)malloc(len);
-        memcpy(realdata, data_, len);
-        data = realdata;
+            len = (len + 4) & ~0x3; // Confusing stuff: should just use local var instead of no-longer-needed arg?
+
+        if (len <= sizeof(uint8_t *)) // No need to do malloc(sizeof(pointer)), just use the pointer as buffer :p
+        {
+            memcpy(&realdata, data_, len); // This way allows using extra size of 64-bit architechture pointers,
+            data = (uint8_t *)&realdata;   // but hardcoding len as 4 would optimize better
+        }                                  // (And this program won't likely ever be compiled as 64bit?)
+        else
+        {
+            realdata = (uint8_t *)malloc(len);
+            memcpy(realdata, data_, len);
+            data = realdata;
+        }
     }
     else
     {
-        realdata = (uint8_t *)malloc((length + 4) & ~0x3);
-        memcpy(realdata, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
-        data = realdata + (start_address & 0x3);
+        if (((length + 4) & ~0x3) <= sizeof(uint8_t))
+        {
+            memcpy(&realdata, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
+            data = (uint8_t *)&realdata + (start_address & 0x3);
+        }
+        else
+        {
+            realdata = (uint8_t *)malloc((length + 4) & ~0x3);
+            memcpy(realdata, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
+            data = realdata + (start_address & 0x3);
+        }
     }
 }
 
 MemChunk::MemChunk(MemChunk &&other)
 {
-    data = other.data;
     realdata = other.realdata;
     start_address = other.start_address;
     length = other.length;
+    if (((uint32_t)other.data & ~0x3) == (uint32_t)&other.realdata)
+        data = (uint8_t *)&realdata;
+    else
+        data = other.data;
+
     other.realdata = 0;
 }
 
 MemChunk &MemChunk::operator=(MemChunk &&other)
 {
-    data = other.data;
-    realdata = other.realdata;
     start_address = other.start_address;
     length = other.length;
+    realdata = other.realdata;
+    if (((uint32_t)other.data & ~0x3) == (uint32_t)&other.realdata)
+        data = (uint8_t *)&realdata;
+    else
+        data = other.data;
+
     other.realdata = 0;
     return *this;
 }
 
 MemChunk::~MemChunk()
 {
-    if (realdata)
+    if (realdata && (((uint32_t)data & ~0x3) != (uint32_t)&realdata))
         free(realdata);
 }
 
@@ -82,10 +107,10 @@ MemSearchResult &MemSearchResult::operator=(MemSearchResult &&other)
     return *this;
 }
 
-void MemSearchResult::AddChunk(MemChunk &chunk)
+void MemSearchResult::AddChunk(void *data, uint32_t length, uint32_t address)
 {
-    mem_usage += chunk.length;
-    chunks.push_back(move(chunk));
+    mem_usage += length;
+    chunks.emplace_back(data, length, address);
 }
 
 MemSearch::MemSearch()
@@ -119,8 +144,11 @@ void MemSearch::NewSearch(uint32_t beg, uint32_t end)
 {
     MemSearchResult base;
     uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
-    MemChunk everything(rdram + beg, end - beg + 1, 0);
-    base.AddChunk(everything);
+    if ((end - beg + 1) & 0x3)
+        base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), end - beg + 1, beg & ~0x3);
+    else
+        base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), (end - beg + 5) & ~0x3 , beg & ~0x3);
+
     undo_list.push_back(move(base));
     undo_memusage += (end - beg + 1);
     undo_pos++;
@@ -251,16 +279,14 @@ void MemSearch::Filter(compare op, bool initial_filter)
             {
                 if (new_chunk_beg)
                 {
-                    MemChunk new_chunk((rdram + new_chunk_beg - 1), j - (new_chunk_beg - 1) + chunk.start_address, new_chunk_beg - 1);
-                    new_result.AddChunk(new_chunk);
+                    new_result.AddChunk((rdram + new_chunk_beg - 1), j - (new_chunk_beg - 1) + chunk.start_address, new_chunk_beg - 1);
                     new_chunk_beg = 0;
                 }
             }
         }
         if (new_chunk_beg)
         {
-            MemChunk new_chunk((rdram + new_chunk_beg - 1), j - (new_chunk_beg - 1) + chunk.start_address, new_chunk_beg - 1);
-            new_result.AddChunk(new_chunk);
+            new_result.AddChunk((rdram + new_chunk_beg - 1), j - (new_chunk_beg - 1) + chunk.start_address, new_chunk_beg - 1);
         }
     }
 
@@ -268,6 +294,7 @@ void MemSearch::Filter(compare op, bool initial_filter)
     if (initial_filter)
     {
         undo_list[0] = move(new_result);
+        undo_memusage = 0;
     }
     else
     {
@@ -304,6 +331,7 @@ enum
 MemSearchPanel::MemSearchPanel(DebuggerFrame *parent, int id, int type, DebugConfigSection &config) : DebugPanel(parent, id, type)
 {
     first_filter = true;
+    displaying_values = false;
 
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL), *filtersizer = new wxBoxSizer(wxVERTICAL);
 
@@ -464,8 +492,8 @@ wxString U64Format(uint8_t *data)
 
 char deci[] = "%d", h8[] = "%02X", h16[] = "%04X", h32[] = "%08X", fl[] = "%f"; // sigh
 
-template<typename type_, class formatfunc>
-void MemSearchPanel::Filter(formatfunc valueformat)
+template<typename type_>
+void MemSearchPanel::Filter()
 {
     if (radio_custom->GetValue())
     {
@@ -517,11 +545,10 @@ void MemSearchPanel::Filter(formatfunc valueformat)
         }
     }
 
-    UpdateList(sizeof(type_), valueformat);
+    GenerateList();
 }
 
-template<class formatfunc>
-void MemSearchPanel::UpdateList(uint32_t value_size, formatfunc valueformat)
+void MemSearchPanel::GenerateList()
 {
     if (first_filter)
         first_filter = false;
@@ -531,12 +558,13 @@ void MemSearchPanel::UpdateList(uint32_t value_size, formatfunc valueformat)
     MemSearchResult *result = search.GetResult();
     vector<MemChunk> *chunks = result->GetChunks();
     uint32_t memusage = result->MemUsage();
-    if (memusage > value_size * 1000)
+    if (memusage > value_size * 1000 || memusage == 0)
     {
         wxVector<wxVariant> value;
         value.push_back(wxString::Format("(%d results)", memusage / value_size));
         value.push_back(wxEmptyString);
         list->AppendItem(value);
+        displaying_values = false;
     }
     else
     {
@@ -547,10 +575,68 @@ void MemSearchPanel::UpdateList(uint32_t value_size, formatfunc valueformat)
             {
                 wxVector<wxVariant> values;
                 values.push_back(wxString::Format("+%06X", chunk.start_address + j));
-                values.push_back(valueformat(chunk.data + j));
+                values.push_back((*valueformat)(chunk.data + j));
                 list->AppendItem(values);
             }
         }
+        displaying_values = true;
+    }
+}
+
+void MemSearchPanel::UpdateList()
+{
+    if (!displaying_values)
+        return;
+
+    MemSearchResult *result = search.GetResult();
+    vector<MemChunk> *chunks = result->GetChunks();
+    int pos = 0;
+    uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
+    for (uint32_t i = 0; i < chunks->size(); i++)
+    {
+        MemChunk &chunk = (*chunks)[i];
+        for (uint32_t j = 0; j + value_size <= chunk.length; j += value_size)
+        {
+            list->SetTextValue((*valueformat)(rdram + chunk.start_address + j), pos, 1);
+            pos++;
+        }
+    }
+}
+
+void MemSearchPanel::UpdateVisibleList()
+{
+    if (!displaying_values)
+        return;
+
+    MemSearchResult *result = search.GetResult();
+    vector<MemChunk> *chunks = result->GetChunks();
+    int first_pos = list->GetViewStart().y;
+    int last_pos = first_pos + list->GetScrollPageSize(wxVERTICAL);
+    int pos = 0;
+    uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
+    for (uint32_t i = 0; i < chunks->size(); i++)
+    {
+        MemChunk &chunk = (*chunks)[i];
+        for (uint32_t j = 0; j + value_size <= chunk.length; j += value_size)
+        {
+            if (pos >= first_pos)
+                list->SetTextValue((*valueformat)(rdram + chunk.start_address + j), pos, 1);
+
+            pos++;
+            if (pos > last_pos)
+                return;
+        }
+    }
+}
+
+void MemSearchPanel::Update(bool vi)
+{
+    if (vi)
+        UpdateVisibleList();
+    else
+    {
+        UpdateList();
+        Print(wxString::Format("%d", list->GetScrollPageSize(wxVERTICAL)));
     }
 }
 
@@ -579,40 +665,84 @@ void MemSearchPanel::FilterEvent(wxCommandEvent &evt)
         address_low->Enable(false);
         address_hi->Enable(false);
         radio_old->SetLabel(_("Old value"));
+
+        switch (choice_valuetype->GetSelection())
+        {
+            case int8:
+                value_size = 1;
+                valueformat = &ValueFormat<int8_t, deci>;
+            break;
+            case uint8:
+                value_size = 1;
+                valueformat = &ValueFormat<uint8_t, h8>;
+            break;
+            case int16:
+                value_size = 2;
+                valueformat = &ValueFormat<int16_t, deci>;
+            break;
+            case uint16:
+                value_size = 2;
+                valueformat = &ValueFormat<uint16_t, h16>;
+            break;
+            case int32:
+                value_size = 4;
+                valueformat = &ValueFormat<int32_t, deci>;
+            break;
+            case uint32:
+                value_size = 4;
+                valueformat = &ValueFormat<uint32_t, h32>;
+            break;
+            case float32:
+                value_size = 4;
+                valueformat = &ValueFormat<float, fl>;
+            break;
+            case int64:
+                value_size = 8;
+                valueformat = &I64Format;
+            break;
+            case uint64:
+                value_size = 8;
+                valueformat = &U64Format;
+            break;
+            case float64:
+                value_size = 8;
+                valueformat = &ValueFormat<double, fl>;
+            break;
+        }
     }
     if (!first_filter || current_radio != radio_old_id) // Anything else than anything
     {
         switch (choice_valuetype->GetSelection())
         {
             case int8:
-                Filter<int8_t>(ValueFormat<int8_t, deci>);
+                Filter<int8_t>();
             break;
             case uint8:
-                Filter<uint8_t>(ValueFormat<uint8_t, h8>);
+                Filter<uint8_t>();
             break;
             case int16:
-                Filter<int16_t>(ValueFormat<int16_t, deci>);
+                Filter<int16_t>();
             break;
             case uint16:
-                Filter<uint16_t>(ValueFormat<uint16_t, h16>);
+                Filter<uint16_t>();
             break;
             case int32:
-                Filter<int32_t>(ValueFormat<int32_t, deci>);
+                Filter<int32_t>();
             break;
             case uint32:
-                Filter<uint32_t>(ValueFormat<uint32_t, h32>);
+                Filter<uint32_t>();
             break;
             case float32:
-                Filter<float>(ValueFormat<float, fl>);
+                Filter<float>();
             break;
             case int64:
-                Filter<int64_t>(I64Format);
+                Filter<int64_t>();
             break;
             case uint64:
-                Filter<uint64_t>(U64Format);
+                Filter<uint64_t>();
             break;
             case float64:
-                Filter<double>(ValueFormat<double, fl>);
+                Filter<double>();
             break;
         }
     }
@@ -711,18 +841,26 @@ void MemSearchPanel::RClickMenu(wxContextMenuEvent &evt)
     PopupMenu(&menu);
 }
 
+void MemSearchPanel::Clear()
+{
+    search.Clear();
+    list->DeleteAllItems();
+    choice_valuetype->Enable();
+    address_hi->Enable();
+    address_low->Enable();
+    previous_choice = choice_cmp->GetSelection();
+    radio_old->SetLabel(_("Anything"));
+    first_filter = true;
+    displaying_values = false;
+}
+
 void MemSearchPanel::RClickEvent(wxCommandEvent &evt)
 {
     int id = evt.GetId();
     switch (id)
     {
         case menu_clear:
-            search.Clear();
-            list->DeleteAllItems();
-            choice_valuetype->Enable();
-            previous_choice = choice_cmp->GetSelection();
-            radio_old->SetLabel(_("Anything"));
-            first_filter = true;
+            Clear();
         break;
         case menu_undo:
         case menu_redo:
@@ -731,39 +869,7 @@ void MemSearchPanel::RClickEvent(wxCommandEvent &evt)
             else
                 search.Redo();
 
-            switch (choice_valuetype->GetSelection())
-            {
-                case int8:
-                    UpdateList(1, ValueFormat<int8_t, deci>);
-                break;
-                case uint8:
-                    UpdateList(1, ValueFormat<uint8_t, h8>);
-                break;
-                case int16:
-                    UpdateList(2, ValueFormat<int16_t, deci>);
-                break;
-                case uint16:
-                    UpdateList(2, ValueFormat<uint16_t, h16>);
-                break;
-                case int32:
-                    UpdateList(4, ValueFormat<int32_t, deci>);
-                break;
-                case uint32:
-                    UpdateList(4, ValueFormat<uint32_t, h32>);
-                break;
-                case float32:
-                    UpdateList(4, ValueFormat<float, fl>);
-                break;
-                case int64:
-                    UpdateList(4, I64Format);
-                break;
-                case uint64:
-                    UpdateList(4, U64Format);
-                break;
-                case float64:
-                    UpdateList(4, ValueFormat<double, fl>);
-                break;
-            }
+            GenerateList();
         break;
         default:
         break;
