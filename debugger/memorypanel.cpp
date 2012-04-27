@@ -287,6 +287,8 @@ void MemoryWindow::RClickEvent(wxCommandEvent &evt)
                 length = 4;
             break;
             default:
+                type = 0;
+                length = 0;
             break;
         }
         wxString name;

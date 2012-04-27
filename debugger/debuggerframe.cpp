@@ -676,7 +676,7 @@ void DebuggerFrame::LoadGameValues()
         {
             if (osal_insensitive_strcmp(section.name, "breakpoint") == 0 && section.num_values >= 4)
             {
-                uint32_t address, length, type;
+                uint32_t address, length, type = 0;
                 wxString name;
 
                 name = wxString::FromUTF8(section.GetValue("name", ""));
