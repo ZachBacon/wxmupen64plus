@@ -634,10 +634,7 @@ void MemSearchPanel::Update(bool vi)
     if (vi)
         UpdateVisibleList();
     else
-    {
         UpdateList();
-        Print(wxString::Format("%d", list->GetScrollPageSize(wxVERTICAL)));
-    }
 }
 
 void MemSearchPanel::FilterEvent(wxCommandEvent &evt)
