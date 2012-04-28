@@ -30,7 +30,7 @@ Cmd breakcmd = { &DebugConsole::CmdBreak, "\"b|break|breakpoint <opt>\" Manipula
     \"a|add <type> <address> [length] [name]\" Adds a new breakpoint\n\
     \"d|del|delete <name|address>\" Deletes breakpoint\n    \"dis|disable <name|address>\" Disables breakpoint\n\
     \"ena|enable <name|address>\" Enables previously disabled breakpoint\n    \"l|list\" Lists all breakpoints\n\
-If there are multiple breakpoints with same name, all are affected\
+If there are multiple breakpoints with same name, all are affected\n\
 Type can be w, r, or x (write, read, execute) or any combination of above." };
 Cmd helpcmd = { &DebugConsole::CmdHelp, "\"h|help|?\" Helps poor people" };
 Cmd vibreakcmd = { &DebugConsole::CmdViBreak, "\"vi|vibreak\" Breaks at the next vertical interrupt." };
@@ -141,7 +141,7 @@ void DebugConsole::CmdBreak(wxString &cmd)
     }
     if (arg[0] == 'a' && (arg[1] == 0 || strcmp(arg, "add") == 0))
     {
-        const char *type_str = strtok(0, " "), *address_str = strtok(0, " "), *length_str = strtok(0, " "), *name = strtok(0, " ");
+        const char *type_str = strtok(0, " "), *address_str = strtok(0, " "), *length_str = strtok(0, " "), *name = strtok(0, "");
         if (!address_str)
         {
             Print(breakcmd.help);
@@ -189,7 +189,7 @@ void DebugConsole::CmdBreak(wxString &cmd)
     }
     else if (arg[0] == 'd')
     {
-        const char *name = strtok(0, " ");
+        const char *name = strtok(0, "");
         if (!name)
         {
             Print(breakcmd.help);
@@ -214,7 +214,7 @@ void DebugConsole::CmdBreak(wxString &cmd)
     }
     else if (arg[0] == 'e' && (strcmp(arg, "ena") == 0 || strcmp(arg, "enable") == 0))
     {
-        const char *name = strtok(0, " ");
+        const char *name = strtok(0, "");
         if (!name)
         {
             Print(breakcmd.help);
@@ -239,7 +239,7 @@ void DebugConsole::CmdBreak(wxString &cmd)
             char type_str[4], *type_pos = type_str, type = bpt->GetType();
             if (type & BREAK_TYPE_READ)
                 *(type_pos++) = 'r';
-            if (type & BREAK_TYPE_READ)
+            if (type & BREAK_TYPE_WRITE)
                 *(type_pos++) = 'w';
             if (type & BREAK_TYPE_EXECUTE)
                 *(type_pos++) = 'x';

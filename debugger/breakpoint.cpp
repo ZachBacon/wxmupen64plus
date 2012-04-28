@@ -71,7 +71,7 @@ bool BreakpointInterface::Add(Breakpoint *bpt)
 
     for (int i = 0; i < bpt->length; i++)
         breakmap->insert(pair<uint32_t, Breakpoint *>(bpt->address + i, bpt));
-    breaks->insert(pair<wxString *, Breakpoint *>(&bpt->name,bpt));
+    breaks->insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
     return true;
 }
 
@@ -80,9 +80,23 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
     if (Breakpoint::IsValid(name, address, length, type) != BREAK_VALID)
         return false;
 
+    if (name != bpt->name)
+    {
+        for (auto range = breaks->equal_range(&bpt->name); range.first != range.second; ++range.first)
+        {
+            if (range.first->second == bpt)
+            {
+                breaks->erase(range.first);
+                break;
+            }
+        }
+        bpt->name = name;
+        breaks->insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
+    }
+
     if (!bpt->enabled)
     {
-        bpt->SetValues(name, address, length, type);
+        bpt->SetValues(address, length, type);
         return true;
     }
     if (address != bpt->address || length != bpt->length)
@@ -96,7 +110,7 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
         for (int i = 0; i < length; i++)
             breakmap->insert(pair<uint32_t, Breakpoint *>(address + i, bpt));
     }
-    bpt->SetValues(name, address, length, type);
+    bpt->SetValues(address, length, type);
     breakpoint raw_bpt;
     raw_bpt.address = address;
     raw_bpt.endaddr = address + length - 1;
@@ -133,6 +147,10 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
 unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name, int *amt)
 {
     int count = breaks->count(&name);
+    *amt = count;
+    if (!count)
+        return 0;
+
     unique_ptr<Breakpoint *[]> ret(new Breakpoint*[count]);
     auto range = breaks->equal_range(&name);
     auto it = range.first;
@@ -140,7 +158,6 @@ unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name,
     {
         ret[i] = it->second;
     }
-    *amt = count;
     return ret;
 }
 
@@ -188,7 +205,7 @@ void BreakpointInterface::Clear()
     for (auto it = breaks->begin(); it != breaks->end(); ++it)
     {
         Breakpoint *bpt = it->second;
-        
+
         if (bpt->id != -1)
             (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
 
@@ -222,6 +239,13 @@ Breakpoint::~Breakpoint()
 void Breakpoint::SetValues(const wxString &name_, uint32_t address_, int length_, char type_)
 {
     name = name_;
+    type = type_;
+    address = address_;
+    length = length_;
+}
+
+void Breakpoint::SetValues(uint32_t address_, int length_, char type_)
+{
     type = type_;
     address = address_;
     length = length_;

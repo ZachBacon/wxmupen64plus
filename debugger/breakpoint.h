@@ -84,6 +84,8 @@ class Breakpoint
     private:
         // Setting values outside of creation should be done through BreakpointInterface
         void SetValues(const wxString &name, uint32_t address, int length, char type);
+        void SetValues(uint32_t address_, int length_, char type_);
+
         wxString name;
         int id;
         uint32_t address;

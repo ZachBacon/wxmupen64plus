@@ -553,7 +553,19 @@ Breakpoint *DebuggerFrame::FindBreakpoint(uint32_t address, uint32_t length)
 
 std::unique_ptr<Breakpoint *[]> DebuggerFrame::FindBreakpointsByName(const wxString &name, int *amt)
 {
-    return breakpoints->FindByName(name, amt);
+    auto ret = breakpoints->FindByName(name, amt);
+    if (!ret) // Maybe name is an address
+    {
+        uint32_t address = strtoul(name, 0, 16);
+        Breakpoint *bpt = FindBreakpoint(address);
+        if (bpt)
+        {
+            ret.reset(new Breakpoint *[1]);
+            ret[0] = bpt;
+            *amt = 1;
+        }
+    }
+    return ret;
 }
 
 const BreakContainer *DebuggerFrame::GetBreakpoints()
