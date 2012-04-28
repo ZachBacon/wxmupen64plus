@@ -145,9 +145,9 @@ void MemSearch::NewSearch(uint32_t beg, uint32_t end)
     MemSearchResult base;
     uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
     if ((end - beg + 1) & 0x3)
-        base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), end - beg + 1, beg & ~0x3);
-    else
         base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), (end - beg + 5) & ~0x3 , beg & ~0x3);
+    else
+        base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), end - beg + 1, beg & ~0x3);
 
     undo_list.push_back(move(base));
     undo_memusage += (end - beg + 1);
