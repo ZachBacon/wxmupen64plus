@@ -166,53 +166,25 @@ type_ magicswap(uint8_t *pointer);
 template<>
 int8_t magicswap<int8_t>(uint8_t *pointer)
 {
-    switch ((uint32_t)pointer & 3)
-    {
-        default:
-        case 0:
-            return *(int8_t *)(pointer + 3);
-        case 1:
-            return *(int8_t *)(pointer + 1);
-        case 2:
-            return *(int8_t *)(pointer - 1);
-        case 3:
-            return *(int8_t *)(pointer - 3);
-    }
+    return *(int8_t *)((uint32_t)pointer ^ 3);
 }
 
 template<>
 uint8_t magicswap<uint8_t>(uint8_t *pointer)
 {
-    switch ((uint32_t)pointer & 3)
-    {
-        default:
-        case 0:
-            return *(pointer + 3);
-        case 1:
-            return *(pointer + 1);
-        case 2:
-            return *(pointer - 1);
-        case 3:
-            return *(pointer - 3);
-    }
+    return *(uint8_t *)((uint32_t)pointer ^ 3);
 }
 
 template<>
 int16_t magicswap<int16_t>(uint8_t *pointer)
 {
-    if ((uint32_t)pointer & 2)
-        return *(int16_t *)(pointer - 2);
-    else
-        return *(int16_t *)(pointer + 2);
+    return *(int16_t *)((uint32_t)pointer ^ 2);
 }
 
 template<>
 uint16_t magicswap<uint16_t>(uint8_t *pointer)
 {
-    if ((uint32_t)pointer & 2)
-        return *(uint16_t *)(pointer);
-    else
-        return *(uint16_t *)(pointer + 2);
+    return *(uint16_t *)((uint32_t)pointer ^ 2);
 }
 
 template<>
