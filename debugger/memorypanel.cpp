@@ -75,6 +75,11 @@ MemoryPanel::MemoryPanel(DebuggerFrame *parent, int id, int type, DebugConfigSec
     offset_chooser->Bind(wxEVT_COMMAND_TEXT_ENTER, &MemoryPanel::Goto, this);
 }
 
+MemoryPanel::~MemoryPanel()
+{
+    delete[] data;
+}
+
 void MemoryPanel::SaveConfig(DebugConfigOut &config, DebugConfigSection &section)
 {
     section.num_values = 1;
@@ -122,10 +127,6 @@ uint8_t *MemoryPanel::RequestData(int size, int relative_offset)
     if (relative_offset != 0 || size > data_size || data_changed)
         SetPosition(current_position + relative_offset, size);
     return data;
-}
-
-MemoryPanel::~MemoryPanel()
-{
 }
 
 void MemoryPanel::SetValue(int pos, int value)

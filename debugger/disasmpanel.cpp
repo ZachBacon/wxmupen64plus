@@ -109,6 +109,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSec
 
 DisasmPanel::~DisasmPanel()
 {
+    delete[] data;
+    delete[] data_strings;
 }
 
 void DisasmPanel::Update(bool vi)

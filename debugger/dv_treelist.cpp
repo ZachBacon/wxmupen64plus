@@ -57,6 +57,7 @@ DataViewTreeListModel::DataViewTreeListModel(int cols_)
 
 DataViewTreeListModel::~DataViewTreeListModel()
 {
+    Clear();
     delete (dvtlGroup *)root_item.val;
 }
 

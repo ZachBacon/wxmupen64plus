@@ -21,7 +21,7 @@ struct Cmd
     const char *help;
 };
 WX_DECLARE_STRING_HASH_MAP(Cmd, CommandMap);
-CommandMap *DebugConsole::commands = 0;
+CommandMap DebugConsole::commands;
 
 Cmd playcmd = { &DebugConsole::CmdPlay, "\"play|run\" Continues the execution" };
 Cmd pausecmd = { &DebugConsole::CmdPause, "\"pause|stop\" Pauses the execution" };
@@ -46,31 +46,31 @@ enum
 
 void DebugConsole::InitCommands()
 {
-    commands = new CommandMap;
-    (*commands)["play"] = playcmd;
-    (*commands)["run"] = playcmd;
-    (*commands)["pause"] = pausecmd;
-    (*commands)["stop"] = pausecmd;
-    (*commands)["step"] = stepcmd;
-    (*commands)["breakpoint"] = breakcmd;
-    (*commands)["break"] = breakcmd;
-    (*commands)["b"] = breakcmd;
-    (*commands)["help"] = helpcmd;
-    (*commands)["h"] = helpcmd;
-    (*commands)["?"] = helpcmd;
-    (*commands)["ohmygodhelpmeplease"] = helpcmd;
-    (*commands)["vibreak"] = vibreakcmd;
-    (*commands)["vi"] = vibreakcmd;
-    (*commands)["cls"] = clearcmd;
-    (*commands)["clear"] = clearcmd;
-    (*commands)["text"] = textcmd;
-    (*commands)["ni"] = nicmd;
+    commands["play"] = playcmd;
+    commands["run"] = playcmd;
+    commands["pause"] = pausecmd;
+    commands["stop"] = pausecmd;
+    commands["step"] = stepcmd;
+    commands["breakpoint"] = breakcmd;
+    commands["break"] = breakcmd;
+    commands["b"] = breakcmd;
+    commands["help"] = helpcmd;
+    commands["h"] = helpcmd;
+    commands["?"] = helpcmd;
+    commands["ohmygodhelpmeplease"] = helpcmd;
+    commands["vibreak"] = vibreakcmd;
+    commands["vi"] = vibreakcmd;
+    commands["cls"] = clearcmd;
+    commands["clear"] = clearcmd;
+    commands["text"] = textcmd;
+    commands["ni"] = nicmd;
 }
 
 DebugConsole::DebugConsole(DebuggerFrame *parent_, int id, int type) : DebugPanel(parent_, id, type)
 {
-    if (!commands)
+    if (commands.empty())
         InitCommands();
+
     wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
     SetSizer(sizer);
     in = new wxTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
@@ -293,8 +293,8 @@ void DebugConsole::CmdHelp(wxString &cmd)
     }
     else
     {
-        CommandMap::iterator it = commands->find(arg);
-        if(it != commands->end())
+        CommandMap::iterator it = commands.find(arg);
+        if(it != commands.end())
             Print(it->second.help);
         else
             Print(wxString::Format("Unknown command \"%s\". Type \"help\" for list of commands.", cmd));
@@ -309,8 +309,8 @@ void DebugConsole::Command(wxCommandEvent &evt)
 
     cmd.MakeLower(); // Maybe shouldn't?
     wxString cmd_name = cmd.substr(0, cmd.find_first_of(' '));
-    CommandMap::iterator it = commands->find(cmd_name);
-    if(it != commands->end())
+    CommandMap::iterator it = commands.find(cmd_name);
+    if(it != commands.end())
     {
         CmdFunc func = it->second.func;
         ((this)->*(func))(cmd);

@@ -53,14 +53,14 @@ class BreakpointInterface
 
         Breakpoint *Find(uint32_t address, uint32_t length = 1);
         std::unique_ptr<Breakpoint *[]> FindByName(const wxString &name, int *amt);
-        const BreakContainer *GetAllBreakpoints() { return breaks; }
+        const BreakContainer *GetAllBreakpoints() { return &breaks; }
 
     private:
         bool RawAdd(Breakpoint *bpt);
         void Remove(Breakpoint *bpt);
         // I don't think hash table is the best option for data ranges far aways each other, but it shall be enough for now
-        std::unordered_map<uint32_t, Breakpoint *> *breakmap;
-        BreakContainer *breaks;
+        std::unordered_map<uint32_t, Breakpoint *> breakmap;
+        BreakContainer breaks;
 };
 
 class Breakpoint

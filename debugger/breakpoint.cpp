@@ -34,8 +34,7 @@ size_t HashStringPointer::operator()(const wxString *val) const
 
 BreakpointInterface::BreakpointInterface()
 {
-    breakmap = new unordered_map<uint32_t, Breakpoint *> ;
-    breaks = new BreakContainer;
+
 }
 
 BreakpointInterface::~BreakpointInterface()
@@ -70,8 +69,8 @@ bool BreakpointInterface::Add(Breakpoint *bpt)
         return false;
 
     for (int i = 0; i < bpt->length; i++)
-        breakmap->insert(pair<uint32_t, Breakpoint *>(bpt->address + i, bpt));
-    breaks->insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
+        breakmap.insert(pair<uint32_t, Breakpoint *>(bpt->address + i, bpt));
+    breaks.insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
     return true;
 }
 
@@ -82,16 +81,16 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
 
     if (name != bpt->name)
     {
-        for (auto range = breaks->equal_range(&bpt->name); range.first != range.second; ++range.first)
+        for (auto range = breaks.equal_range(&bpt->name); range.first != range.second; ++range.first)
         {
             if (range.first->second == bpt)
             {
-                breaks->erase(range.first);
+                breaks.erase(range.first);
                 break;
             }
         }
         bpt->name = name;
-        breaks->insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
+        breaks.insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
     }
 
     if (!bpt->enabled)
@@ -106,9 +105,9 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
             return false;
 
         for (int i = 0; i < bpt->length; i++)
-            breakmap->erase(bpt->address + i);
+            breakmap.erase(bpt->address + i);
         for (int i = 0; i < length; i++)
-            breakmap->insert(pair<uint32_t, Breakpoint *>(address + i, bpt));
+            breakmap.insert(pair<uint32_t, Breakpoint *>(address + i, bpt));
     }
     bpt->SetValues(address, length, type);
     breakpoint raw_bpt;
@@ -131,14 +130,14 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
     bpt->enabled = false;
 
     for (int i = 0; i < bpt->length; i++)
-        breakmap->erase(bpt->address + i);
+        breakmap.erase(bpt->address + i);
 
-    auto range = breaks->equal_range(&bpt->name);
+    auto range = breaks.equal_range(&bpt->name);
     for (auto it = range.first; it != range.second; ++it)
     {
         if (it->second == bpt)
         {
-            breaks->erase(it);
+            breaks.erase(it);
             break;
         }
     }
@@ -146,13 +145,13 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
 
 unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name, int *amt)
 {
-    int count = breaks->count(&name);
+    int count = breaks.count(&name);
     *amt = count;
     if (!count)
         return 0;
 
     unique_ptr<Breakpoint *[]> ret(new Breakpoint*[count]);
-    auto range = breaks->equal_range(&name);
+    auto range = breaks.equal_range(&name);
     auto it = range.first;
     for (int i = 0; i < count; i++, ++it)
     {
@@ -187,13 +186,10 @@ void BreakpointInterface::Disable(Breakpoint *bpt)
 
 Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)
 {
-    if (!breakmap)
-        return 0;
-
-    std::unordered_map<uint32_t, Breakpoint *>::iterator it, end = breakmap->end();
+    std::unordered_map<uint32_t, Breakpoint *>::iterator it, end = breakmap.end();
     for (uint32_t i = 0; i < length; i++)
     {
-        it = breakmap->find(address + i);
+        it = breakmap.find(address + i);
         if (it != end)
             return it->second;
     }
@@ -202,7 +198,7 @@ Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)
 
 void BreakpointInterface::Clear()
 {
-    for (auto it = breaks->begin(); it != breaks->end(); ++it)
+    for (auto it = breaks.begin(); it != breaks.end(); ++it)
     {
         Breakpoint *bpt = it->second;
 
@@ -211,8 +207,8 @@ void BreakpointInterface::Clear()
 
         delete bpt;
     }
-    breakmap->clear();
-    breaks->clear();
+    breakmap.clear();
+    breaks.clear();
 }
 
 // ----------------------------------------------------------------------

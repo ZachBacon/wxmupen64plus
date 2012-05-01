@@ -105,6 +105,8 @@ class MemSearchPanel : public DebugPanel
         void Clear();
 
     private:
+        static int dvlc_first_item;
+
         template<typename type> void Filter();
         void GenerateList();
         void UpdateList();

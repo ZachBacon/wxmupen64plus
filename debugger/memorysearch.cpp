@@ -14,6 +14,9 @@
 
 #include "../mupen64plusplus/MupenAPI.h"
 #include "debugconfig.h"
+#include "colors.h"
+
+int MemSearchPanel::dvlc_first_item = -1; // y pos for first item in wxDataViewListCtrl, x is just assumed to be 1
 
 enum
 {
@@ -580,10 +583,33 @@ void MemSearchPanel::UpdateVisibleList()
     if (!displaying_values)
         return;
 
+    // Detecting scroll position without using scrolling functions
+    // as they can't be used with native controls
+
+    if (dvlc_first_item == -1)
+    {
+        for (int i = 0; dvlc_first_item == -1; i++) // Is there a better way to do this?
+        {
+            wxDataViewItem item;
+            wxDataViewColumn *col;
+            list->HitTest(wxPoint(0, i), item, col);
+            if (item.GetID() != 0)
+                dvlc_first_item = i;
+        }
+    }
+
+    wxDataViewItem item;
+    wxDataViewColumn *col;
+    list->HitTest(wxPoint(0, dvlc_first_item), item, col);
+    int first_pos = (int)item.GetID() - 1;
+    list->HitTest(wxPoint(0, list->GetSize().y), item, col);
+    int last_pos = (int)item.GetID() - 2; // Is this always -2? It seems weird
+    if (last_pos == -2)     // Id was 0, so list had not enough entries to fill it
+        last_pos = 10000;   // So any high number is fine
+
     MemSearchResult *result = search.GetResult();
     vector<MemChunk> *chunks = result->GetChunks();
-    int first_pos = list->GetViewStart().y;
-    int last_pos = first_pos + list->GetScrollPageSize(wxVERTICAL);
+
     int pos = 0;
     uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
     for (uint32_t i = 0; i < chunks->size(); i++)

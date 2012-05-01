@@ -321,16 +321,7 @@ void DebuggerFrame::PaneCloseEvent(wxAuiManagerEvent &evt)
 
 void DebuggerFrame::SafeAuiUpdate()
 {
-    if (aui_mode >= 2) // Stuff breaks otherwise
-    {
-        double old_constraint[2];
-        aui->GetDockSizeConstraint(&old_constraint[0], &old_constraint[1]);
-        aui->SetDockSizeConstraint(1, 1);
-        aui->Update();
-        aui->SetDockSizeConstraint(old_constraint[0], old_constraint[1]);
-    }
-    else
-        aui->Update();
+    aui->Update();
 }
 
 bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
@@ -938,6 +929,7 @@ void DebuggerFrame::MenuAuiMode(wxCommandEvent &evt)
                         pane.BestSize(pane.rect.GetSize()); // Without this and SetDockSizeConstraint unlocking will bug
                     }
                 }
+                aui->SetDockSizeConstraint(1, 1);
                 aui->Update();
             }
             else
@@ -951,11 +943,8 @@ void DebuggerFrame::MenuAuiMode(wxCommandEvent &evt)
                         pane.Floatable(true);
                     }
                 }
-                double old_constraint[2];
-                aui->GetDockSizeConstraint(&old_constraint[0], &old_constraint[1]);
-                aui->SetDockSizeConstraint(1, 1);
                 aui->Update();
-                aui->SetDockSizeConstraint(old_constraint[0], old_constraint[1]);
+                aui->SetDockSizeConstraint(1.0 / 3.0, 1.0 / 3.0);
             }
         break;
     }

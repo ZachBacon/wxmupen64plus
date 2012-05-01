@@ -32,7 +32,7 @@ class DebugConsole : public DebugPanel
         void RClickEvent(wxCommandEvent &evt);
 
     private:
-        static CommandMap *commands;
+        static CommandMap commands;
         wxTextCtrl *in;
         wxTextCtrl *out;
 
