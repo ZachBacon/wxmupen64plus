@@ -10,6 +10,7 @@ class wxAuiNotebookEvent;
 class wxTextCtrl;
 class RegisterTab;
 class wxStaticText;
+class RegisterPanel;
 
 enum RegisterType
 {
@@ -65,6 +66,8 @@ class RegisterTab : public wxScrolledWindow
 
         virtual void RClickMenu() {}
         virtual void MenuClick(wxCommandEvent &evt) {}
+
+        RegisterPanel *GetParent() { return (RegisterPanel *)wxWindow::GetParent()->GetParent(); } // ugh
 
     protected:
         int reg_name_len;

@@ -9,6 +9,7 @@
 #include "../mupen64plusplus/MupenAPI.h"
 #include "colors.h"
 #include "debugconfig.h"
+#include "debuggerframe.h"
 
 #define singlereg_height (g_textctrl_default.y + 3)
 
@@ -20,6 +21,8 @@ enum
     cop1_float32,
     cop1_float64,
     cop1_raw,
+    value_1,
+    value_2
 };
 
 const char *gpr_names[] =
@@ -75,11 +78,11 @@ SingleRegister::SingleRegister(RegisterTab *parent_, int id, const char *name, R
 
     if (type == REGISTER_INT64 || type == REGISTER_INT32)
     {
-        value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
+        value = new wxTextCtrl(this, value_1, "", wxPoint(reg_name_len, 1));
         value->SetSize(g_number_width * 10.5, -1);
         if (type == REGISTER_INT64)
         {
-            value2 = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len + g_number_width * 11, 1));
+            value2 = new wxTextCtrl(this, value_2, "", wxPoint(reg_name_len + g_number_width * 11, 1));
             value2->SetSize(g_number_width * 10.5, -1);
             value2->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
             value2->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
@@ -87,7 +90,7 @@ SingleRegister::SingleRegister(RegisterTab *parent_, int id, const char *name, R
     }
     else
     {
-        value = new wxTextCtrl(this, -1, "", wxPoint(reg_name_len, 1));
+        value = new wxTextCtrl(this, value_1, "", wxPoint(reg_name_len, 1));
         value->SetSize(g_number_width * 20, -1);
     }
     SetSize(g_number_width * 26, 28);
@@ -103,7 +106,14 @@ SingleRegister::~SingleRegister()
 
 void SingleRegister::RClickEvent(wxCommandEvent &evt)
 {
-    switch (evt.GetId())
+    int id = evt.GetId();
+    if (type == REGISTER_INT64)
+    {
+        DebuggerFrame *frame = parent->GetParent()->GetParent(); // ^^
+        if (frame->DoFollow(id, GetInt()))
+            return;
+    }
+    switch (id)
     {
         case menu_reset:
             ResetValue();
@@ -120,6 +130,15 @@ void SingleRegister::RClickMenu(wxMouseEvent &evt)
 
     reset = new wxMenuItem(&menu, menu_reset, _("Reset value"));
     menu.Append(reset);
+
+    if (type == REGISTER_INT64 && evt.GetId() == value_2 && MemIsValid(GetInt()))
+    {
+        DebuggerFrame *frame = parent->GetParent()->GetParent(); // ^^
+        menu.AppendSeparator();
+        frame->MenuAppendDisasmFollow(&menu);
+        frame->MenuAppendMemoryFollow(&menu);
+    }
+
     menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &SingleRegister::RClickEvent, this);
     PopupMenu(&menu);
 }
@@ -208,7 +227,10 @@ void SingleRegister::ResetValue()
 
 uint64_t SingleRegister::GetInt()
 {
-    return strtoull(value->GetValue(), 0, 16);
+    if (type == REGISTER_INT64)
+        return (uint64_t)strtoull(value->GetValue(), 0, 16) << 32 | strtoull(value2->GetValue(), 0, 16);
+    else
+        return strtoull(value->GetValue(), 0, 16);
 }
 
 double SingleRegister::GetFloat()
@@ -230,8 +252,10 @@ void SingleRegister::SetType(RegisterType new_type)
     {
         if (!value2)
         {
-            value2 = new wxTextCtrl(this, -1, "", wxPoint(value->GetPosition().x + g_number_width * 11, 1));
+            value2 = new wxTextCtrl(this, value_2, "", wxPoint(value->GetPosition().x + g_number_width * 11, 1));
             value2->SetSize(g_number_width * 10.5, -1);
+            value2->Bind(wxEVT_COMMAND_TEXT_UPDATED, &SingleRegister::ValueChanged, this);
+            value2->Bind(wxEVT_RIGHT_UP, &SingleRegister::RClickMenu, this);
         }
         else
             value2->Show();

@@ -159,6 +159,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
     next_id = time(0);
     inited = false;
     vi_break = false;
+    running = false;
     vi_count = 0;
     pc = 0;
     aui_mode = 0;
@@ -808,13 +809,13 @@ void DebuggerFrame::MenuAppendDisasmFollow(wxMenu *menu)
 
 bool DebuggerFrame::DoFollow(int id, uint32_t address)
 {
-    if (id < ASMJMP_ID_START || id >PANELJMP_ID_LAST)
+    if (id < ASMJMP_ID_START || id > PANELJMP_ID_LAST)
         return false;
 
-    if (id > MEMJMP_ID_START)
-        mempanels[id % PANELJMP_MAX_ID_PER_TYPE]->Goto(address);
+    if (id >= MEMJMP_ID_START)
+        mempanels[id - MEMJMP_ID_START]->Goto(address);
     else // asm
-        disasmpanels[id]->Goto(address, 0);
+        disasmpanels[id - ASMJMP_ID_START]->Goto(address, 0);
 
     return true;
 }
