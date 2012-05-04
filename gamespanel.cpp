@@ -75,7 +75,7 @@ std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPtr sortData)
 {
     GamesPanel* self = (GamesPanel*)sortData;
-
+    
 #if defined(__WXMAC__) && !defined(__WXOSX_COCOA__)
     RomInfo& rom1 = self->m_roms[item1];
     RomInfo& rom2 = self->m_roms[item2];
@@ -86,8 +86,8 @@ int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPt
 
     //printf("Comparing <%s> and <%s>\n", (const char*)rom1.m_file_name.mb_str(),
     //    (const char*)rom2.m_file_name.mb_str());
-
-    if (self->m_curr_col == COLUMN_FILE)
+    
+    if (self->m_curr_col == COLUMN_FILE) 
     {
         return rom2.m_file_name.CmpNoCase( rom1.m_file_name );
     }
@@ -116,57 +116,57 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
     m_canvas = NULL;
     m_gamesPathParam = gamesPathParam;
     api->setListener(this);
-
+    
     m_width_param = NULL;
     m_height_param = NULL;
-
+    
     wxBoxSizer* oversizer = new wxBoxSizer(wxHORIZONTAL);
-
+    
     // ---- Buttons area
     wxBoxSizer* buttons = new wxBoxSizer(wxVERTICAL);
-
+    
     buttons->AddStretchSpacer();
-
-#ifdef WXDATADIR
-    wxString datadir = wxString(WXDATADIR) + wxFileName::GetPathSeparator();
+    
+#ifdef DATADIR
+    wxString datadir = wxString(DATADIR) + wxFileName::GetPathSeparator();
 #else
     wxString datadir = wxStandardPaths::Get().GetResourcesDir() + wxFileName::GetPathSeparator();
 #endif
 
-    wxBitmap icon_play(datadir + "play.png", wxBITMAP_TYPE_PNG);
+    wxBitmap icon_play(datadir + "play.png", wxBITMAP_TYPE_PNG);  
     m_play_button = new wxBitmapButton(this, wxID_ANY, icon_play, wxDefaultPosition, wxDefaultSize,
                                        wxBORDER_NONE);
     buttons->Add(m_play_button, 0, wxALL, 5);
-
-    wxBitmap icon_pause(datadir + "pause.png", wxBITMAP_TYPE_PNG);
+    
+    wxBitmap icon_pause(datadir + "pause.png", wxBITMAP_TYPE_PNG);  
     m_pause_button = new wxBitmapButton(this, wxID_ANY, icon_pause, wxDefaultPosition, wxDefaultSize,
                                        wxBORDER_NONE);
     buttons->Add(m_pause_button, 0, wxALL, 5);
-
+    
 	m_pause_button->SetCanFocus(false);
 	m_pause_button->Connect(m_pause_button->GetId(), wxEVT_SET_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
-
-    wxBitmap icon_stop(datadir + "stop.png", wxBITMAP_TYPE_PNG);
+	
+    wxBitmap icon_stop(datadir + "stop.png", wxBITMAP_TYPE_PNG);  
     m_stop_button = new wxBitmapButton(this, wxID_ANY, icon_stop, wxDefaultPosition, wxDefaultSize,
                                        wxBORDER_NONE);
     buttons->Add(m_stop_button, 0, wxALL, 5);
-
+    
 	m_stop_button->SetCanFocus(false);
 	m_stop_button->Connect(m_stop_button->GetId(), wxEVT_SET_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
-
+	
     buttons->AddStretchSpacer();
-
+    
 #ifdef __WXMSW__
     // On Windows, the default disabled look is indisinguishible from the enabled look, not sure
     // why... maybe it converts the image to greyscale but this is already a greyscale image
     m_play_button->SetBitmapDisabled( wxBitmap( icon_play.ConvertToImage().ConvertToDisabled(100) ) );
     m_pause_button->SetBitmapDisabled( wxBitmap( icon_pause.ConvertToImage().ConvertToDisabled(100) ) );
-    m_stop_button->SetBitmapDisabled( wxBitmap( icon_stop.ConvertToImage().ConvertToDisabled(100) ) );
+    m_stop_button->SetBitmapDisabled( wxBitmap( icon_stop.ConvertToImage().ConvertToDisabled(100) ) );    
 #endif
 
     // ---- List area
     m_list_sizer = new wxBoxSizer(wxVERTICAL);
-
+    
     wxString path;
     //if (m_gamesPathParam != NULL)
     {
@@ -179,38 +179,38 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
             wxLogWarning("Failed to read ROMs path from config file : %s", ex.what());
         }
     }
-
+    
     m_center_panel = new wxPanel(this);
-
+    
     m_dir_picker = new wxDirPickerCtrl(m_center_panel, wxID_ANY, path, _("Directory Picker"), wxDefaultPosition, wxDefaultSize,
                                        wxDIRP_DEFAULT_STYLE | wxDIRP_USE_TEXTCTRL);
     m_list_sizer->Add(m_dir_picker, 0, wxALL | wxEXPAND, 5);
 
     m_dir_picker->Connect(m_dir_picker->GetId(), wxEVT_COMMAND_DIRPICKER_CHANGED,
                           wxFileDirPickerEventHandler(GamesPanel::onPathChange), NULL, this);
-
+        
     m_item_list = new wxListCtrl(m_center_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                  wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES);
     m_list_sizer->Add(m_item_list, 1, wxALL | wxEXPAND, 5);
-
+    
     populateList();
-
+    
     /*
     m_status = new wxStaticText(this, wxID_ANY, _("Emulation is stopped"));
     buttons->Add(m_status, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
-
-    wxBitmap icon_cart(datadir + "mupen64cart.png", wxBITMAP_TYPE_PNG);
+    
+    wxBitmap icon_cart(datadir + "mupen64cart.png", wxBITMAP_TYPE_PNG);  
     wxStaticBitmap* icon = new wxStaticBitmap(this, wxID_ANY, icon_cart);
     buttons->Add(icon, 0, wxALL, 5);
     */
-
+    
     m_center_panel->SetSizer(m_list_sizer);
-
+    
     oversizer->Add(m_center_panel, 1, wxEXPAND);
     oversizer->Add(buttons, 0, wxEXPAND | wxRIGHT, 5);
-
+    
     SetSizer(oversizer);
-
+    
     // ---- Events ----
     m_play_button->Connect(m_play_button->GetId(), wxEVT_COMMAND_BUTTON_CLICKED,
                            wxCommandEventHandler(GamesPanel::onPlay), NULL, this);
@@ -220,10 +220,10 @@ GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* game
                            wxCommandEventHandler(GamesPanel::onStop), NULL, this);
     m_pause_button->Disable();
     m_stop_button->Disable();
-
+    
     m_item_list->Connect(m_item_list->GetId(), wxEVT_COMMAND_LIST_COL_CLICK,
                          wxListEventHandler(GamesPanel::onColClick), NULL, this);
-
+    
     Connect(wxID_ANY, wxMUPEN_STATE_CHANGE,
             wxCommandEventHandler(GamesPanel::onMupenStateChangeEvt), NULL, this);
     Connect(wxID_ANY, wxMUPEN_SAVE_SLOT_CHANGE,
@@ -245,16 +245,16 @@ void GamesPanel::populateList()
 {
     wxString path = m_dir_picker->GetPath();
     m_item_list->ClearAll();
-
+        
     if (path.IsEmpty()) return;
-
+    
     wxArrayString columns;              std::vector<int> sizes;
     columns.Add( _("File Name") );      sizes.push_back( 300 );
     columns.Add( _("Internal Name") );  sizes.push_back( 225 );
     //columns.Add( _("Good Name") );      sizes.push_back( 225 );
     columns.Add( _("Country") );        sizes.push_back( 75 );
     //columns.Add( _("Size") );        sizes.push_back( 75 );
-
+    
     const int count = columns.Count();
     for (int n=0; n<count; n++)
     {
@@ -264,22 +264,22 @@ void GamesPanel::populateList()
         col.SetWidth( sizes[n] );
         m_item_list->InsertColumn(n, col);
     }
-
+    
     m_roms = getRomsInDir(path);
-
+    
     const int item_amount = m_roms.size();
     for (int n=0; n<item_amount; n++)
     {
         RomInfo& curritem = m_roms[n];
-
+                
         wxListItem item;
         item.SetId(n);
         item.SetText( curritem.m_file_name );
-
+        
         Mupen64PlusPlus::RomInfo info;
-
+        
         long id = m_item_list->InsertItem( item );
-
+        
         if (id != -1)
         {
             std::map<wxString, Mupen64PlusPlus::RomInfo>::iterator elem = g_cache.find(curritem.m_full_path);
@@ -301,26 +301,26 @@ void GamesPanel::populateList()
                                 ex.what());
                 }
             }
-
+            
             curritem.m_country = info.country;
             curritem.m_internal_name = info.name;
-
+        
             // set value in first column
             m_item_list->SetItem(id, COLUMN_FILE, curritem.m_file_name);
-
+            
             // set value in second column
             m_item_list->SetItem(id, COLUMN_NAME, info.name);
-
+            
             // set value in third column
             //m_item_list->SetItem(id, 2, info.goodname);
-
+            
             // set value in fourth column
             m_item_list->SetItem(id, COLUMN_COUNTRY, info.country);
-
+            
             m_item_list->SetItemData(id, id);
         }
     } // end for
-
+    
     m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
 }
 
@@ -343,15 +343,15 @@ void GamesPanel::initGLCanvas()
         //m_canvas->Connect(wxID_ANY, wxEVT_KILL_FOCUS, wxFocusEventHandler(GamesPanel::wanderingFocus), NULL, this);
 
         ((wxFrame*)GetParent())->Layout();
-        ((wxFrame*)GetParent())->Refresh();
+        ((wxFrame*)GetParent())->Refresh();    
 
         // FIXME: ugly hack to force a full refresh
         ((wxFrame*)GetParent())->SetSize( ((wxFrame*)GetParent())->GetSize() );
     }
-
+    
     wxCommandEvent evt(wxMUPEN_INITED_GL_CANVAS, -1);
     wxGetApp().AddPendingEvent(evt);
-
+	
     if (m_canvas != NULL)
     {
         m_canvas->SetFocus();
@@ -392,7 +392,7 @@ void GamesPanel::onColClick(wxListEvent& evt)
     {
         m_curr_col = evt.GetColumn();
         m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
-    }
+    }  
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -400,17 +400,17 @@ void GamesPanel::onColClick(wxListEvent& evt)
 std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
 {
     std::vector<RomInfo> out;
-
+    
     wxArrayString children;
     // wxDIR_FILES is used to avoid very long processing (e.g. searching the entire disk if path is set to /...)
     const int count = wxDir::GetAllFiles(dirpath, &children, wxEmptyString, wxDIR_FILES);
-
+    
     assert(count == (int)children.Count());
-
+    
     for (int n=0; n<count; n++)
     {
         wxString filename = wxFileName::FileName(children[n]).GetFullName();
-
+        
         // roms typically end with "*.n64|*.z64|*.v64"
         if (filename.EndsWith("64") && !filename.StartsWith("."))
         {
@@ -418,7 +418,7 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
                                    filename, "", "") );
         }
     }
-
+    
     return out;
 }
 
@@ -427,7 +427,7 @@ std::vector<GamesPanel::RomInfo> GamesPanel::getRomsInDir(wxString dirpath)
 void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 {
     //killThread();
-
+    
     try
     {
         m_gamesPathParam->setStringValue(m_dir_picker->GetPath().ToStdString());
@@ -445,20 +445,20 @@ void GamesPanel::onPathChange(wxFileDirPickerEvent& event)
 void GamesPanel::onPlay(wxCommandEvent& evt)
 {
     //killThread();
-
+    
     if (m_api->getEmulationState() == M64EMU_PAUSED)
     {
         m_api->resumeEmulation();
         return;
     }
-
-    wxString path = m_dir_picker->GetPath();
+    
+    wxString path = m_dir_picker->GetPath();        
     if (path.IsEmpty())
     {
         wxBell();
         return;
     }
-
+    
     ptr_vector<ConfigSection>& config = wxGetApp().getConfig();
     for (int n = 0, found_sections = 0; n < config.size() && found_sections != 3; n++)
     {
@@ -479,7 +479,7 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
             found_sections |= 0x2;
         }
     }
-
+    
     if (m_width_param == NULL or m_height_param == NULL)
     {
         mplog_warning("GamesPanel", "Cannot find size parameters\n");
@@ -488,7 +488,7 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
     {
         m_previous_width = m_width_param->getIntValue();
         m_previous_height = m_height_param->getIntValue();
-
+        
         if (m_fullscreen_param->getBoolValue())
         {
             int displayID = wxDisplay::GetFromWindow( wxGetApp().GetTopWindow() );
@@ -498,7 +498,7 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
                 return;
             }
             wxDisplay display(displayID);
-
+            
             // maximize (but keep aspect ratio)
             m_width_param->setIntValue(display.GetGeometry().GetHeight()*1.33f);
             m_height_param->setIntValue(display.GetGeometry().GetHeight());
@@ -513,17 +513,17 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
             }
         }
     }
-
+    
     long item = m_item_list->GetNextItem(-1,
                                         wxLIST_NEXT_ALL,
                                         wxLIST_STATE_SELECTED);
-
+    
     if (item == -1)
     {
         wxMessageBox( _("No game is selected, cannot start emulation") );
         return;
     }
-
+    
     wxString file = path + wxFileName::GetPathSeparator() + m_item_list->GetItemText(item);
     loadRom(m_item_list->GetItemText(item), file);
 }
@@ -531,22 +531,22 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
 // -----------------------------------------------------------------------------------------------------------
 
 void GamesPanel::loadRom(wxString name, wxString file)
-{
+{    
     if (m_api->getEmulationState() != M64EMU_STOPPED)
     {
         wxMessageBox( _("A game is already running") );
         return;
     }
-
+    
     wxProgressDialog dialog( _("Loading..."), _("Your game is loading") );
     dialog.Show();
-
+    
     printf("\n==== Running file '%s' ====\n\n", (const char*)file.utf8_str());
 
     try
-    {
+    {        
         m_api->loadRom(file, true, &dialog);
-
+        
         m_currently_loaded_rom = name;
         dialog.Hide();
         #ifdef __WXMAC__
@@ -554,9 +554,9 @@ void GamesPanel::loadRom(wxString name, wxString file)
         #else
         const bool asynchronous = true;
         #endif
-
+        
         setOsdLogging(true);
-
+        
         m_api->runEmulation(asynchronous);
     }
     catch (std::runtime_error& ex)
@@ -586,11 +586,11 @@ void GamesPanel::onStop(wxCommandEvent& evt)
     try
     {
         m_api->stopEmulation();
-
+        
         wxCommandEvent evt(wxMUPEN_CLEANUP_GL_CANVAS, -1);
         wxGetApp().AddPendingEvent(evt);
         //cleanGLCanvas();
-
+        
         if (DebuggerFrame::Exists())
             DebuggerFrame::GameClosed();
     }
@@ -605,19 +605,19 @@ void GamesPanel::onStop(wxCommandEvent& evt)
 void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
 {
     m64p_emu_state newState = (m64p_emu_state)evt.GetInt();
-
+    
     switch (newState)
     {
         case M64EMU_STOPPED:
-
+        
             setOsdLogging(false);
-
+        
             if (m_width_param != NULL and m_height_param != NULL and m_api->useVideoExtension())
             {
                 m_width_param->setIntValue(m_previous_width);
                 m_height_param->setIntValue(m_previous_height);
             }
-
+    
             if (m_api->isARomOpen()) m_api->closeRom();
             m_currently_loaded_rom = "";
             m_play_button->Enable();
@@ -627,14 +627,14 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             wxGetApp().enableToolbar(true);
             //m_status->SetLabel(_("Emulation is stopped"));
             //Layout();
-
+            
             cleanGLCanvas();
             break;
-
+        
         case M64EMU_RUNNING:
-
+            
             setOsdLogging(true);
-
+            
             m_play_button->Disable();
             m_stop_button->Enable();
             m_pause_button->Enable();
@@ -643,7 +643,7 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             //m_status->SetLabel(wxString::Format(_("'%s' is running"), m_currently_loaded_rom.mb_str()));
             Layout();
             break;
-
+        
         case M64EMU_PAUSED:
             m_play_button->Enable();
             m_stop_button->Enable();
