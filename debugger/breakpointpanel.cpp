@@ -224,13 +224,13 @@ class BreakDataModel : public DataViewTreeListModel
         void GetValue(wxVariant &variant, const wxDataViewItem &item_, unsigned int col) const
         {
             dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
-            if (item->isGroup)
+            if (item->group)
             {
-                if (col == 0 && item->val)
-                    variant = (((dvtlGroup *)item->val)->name);
+                if (col == 0)
+                    variant = item->group->name;
                 return;
             }
-            Breakpoint *bpt = (Breakpoint *)item->val;
+            Breakpoint *bpt = (Breakpoint *)item->value;
             switch (col)
             {
                 case name_col:
@@ -252,17 +252,17 @@ class BreakDataModel : public DataViewTreeListModel
         bool SetValue(const wxVariant &variant, const wxDataViewItem &item_, unsigned int col)
         {
             dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
-            if (item->isGroup)
+            if (item->group)
             {
                 if (col == 0)
                 {
-                    ((dvtlGroup *)item->val)->name = variant.MakeString();
+                    item->group->name = variant.MakeString();
                     return true;
                 }
                 else
                     return false;
             }
-            Breakpoint *bpt = (Breakpoint *)item->val;
+            Breakpoint *bpt = (Breakpoint *)item->value;
             switch (col)
             {
                 case name_col:
@@ -297,11 +297,11 @@ class BreakDataModel : public DataViewTreeListModel
             dvtlModelItem *const *children = group->GetChildren(&amt);
             for (int i = 0; i < amt; i++)
             {
-                if (children[i]->isGroup)
-                    UpdateGroup((dvtlGroup *)children[i]->val);
+                if (children[i]->group)
+                    UpdateGroup(children[i]->group);
                 else
                 {
-                    Breakpoint *bpt = (Breakpoint *)children[i]->val;
+                    Breakpoint *bpt = (Breakpoint *)children[i]->value;
                     wxString new_val = GetBreakValue(bpt);
                     if (!new_val.empty())
                         ValueChanged(wxDataViewItem(children[i]), value_col);
@@ -310,7 +310,7 @@ class BreakDataModel : public DataViewTreeListModel
         }
         void UpdateValues()
         {
-            UpdateGroup((dvtlGroup *)root_item.val);
+            UpdateGroup(&root_group);
         }
     private:
         DebuggerFrame *debug_frame;
@@ -481,7 +481,7 @@ void BreakpointPanel::EditDialog()
     if (!item)
         return;
 
-    Breakpoint *bpt = (Breakpoint *)item->val;
+    Breakpoint *bpt = (Breakpoint *)item->value;
     dlg.SetValues(bpt);
     if (dlg.ShowModal() == wxOK)
     {
@@ -566,7 +566,7 @@ void BreakpointPanel::EnableSelected(bool enable)
     int amt = items.GetCount();
     for (int i = 0; i < amt; i++)
     {
-        Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->val;
+        Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->value; // what
         parent->EnableBreakpoint(bpt, enable, i == amt - 1);
     }
     list->UnselectAll();
@@ -579,7 +579,7 @@ void BreakpointPanel::DeleteSelected()
     int amt = items.GetCount();
     for (int i = 0; i < amt; i++)
     {
-        Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->val;
+        Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->value;
         parent->DeleteBreakpoint(bpt, i == amt - 1);
     }
     list->UnselectAll();
@@ -691,5 +691,3 @@ void BreakpointPanel::Reset()
 {
     data_model->Clear();
 }
-
-

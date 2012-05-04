@@ -15,7 +15,7 @@ dvtlGroup::~dvtlGroup()
     free(children);
 }
 
-dvtlModelItem *const *dvtlGroup::GetChildren(int *amt)
+dvtlModelItem *const *dvtlGroup::GetChildren(int *amt) const
 {
     *amt = child_amount;
     return children;
@@ -45,26 +45,27 @@ void dvtlGroup::RemoveChild(dvtlModelItem *child)
     }
 }
 
+void dvtlGroup::Clear()
+{
+    child_amount = 0;
+}
+
 // ----------------------------------------------------------------------
 
-DataViewTreeListModel::DataViewTreeListModel(int cols_)
+DataViewTreeListModel::DataViewTreeListModel(int cols_) : root_group("")
 {
     cols = cols_;
-    root_item.parent = 0;
-    root_item.isGroup = true;
-    root_item.val = new dvtlGroup("");
 }
 
 DataViewTreeListModel::~DataViewTreeListModel()
 {
     Clear();
-    delete (dvtlGroup *)root_item.val;
 }
 
 bool DataViewTreeListModel::IsContainer(const wxDataViewItem &item_) const
 {
     dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
-    if (item && item->isGroup) // This may have null item, or is it a bug?
+    if (item && item->group)
         return true;
     return false;
 }
@@ -72,24 +73,27 @@ bool DataViewTreeListModel::IsContainer(const wxDataViewItem &item_) const
 wxDataViewItem DataViewTreeListModel::GetParent(const wxDataViewItem &item_) const
 {
     dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
-    return wxDataViewItem((dvtlGroup *)item->parent);
+    return wxDataViewItem(item->parent);
 }
 
 unsigned int DataViewTreeListModel::GetChildren(const wxDataViewItem &item_, wxDataViewItemArray &children) const
 {
     dvtlModelItem *item = (dvtlModelItem *)item_.GetID();
-    if (!item)
-        item = (dvtlModelItem *)&root_item; // Breaks constness
 
     int count = 0;
-    if (item->isGroup)
+    const dvtlGroup *group;
+
+    if (!item)
+        group = &root_group;
+    else
+        group = item->group;
+
+    if (group)
     {
-        dvtlGroup *group = (dvtlGroup *)(item->val);
         dvtlModelItem *const *raw_children = group->GetChildren(&count);
         for (int i = 0; i < count; i++)
         {
-            wxDataViewItem new_item(raw_children[i]);
-            children.Add(new_item);
+            children.Add(wxDataViewItem(raw_children[i]));
         }
     }
     return count;
@@ -103,11 +107,11 @@ unsigned int DataViewTreeListModel::GetColumnCount() const
 void DataViewTreeListModel::AddItem(void *value, dvtlModelItem *parent)
 {
     dvtlModelItem *item = new dvtlModelItem;
-    item->isGroup = false;
-    item->val = value;
+    item->group = 0;
+    item->value = value;
     item->parent = parent;
     if (!parent)
-        ((dvtlGroup *)root_item.val)->AddChild(item);
+        root_group.AddChild(item);
 
     value_lookup[value] = item;
     wxDataViewItem item_(item);
@@ -131,7 +135,7 @@ void DataViewTreeListModel::RemoveItem(void *value)
 
     dvtlModelItem *item = it->second;
     if (!item->parent)
-        ((dvtlGroup *)root_item.val)->RemoveChild(item);
+        root_group.RemoveChild(item);
 
     wxDataViewItem item_(item);
     ItemDeleted(wxDataViewItem(item->parent), item_);
@@ -145,12 +149,10 @@ void DataViewTreeListModel::Clear()
     for (auto it = value_lookup.begin(); it != value_lookup.end(); ++it)
     {
         dvtlModelItem *item = it->second;
-        if (item->isGroup)
-            delete (dvtlGroup *)item->val;
+        delete item->group;
         delete item;
     }
-    delete (dvtlGroup *)root_item.val;
-    root_item.val = new dvtlGroup("");
+    root_group.Clear();
     value_lookup.clear();
     Cleared();
 }

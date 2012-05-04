@@ -49,10 +49,8 @@ void InitDrawingValues()
     g_color_text_selected = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
     g_color_text_default = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 
-
     wxFrame *frame = new wxFrame(0, -1, "tmp");
     wxTextCtrl *ctrl = new wxTextCtrl(frame, -1);
     g_textctrl_default = ctrl->GetSize();
     frame->Destroy();
 }
-

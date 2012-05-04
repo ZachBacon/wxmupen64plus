@@ -4,12 +4,16 @@
 #include <wx/dataview.h>
 #include <unordered_map>
 // Generic code for implementing custom list control with collapsible groups
+// It's somewhat hard to understand, maybe templates would be better
+// And groups don't likely work (yet)
+
+class dvtlGroup;
 
 struct dvtlModelItem
 {
-    void *val;
+    void *value;
     dvtlModelItem *parent;
-    bool isGroup;
+    dvtlGroup *group;
 };
 
 extern template class std::unordered_map<void *, dvtlModelItem *>;
@@ -21,9 +25,11 @@ class dvtlGroup
         dvtlGroup(const wxString &name);
         ~dvtlGroup();
 
-        dvtlModelItem *const *GetChildren(int *amt);
+        dvtlModelItem *const *GetChildren(int *amt) const;
         int AddChild(dvtlModelItem *child);
         void RemoveChild(dvtlModelItem *child);
+
+        void Clear();
 
         wxString name;
 
@@ -50,7 +56,7 @@ class DataViewTreeListModel : public wxDataViewModel
         void Clear();
 
     protected:
-        dvtlModelItem root_item;
+        dvtlGroup root_group;
 
     private:
         int cols;
