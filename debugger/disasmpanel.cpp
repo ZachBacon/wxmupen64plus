@@ -304,6 +304,11 @@ void DisasmPanel::CodeDClick(wxMouseEvent &evt)
     ToggleBreakpoint(address);
 }
 
+void DisasmPanel::Select(uint32_t address, bool add_to_selection)
+{
+    code->Select(address, add_to_selection);
+}
+
 /// ------------------------------------------------------------------------------
 
 DisasmWindow::DisasmWindow(DisasmPanel *parent_, int id) : wxWindow(parent_, id, wxDefaultPosition, wxDefaultSize)

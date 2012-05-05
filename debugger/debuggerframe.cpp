@@ -774,7 +774,10 @@ bool DebuggerFrame::DoFollow(int id, uint32_t address)
     if (id >= MEMJMP_ID_START)
         mempanels[id - MEMJMP_ID_START]->Goto(address);
     else // asm
+    {
         disasmpanels[id - ASMJMP_ID_START]->Goto(address, 0);
+        disasmpanels[id - ASMJMP_ID_START]->Select(address, false);
+    }
 
     return true;
 }
