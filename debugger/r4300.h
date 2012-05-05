@@ -18,7 +18,7 @@ enum R4300opcodes
     andi    = 12,   // and imm
     ori     = 13,   // or imm
     xori    = 14,   // xor imm
-    lui     = 15,   // load unsigned imm
+    lui     = 15,   // load upper imm
     cop0_op = 16,
     cop1_op = 17,
     beql    = 20,   // branch equal likely

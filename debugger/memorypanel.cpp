@@ -114,12 +114,13 @@ void MemoryPanel::SetPosition(uint32_t offset, int size)
 
 void MemoryPanel::Goto(wxCommandEvent &evt)
 {
-    Goto(strtoul(offset_chooser->GetValue(), 0, 16));
+    memory->Goto(strtoul(offset_chooser->GetValue(), 0, 16));
 }
 
 void MemoryPanel::Goto(uint32_t address)
 {
     memory->Goto(address);
+    offset_chooser->SetValue(wxString::Format("%08X", address));
 }
 
 uint8_t *MemoryPanel::RequestData(int size, int relative_offset)
