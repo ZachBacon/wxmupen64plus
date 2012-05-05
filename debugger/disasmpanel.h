@@ -53,6 +53,7 @@ class DisasmPanel : public DebugPanel
         wxButton *pause;
         wxButton *step;
         wxTextCtrl *pc_display;
+        wxTextCtrl *old_pc;
 
         uint32_t address;
 };

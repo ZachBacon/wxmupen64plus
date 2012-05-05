@@ -64,6 +64,9 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSec
     pc_display = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
     pc_display->SetMinSize(wxSize(70, -1));
     pc_go = new wxButton(subpanel, -1, _("Follow PC"));
+    wxStaticText *old_pc_text = new wxStaticText(subpanel, -1, _("Previous PC"));
+    old_pc = new wxTextCtrl(subpanel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+    old_pc->SetMinSize(wxSize(70, -1));
     run = new wxButton(subpanel, -1, _("Run"));
     pause = new wxButton(subpanel, -1, _("Pause"));
     step = new wxButton(subpanel, -1, _("Step"));
@@ -73,6 +76,8 @@ DisasmPanel::DisasmPanel(DebuggerFrame *parent, int id, int type, DebugConfigSec
     subsizer->Add(pc_text, 0, wxEXPAND);
     subsizer->Add(pc_display, 0, wxEXPAND);
     subsizer->Add(pc_go, 0, wxEXPAND);
+    subsizer->Add(old_pc_text, 0, wxEXPAND | wxTOP, 3);
+    subsizer->Add(old_pc, 0, wxEXPAND);
     subsizer->Add(separator_line, 0, wxEXPAND | wxALL, 5);
     subsizer->Add(go_address, 0, wxEXPAND);
     subsizer->Add(go_button, 0, wxEXPAND);
@@ -128,6 +133,9 @@ void DisasmPanel::Update(bool vi)
             pc_display->SetValue(buf);
             if (go_address->IsEmpty())
                 go_address->SetValue(buf);
+
+            sprintf(buf, "%08X", GetDebugState(M64P_DBG_PREVIOUS_PC));
+            old_pc->SetValue(buf);
         }
 
         int lines = code->GetLines() - 2; // -1 because lines have the partially seen one included, another -1 because magic (bad?)
@@ -267,14 +275,14 @@ const char **DisasmPanel::RequestData(int lines)
         else
         {
             DecodeOpcode(pos + i * 4, op, args);
-            
+
             // Core's decode function outputs some instructions, such as float manipulation, completely to the
             // "op" buffer and leaves args empty, adding two tabs between args and the opcode instead.
             // I don't understand the decode function well enough to edit it, so this just detects these tabs
             // and converts them to spaces.
             // I think decoder does that since those instructions share same opcode id, differing on smaller scale
             // than the other opcodes.
-            
+
             char *tabs = strchr(op, '\t');
             if (tabs)
             {
