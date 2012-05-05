@@ -124,6 +124,7 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
     if (bpt->id == -1)
         return;
 
+    int old_id = bpt->id;
     (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
     bpt->id = -1;
     bpt->enabled = false;
@@ -134,10 +135,14 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
     auto range = breaks.equal_range(&bpt->name);
     for (auto it = range.first; it != range.second; ++it)
     {
-        if (it->second == bpt)
+        Breakpoint *entry = it->second;
+        if (entry == bpt)
         {
             breaks.erase(it);
-            break;
+        }
+        else if (entry->id > old_id) // Core does this too, so it has to be mimiced (maybe shouldn't use ids at all)
+        {
+            entry->id -= 1;
         }
     }
 }
