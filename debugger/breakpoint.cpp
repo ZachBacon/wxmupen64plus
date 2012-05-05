@@ -133,18 +133,21 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
         breakmap.erase(bpt->address + i);
 
     auto range = breaks.equal_range(&bpt->name);
+    auto to_be_deleted = breaks.end();
     for (auto it = range.first; it != range.second; ++it)
     {
         Breakpoint *entry = it->second;
         if (entry == bpt)
         {
-            breaks.erase(it);
+            to_be_deleted = it;
         }
         else if (entry->id > old_id) // Core does this too, so it has to be mimiced (maybe shouldn't use ids at all)
         {
             entry->id -= 1;
         }
     }
+    if (to_be_deleted != breaks.end())
+        breaks.erase(to_be_deleted);
 }
 
 unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name, int *amt)

@@ -142,6 +142,8 @@ void DataViewTreeListModel::RemoveItem(void *value)
     delete item;
 
     value_lookup.erase(it);
+    if (value_lookup.empty()) // Without this weird display lock would happen on windows
+        Cleared();
 }
 
 void DataViewTreeListModel::Clear()

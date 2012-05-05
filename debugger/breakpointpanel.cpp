@@ -615,17 +615,20 @@ void BreakpointPanel::RClickItem(wxDataViewEvent &evt)
     wxMenuItem *add, *edit, *remove, *disable, *enable, *separator;
     add = new wxMenuItem(&menu, break_add, _("New..\tCtrl-A"));
     menu.Append(add);
-    if (list->GetSelection().GetID() != 0) // wx 2.9.3: list->GetSelectedItemsCount() == 1 or list->HasSelecion()
+    if (list->HasSelection())
     {
-        edit = new wxMenuItem(&menu, break_edit, _("Edit..\tCtrl-E"));
-        menu.Append(edit);
+        if (list->GetSelection().GetID() != 0) // wx 2.9.3: list->GetSelectedItemsCount() == 1 or list->HasSelecion()
+        {
+            edit = new wxMenuItem(&menu, break_edit, _("Edit..\tCtrl-E"));
+            menu.Append(edit);
+        }
+        disable = new wxMenuItem(&menu, break_disable, _("Disable"));
+        menu.Append(disable);
+        enable = new wxMenuItem(&menu, break_enable, _("Enable"));
+        menu.Append(enable);
+        remove = new wxMenuItem(&menu, break_delete, _("Delete\tDel"));
+        menu.Append(remove);
     }
-    disable = new wxMenuItem(&menu, break_disable, _("Disable"));
-    menu.Append(disable);
-    enable = new wxMenuItem(&menu, break_enable, _("Enable"));
-    menu.Append(enable);
-    remove = new wxMenuItem(&menu, break_delete, _("Delete\tDel"));
-    menu.Append(remove);
 
     separator = new wxMenuItem(&menu);
     menu.Append(separator);
