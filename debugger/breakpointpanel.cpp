@@ -569,7 +569,6 @@ void BreakpointPanel::EnableSelected(bool enable)
         Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->value; // what
         parent->EnableBreakpoint(bpt, enable, i == amt - 1);
     }
-    list->UnselectAll();
 }
 
 void BreakpointPanel::DeleteSelected()
@@ -675,6 +674,23 @@ void BreakpointPanel::KeyDown(wxKeyEvent &evt)
         case WXK_CONTROL_E:
             if (wxGetKeyState(WXK_CONTROL))
                 EditDialog();
+        break;
+        case WXK_SPACE:
+        {
+            wxDataViewItemArray items;
+            list->GetSelections(items);
+            int amt = items.GetCount();
+            if (amt)
+            {
+                Breakpoint *first = (Breakpoint *)((dvtlModelItem *)items.Item(0).GetID())->value;
+                bool enable = !(first->IsEnabled());
+                for (int i = 0; i < amt; i++)
+                {
+                    Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)items.Item(i).GetID())->value;
+                    parent->EnableBreakpoint(bpt, enable, i == amt - 1);
+                }
+            }
+        }
         break;
         default:
             evt.Skip();
