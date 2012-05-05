@@ -267,7 +267,26 @@ const char **DisasmPanel::RequestData(int lines)
         else
         {
             DecodeOpcode(pos + i * 4, op, args);
-            data_string_pos += sprintf(data_string_pos, "%s  %s", op, args) + 1;
+            
+            // Core's decode function outputs some instructions, such as float manipulation, completely to the
+            // "op" buffer and leaves args empty, adding two tabs between args and the opcode instead.
+            // I don't understand the decode function well enough to edit it, so this just detects these tabs
+            // and converts them to spaces.
+            // I think decoder does that since those instructions share same opcode id, differing on smaller scale
+            // than the other opcodes.
+            
+            char *tabs = strchr(op, '\t');
+            if (tabs)
+            {
+                while (*tabs == '\t')
+                {
+                    *tabs = ' ';
+                    tabs++;
+                }
+                data_string_pos += sprintf(data_string_pos, "%s", op) + 1;
+            }
+            else
+                data_string_pos += sprintf(data_string_pos, "%s  %s", op, args) + 1;
         }
     }
     return data;
