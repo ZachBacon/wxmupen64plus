@@ -40,7 +40,7 @@ MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(
         {
             memcpy(&realdata, data_, len); // This way allows using extra size of 64-bit architechture pointers,
             data = (uint8_t *)&realdata;   // but hardcoding len as 4 would optimize better
-        }                                  // (And this program won't likely ever be compiled as 64bit?)
+        }
         else
         {
             realdata = (uint8_t *)malloc(len);
@@ -52,13 +52,13 @@ MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(
     {
         if (((length + 4) & ~0x3) <= sizeof(uint8_t))
         {
-            memcpy(&realdata, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
+            memcpy(&realdata, (void *)((uintptr_t)data_ & ~0x3), (length + 4) & ~0x3);
             data = (uint8_t *)&realdata + (start_address & 0x3);
         }
         else
         {
             realdata = (uint8_t *)malloc((length + 4) & ~0x3);
-            memcpy(realdata, (void *)((uint32_t)data_ & ~0x3), (length + 4) & ~0x3);
+            memcpy(realdata, (void *)((uintptr_t)data_ & ~0x3), (length + 4) & ~0x3);
             data = realdata + (start_address & 0x3);
         }
     }
@@ -69,7 +69,7 @@ MemChunk::MemChunk(MemChunk &&other)
     realdata = other.realdata;
     start_address = other.start_address;
     length = other.length;
-    if (((uint32_t)other.data & ~0x3) == (uint32_t)&other.realdata)
+    if (((uintptr_t)other.data & ~0x3) == (uintptr_t)&other.realdata)
         data = (uint8_t *)&realdata;
     else
         data = other.data;
@@ -82,7 +82,7 @@ MemChunk &MemChunk::operator=(MemChunk &&other)
     start_address = other.start_address;
     length = other.length;
     realdata = other.realdata;
-    if (((uint32_t)other.data & ~0x3) == (uint32_t)&other.realdata)
+    if (((uintptr_t)other.data & ~0x3) == (uintptr_t)&other.realdata)
         data = (uint8_t *)&realdata;
     else
         data = other.data;
@@ -93,7 +93,7 @@ MemChunk &MemChunk::operator=(MemChunk &&other)
 
 MemChunk::~MemChunk()
 {
-    if (realdata && (((uint32_t)data & ~0x3) != (uint32_t)&realdata))
+    if (realdata && (((uintptr_t)data & ~0x3) != (uintptr_t)&realdata))
         free(realdata);
 }
 
@@ -148,9 +148,9 @@ void MemSearch::NewSearch(uint32_t beg, uint32_t end)
     MemSearchResult base;
     uint8_t *rdram = (uint8_t *)GetMemoryPointer(M64P_DBG_PTR_RDRAM);
     if ((end - beg + 1) & 0x3)
-        base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), (end - beg + 5) & ~0x3 , beg & ~0x3);
+        base.AddChunk((void *)((uintptr_t)(rdram + beg) & ~0x3), (end - beg + 5) & ~0x3 , beg & ~0x3);
     else
-        base.AddChunk((void *)((uint32_t)(rdram + beg) & ~0x3), end - beg + 1, beg & ~0x3);
+        base.AddChunk((void *)((uintptr_t)(rdram + beg) & ~0x3), end - beg + 1, beg & ~0x3);
 
     undo_list.push_back(move(base));
     undo_memusage += (end - beg + 1);
@@ -169,25 +169,25 @@ type_ magicswap(uint8_t *pointer);
 template<>
 int8_t magicswap<int8_t>(uint8_t *pointer)
 {
-    return *(int8_t *)((uint32_t)pointer ^ 3);
+    return *(int8_t *)((uintptr_t)pointer ^ 3);
 }
 
 template<>
 uint8_t magicswap<uint8_t>(uint8_t *pointer)
 {
-    return *(uint8_t *)((uint32_t)pointer ^ 3);
+    return *(uint8_t *)((uintptr_t)pointer ^ 3);
 }
 
 template<>
 int16_t magicswap<int16_t>(uint8_t *pointer)
 {
-    return *(int16_t *)((uint32_t)pointer ^ 2);
+    return *(int16_t *)((uintptr_t)pointer ^ 2);
 }
 
 template<>
 uint16_t magicswap<uint16_t>(uint8_t *pointer)
 {
-    return *(uint16_t *)((uint32_t)pointer ^ 2);
+    return *(uint16_t *)((uintptr_t)pointer ^ 2);
 }
 
 template<>
