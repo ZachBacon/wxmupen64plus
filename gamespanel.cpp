@@ -581,12 +581,12 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
             }
     
             if (m_api->isARomOpen())
-            { 
-                m_api->closeRom();       
+            {
 #ifdef ENABLE_DEBUGGER
             if (DebuggerFrame::Exists())
                 DebuggerFrame::GameClosed();
 #endif
+                m_api->closeRom();
             }
             m_currently_loaded_rom = "";
             m_play_button->Enable();

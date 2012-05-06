@@ -29,7 +29,7 @@ enum
     radio_custom_id
 };
 
-MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(address), length(len)
+MemChunk::MemChunk(void *source, uint32_t len, uint32_t address) : start_address(address), length(len)
 {
     if (!(start_address & 0x3)) // already aligned
     {
@@ -38,13 +38,17 @@ MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(
 
         if (len <= sizeof(uint8_t *)) // No need to do malloc(sizeof(pointer)), just use the pointer as buffer :p
         {
-            memcpy(&realdata, data_, len); // This way allows using extra size of 64-bit architechture pointers,
-            data = (uint8_t *)&realdata;   // but hardcoding len as 4 would optimize better
+            // This way allows using extra size of 64-bit architechture pointers,
+            // but hardcoding len as 4 would optimize better
+            // Can't use sizeof(uint8_t *) as len, as it *could* segfault 
+            // if source pointed to last four bytes of rdram
+            memcpy(&realdata, source, len); 
+            data = (uint8_t *)&realdata;
         }
         else
         {
             realdata = (uint8_t *)malloc(len);
-            memcpy(realdata, data_, len);
+            memcpy(realdata, source, len);
             data = realdata;
         }
     }
@@ -52,13 +56,13 @@ MemChunk::MemChunk(void *data_, uint32_t len, uint32_t address) : start_address(
     {
         if (((length + 4) & ~0x3) <= sizeof(uint8_t))
         {
-            memcpy(&realdata, (void *)((uintptr_t)data_ & ~0x3), (length + 4) & ~0x3);
+            memcpy(&realdata, (void *)((uintptr_t)source & ~0x3), (length + 4) & ~0x3);
             data = (uint8_t *)&realdata + (start_address & 0x3);
         }
         else
         {
             realdata = (uint8_t *)malloc((length + 4) & ~0x3);
-            memcpy(realdata, (void *)((uintptr_t)data_ & ~0x3), (length + 4) & ~0x3);
+            memcpy(realdata, (void *)((uintptr_t)source & ~0x3), (length + 4) & ~0x3);
             data = realdata + (start_address & 0x3);
         }
     }
@@ -601,9 +605,9 @@ void MemSearchPanel::UpdateVisibleList()
     wxDataViewItem item;
     wxDataViewColumn *col;
     list->HitTest(wxPoint(0, dvlc_first_item), item, col);
-    int first_pos = (int)item.GetID() - 1;
+    intptr_t first_pos = (intptr_t)item.GetID() - 1;
     list->HitTest(wxPoint(0, list->GetSize().y), item, col);
-    int last_pos = (int)item.GetID() - 2; // Is this always -2? It seems weird
+    intptr_t last_pos = (intptr_t)item.GetID() - 2; // Is this always - 2? It seems weird
     if (last_pos == -2)     // Id was 0, so list had not enough entries to fill it
         last_pos = 10000;   // So any high number is fine
 
