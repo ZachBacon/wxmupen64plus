@@ -227,6 +227,25 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                     multiSampling->m_choices.push_back( ConfigParamChoice("16", 16) );
                 }
 
+                ConfigParam* mipmapSetting = section->getParamWithName("Mipmapping");
+                if (mipmapSetting != NULL)
+                {
+                    mipmapSetting->m_choices.push_back( ConfigParamChoice(_("Disable"), 0) );
+                    mipmapSetting->m_choices.push_back( ConfigParamChoice(_("Nearest"), 1) );
+                    mipmapSetting->m_choices.push_back( ConfigParamChoice(_("Bilinear"), 2) );
+                    mipmapSetting->m_choices.push_back( ConfigParamChoice(_("Trilinear"), 3) );
+                }
+                
+                ConfigParam* anisotropicSetting = section->getParamWithName("AnisotropicFiltering");
+                if (anisotropicSetting != NULL)
+                {
+                    anisotropicSetting->m_choices.push_back( ConfigParamChoice(_("Disable"), 0) );
+                    anisotropicSetting->m_choices.push_back( ConfigParamChoice(_("2x"), 2) );
+                    anisotropicSetting->m_choices.push_back( ConfigParamChoice(_("4x"), 4) );
+                    anisotropicSetting->m_choices.push_back( ConfigParamChoice(_("8x"), 8) );
+                    anisotropicSetting->m_choices.push_back( ConfigParamChoice(_("16x"), 16) );
+                }
+                
                 ConfigParam* colorQuality = section->getParamWithName("ColorQuality");
                 if (colorQuality != NULL)
                 {
