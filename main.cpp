@@ -40,7 +40,11 @@
 #include "main.h"
 #include "wxvidext.h"
 
+
+#ifdef ENABLE_DEBUGGER
 #include "debugger/debuggerframe.h"
+#endif
+
 
 #include <stdexcept>
 #include <algorithm>
@@ -342,9 +346,12 @@ void MupenFrontendApp::shutdown()
         m_curr_panel->removeMyselfFrom(m_sizer);
         m_curr_panel = NULL;
     }
+
+#ifdef ENABLE_DEBUGGER
     if (DebuggerFrame::Exists())
         DebuggerFrame::Delete();
-    
+#endif
+
     if (m_frame != NULL)
     {
         m_frame->Destroy();

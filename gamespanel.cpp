@@ -27,7 +27,10 @@
 #include "mupen64plusplus/MupenAPIpp.h"
 #include "main.h"
 #include "wxvidext.h"
+
+#ifdef ENABLE_DEBUGGER
 #include "debugger/debuggerframe.h"
+#endif
 
 #include "sdlkeypicker.h"
 #include <wx/sizer.h>
@@ -432,8 +435,12 @@ void GamesPanel::onPlay(wxCommandEvent& evt)
         {
             if (config[n]->getParamWithName("EnableDebugger")->getBoolValue() == true)
             {
+#ifdef ENABLE_DEBUGGER
                 if (!DebuggerFrame::Exists())
                     new DebuggerFrame;
+#else
+                wxLogDebug( _("Cannot start the debugger, because your build does not include it") );
+#endif
             }
             found_sections |= 0x2;
         }
@@ -549,8 +556,10 @@ void GamesPanel::onStop(wxCommandEvent& evt)
         wxGetApp().AddPendingEvent(evt);
         //cleanGLCanvas();
         
+#ifdef ENABLE_DEBUGGER
         if (DebuggerFrame::Exists())
             DebuggerFrame::GameClosed();
+#endif
     }
     catch (std::runtime_error& ex)
     {

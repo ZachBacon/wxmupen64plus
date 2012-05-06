@@ -33,6 +33,7 @@ def options(opt):
     opt.add_option('--datadir', action='store', help='(Optional) the directory where to look for data files', default='',  dest='datadir')
     opt.add_option('--libdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='libdir')
     opt.add_option('--bindir', action='store', help='(Optional) the directory where to install wxmupen64plus binary', default='',  dest='bindir')
+    opt.add_option('--debugger', action='store', help='Enable or disable the debugger (true or false). Requires GCC 4.6', default='true',  dest='debugger')
     
     if os.name == 'nt':
         opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
@@ -62,6 +63,7 @@ def configure(ctx):
     api_path   = Options.options.mupenapi
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
+    enable_debugger = (Options.options.debugger == 'true')
     
     wxconfig_args = Options.options.wxconfig_args
     
@@ -82,6 +84,7 @@ def configure(ctx):
     ctx.env['wxhome'] = wxhome
     ctx.env['datadir'] = Options.options.datadir
     ctx.env['libdir'] = Options.options.libdir
+    ctx.env['enable_debugger'] = enable_debugger
     
     ctx.find_program('gcc', var='GCC', mandatory=True)
     ctx.find_program('g++', var='GPP', mandatory=True)
@@ -124,6 +127,8 @@ def build(bld):
     api_path = bld.env['api_path']
 
     wxhome = bld.env['wxhome']
+    
+    enable_debugger = bld.env['enable_debugger']
     
     link_flags = []
     build_flags = []
@@ -196,12 +201,19 @@ def build(bld):
 
 
     # Build the program
-    debugger_sources = ['debugger/breakpoint.cpp', 'debugger/breakpointpanel.cpp', 'debugger/colors.cpp',
-                        'debugger/debugconsole.cpp', 'debugger/debuggerframe.cpp', 'debugger/debugpanel.cpp',
-                        'debugger/disasmpanel.cpp', 'debugger/dv_treelist.cpp', 'debugger/memorypanel.cpp',
-                        'debugger/registerpanel.cpp', 'debugger/debugconfig.cpp', 'debugger/memorysearch.cpp']
+    
+    if bld.env['enable_debugger']:
+        debugger_sources = ['debugger/breakpoint.cpp', 'debugger/breakpointpanel.cpp', 'debugger/colors.cpp',
+                            'debugger/debugconsole.cpp', 'debugger/debuggerframe.cpp', 'debugger/debugpanel.cpp',
+                            'debugger/disasmpanel.cpp', 'debugger/dv_treelist.cpp', 'debugger/memorypanel.cpp',
+                            'debugger/registerpanel.cpp', 'debugger/debugconfig.cpp', 'debugger/memorysearch.cpp']
+        debugger_flags = ['-std=gnu++0x', '-fpermissive', '-DENABLE_DEBUGGER']
+    else:
+        debugger_sources = []
+        debugger_flags = []
+    
     bld.program(features='c cxx cxxprogram',
-                cxxflags=build_flags+['-std=gnu++0x','-fpermissive'],
+                cxxflags=build_flags+debugger_flags,
                 cflags=build_flags+['-Wfatal-errors'],
                 linkflags=link_flags + additional_links,
                 source=['main.cpp', 'gamespanel.cpp', 'parameterpanel.cpp', 'sdlkeypicker.cpp',
