@@ -555,11 +555,6 @@ void GamesPanel::onStop(wxCommandEvent& evt)
         wxCommandEvent evt(wxMUPEN_CLEANUP_GL_CANVAS, -1);
         wxGetApp().AddPendingEvent(evt);
         //cleanGLCanvas();
-        
-#ifdef ENABLE_DEBUGGER
-        if (DebuggerFrame::Exists())
-            DebuggerFrame::GameClosed();
-#endif
     }
     catch (std::runtime_error& ex)
     {
@@ -585,7 +580,14 @@ void GamesPanel::onMupenStateChangeEvt(wxCommandEvent& evt)
                 m_height_param->setIntValue(m_previous_height);
             }
     
-            if (m_api->isARomOpen()) m_api->closeRom();
+            if (m_api->isARomOpen())
+            { 
+                m_api->closeRom();       
+#ifdef ENABLE_DEBUGGER
+            if (DebuggerFrame::Exists())
+                DebuggerFrame::GameClosed();
+#endif
+            }
             m_currently_loaded_rom = "";
             m_play_button->Enable();
             m_stop_button->Disable();
