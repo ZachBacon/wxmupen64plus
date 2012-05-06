@@ -11,6 +11,7 @@ class wxTextCtrl;
 class RegisterTab;
 class wxStaticText;
 class RegisterPanel;
+class wxStaticLine;
 
 enum RegisterType
 {
@@ -92,11 +93,16 @@ class GprTab : public RegisterTab
 
     protected:
         void Reorder();
-        int GetAmount() { return 32; }
+        int GetAmount() { return 32; } // not 34 due this design is horrible
 
     private:
         SingleRegister *registers[32];
+        wxStaticLine *separator;
+        SingleRegister *hi;
+        SingleRegister *lo;
         uint64_t *raw_registers;
+        uint64_t *raw_hi;
+        uint64_t *raw_lo;
 };
 
 class Cop0Tab : public RegisterTab

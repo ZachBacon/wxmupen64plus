@@ -5,6 +5,7 @@
 #include <wx/stattext.h>
 #include <wx/aui/auibook.h>
 #include <wx/menu.h>
+#include <wx/statline.h>
 
 #include "../mupen64plusplus/MupenAPI.h"
 #include "colors.h"
@@ -323,11 +324,18 @@ GprTab::GprTab(wxWindow *parent, int id) : RegisterTab(parent, id)
     reg_name_len = g_number_width * 3;
     reg_basewidth = g_number_width * 23;
     raw_registers = (uint64_t *)GetRegister(M64P_CPU_REG_REG);
+    raw_hi = (uint64_t *)GetRegister(M64P_CPU_REG_HI);
+    raw_lo = (uint64_t *)GetRegister(M64P_CPU_REG_LO);
     for (int i = 0; i < 32; i++)
-    {
-        wxPoint pos = CalcItemPos(i);
-        registers[i] = new SingleRegister(this, i + 1, gpr_names[i], REGISTER_INT64, pos, reg_name_len);
-    }
+        registers[i] = new SingleRegister(this, i + 1, gpr_names[i], REGISTER_INT64, CalcItemPos(i), reg_name_len);
+
+    int rows = GetRows();
+    separator = new wxStaticLine(this, -1, CalcItemPos(rows - 1) + wxPoint(g_number_width * 3, singlereg_height + 4), wxSize(g_number_width * (26 * GetCols() - 6), -1));
+    hi = new SingleRegister(this, 33, "HI", REGISTER_INT64, CalcItemPos(rows - 1) + wxPoint(0, singlereg_height + 7), reg_name_len);
+    if (GetCols() < 2)
+        lo = new SingleRegister(this, 34, "LO", REGISTER_INT64, CalcItemPos(rows - 1) + wxPoint(0, singlereg_height * 2 + 7), reg_name_len);
+    else
+        lo = new SingleRegister(this, 34, "LO", REGISTER_INT64, CalcItemPos(rows * 2 - 1) + wxPoint(0, singlereg_height + 7), reg_name_len);
     SetFocus();
 }
 
@@ -339,17 +347,39 @@ void GprTab::Update()
 {
     for (int i = 0; i < 32; i++)
         registers[i]->SetInt(raw_registers[i]);
+    hi->SetInt(*raw_hi);
+    lo->SetInt(*raw_lo);
 }
 
 void GprTab::ValueChanged(int id, const wxAny &value)
 {
-    raw_registers[id - 1] = value.As<uint64_t>();
+    if (id <= 32)
+        raw_registers[id - 1] = value.As<uint64_t>();
+    else if (id == 33)
+        *raw_hi = value.As<uint64_t>();
+    else if (id == 34)
+        *raw_lo = value.As<uint64_t>();
 }
 
 void GprTab::Reorder()
 {
     for (uint32_t i = 0; i < 32; i++)
         registers[i]->SetPosition(CalcItemPos(i));
+    int rows = GetRows();
+    separator->SetPosition(CalcItemPos(rows - 1) + wxPoint(g_number_width * 3, singlereg_height + 4));
+    separator->SetSize(wxSize(g_number_width * (26 * GetCols() - 6), -1));
+    hi->SetPosition(CalcItemPos(rows - 1) + wxPoint(0, singlereg_height + 9));
+    if (GetCols() < 2)
+        lo->SetPosition(CalcItemPos(rows - 1) + wxPoint(0, singlereg_height * 2 + 9));
+    else
+        lo->SetPosition(CalcItemPos(rows * 2 - 1) + wxPoint(0, singlereg_height + 9));
+
+    Refresh();
+
+    if (GetCols() < 2) // sigh sigh sigh
+        SetVirtualSize(0, 12 + singlereg_height * (rows + 1));
+    else
+        SetVirtualSize(0, 12 + singlereg_height * rows);
 }
 
 /// ----------------------------------------------
