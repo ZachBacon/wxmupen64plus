@@ -85,6 +85,9 @@ m64p_error GetVideoExtension(char videoExtension[], const int videoExtensionLen)
 extern ptr_CoreShutdown  CoreShutdown;
 extern ptr_CoreStartup   CoreStartup;
 
+const char *GetUserConfigPath();
+const char *GetUserDataPath();
+
 /**
  * @pre The emulator cannot be currently running. A ROM image must not be currently opened
  */
@@ -92,33 +95,33 @@ m64p_error openRom(int byteSize, void* romImage);
 
 /**
  * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
- *      There should be no plugins currently attached. 
+ *      There should be no plugins currently attached.
  */
 m64p_error closeRom();
 
 /**
  * @pre The emulator cannot be currently running. A ROM image must have been previously opened.
- * @note This function call will not return until the game has been stopped. 
+ * @note This function call will not return until the game has been stopped.
  */
 m64p_error runEmulation();
 
 /**
  * This will stop the emulator, if it is currently running.
- * @note This command will execute asynchronously. 
+ * @note This command will execute asynchronously.
  */
 m64p_error stopEmulation();
 
 /**
  * This command will pause the emulator if it is running.
  * @return This function will return a non-successful error code if the emulator is in the stopped state.
- * @note This command may execute asynchronously. 
+ * @note This command may execute asynchronously.
  */
 m64p_error pauseEmulation();
 
 /**
- * This command will resume execution of the emulator if it is paused. 
+ * This command will resume execution of the emulator if it is paused.
  * @return This function will return a non-successful error code if the emulator is in the stopped state.
- * @note This command may execute asynchronously. 
+ * @note This command may execute asynchronously.
  */
 m64p_error resumeEmulation();
 
@@ -139,7 +142,7 @@ m64p_error getRomHeader(const char* path, m64p_rom_header* out);
 
 m64p_error getRomSettings(m64p_rom_settings* out);
 
-/** 
+/**
  * @param pj64Format boolean
  */
 m64p_error saveGame(int pj64Format, char* path /* optional */);
@@ -152,7 +155,7 @@ m64p_error getState(m64p_core_param  which, int* out);
 m64p_error setSaveSlot(int slotId);
 
 /**
- * This will cause the core to save a screenshot at the next possible opportunity. 
+ * This will cause the core to save a screenshot at the next possible opportunity.
  * The emulator must be currently running or paused. This command will execute asynchronously.
  */
 m64p_error takeScreenshot();
@@ -168,6 +171,30 @@ m64p_error injectKeyEvent(/*bool*/ int pressed, int key);
 //m64p_error SetGamesPath(char path[]);
 
 void osdNewMessage(const char* message);
+
+/** Debugging functions */
+
+m64p_error SetDebuggingCallbacks(void (*init)(void), void (*update)(unsigned int), void (*vi)(void));
+m64p_error SetRunState(int state);
+m64p_error DebuggerStep();
+int GetDebugState(m64p_dbg_state state);
+
+int MemIsValid(unsigned int address);
+
+unsigned char MemRead8(unsigned int address);
+unsigned short MemRead16(unsigned int address);
+unsigned int MemRead32(unsigned int address);
+unsigned long long MemRead64(unsigned int address);
+void MemWrite8(unsigned int address, unsigned char value);
+void MemWrite32(unsigned int address, unsigned int value);
+
+void *GetRegister(m64p_dbg_cpu_data type);
+unsigned long long ReadRegister(m64p_dbg_cpu_data type, unsigned char index);
+
+void *GetMemoryPointer(m64p_dbg_memptr_type type);
+
+void DecodeOpcode(unsigned int address, char *op, char *args);
+
 
 #ifdef __cplusplus
 }

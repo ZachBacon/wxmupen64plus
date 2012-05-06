@@ -258,7 +258,7 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     {
         Compatible = 1;
     }
-        
+
     /* exit if not compatible */
     if (Compatible == 0)
     {
@@ -278,10 +278,10 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
         CoreHandle = NULL;
         return M64ERR_INPUT_INVALID;
     }
-    
+
     int ConfigAPIVersion, DebugAPIVersion, VidextAPIVersion;
     (*CoreAPIVersionFunc)(&ConfigAPIVersion, &DebugAPIVersion, &VidextAPIVersion, NULL);
-    
+
     if ((ConfigAPIVersion & 0xffff0000) != (CONFIG_API_VERSION & 0xffff0000))
     {
         fprintf(stderr, "AttachCoreLib() Error: Emulator core '%s' incompatible; Config API major version "
@@ -351,10 +351,10 @@ m64p_error AttachCoreLib(const char *CoreLibFilepath)
     DebugMemRead16 = (ptr_DebugMemRead16) osal_dynlib_getproc(CoreHandle, "DebugMemRead16");
     DebugMemRead8  = (ptr_DebugMemRead8)   osal_dynlib_getproc(CoreHandle, "DebugMemRead8");
 
-    DebugMemWrite64 = (ptr_DebugMemWrite64) osal_dynlib_getproc(CoreHandle, "DebugMemRead64");
-    DebugMemWrite32 = (ptr_DebugMemWrite32) osal_dynlib_getproc(CoreHandle, "DebugMemRead32");
-    DebugMemWrite16 = (ptr_DebugMemWrite16) osal_dynlib_getproc(CoreHandle, "DebugMemRead16");
-    DebugMemWrite8  = (ptr_DebugMemWrite8)  osal_dynlib_getproc(CoreHandle, "DebugMemRead8");
+    DebugMemWrite64 = (ptr_DebugMemWrite64) osal_dynlib_getproc(CoreHandle, "DebugMemWrite64");
+    DebugMemWrite32 = (ptr_DebugMemWrite32) osal_dynlib_getproc(CoreHandle, "DebugMemWrite32");
+    DebugMemWrite16 = (ptr_DebugMemWrite16) osal_dynlib_getproc(CoreHandle, "DebugMemWrite16");
+    DebugMemWrite8  = (ptr_DebugMemWrite8)  osal_dynlib_getproc(CoreHandle, "DebugMemWrite8");
 
     DebugGetCPUDataPtr     = (ptr_DebugGetCPUDataPtr)     osal_dynlib_getproc(CoreHandle, "DebugGetCPUDataPtr");
     DebugBreakpointLookup  = (ptr_DebugBreakpointLookup)  osal_dynlib_getproc(CoreHandle, "DebugBreakpointLookup");
@@ -372,7 +372,7 @@ m64p_error DetachCoreLib(void)
     if (CoreHandle == NULL)
         return M64ERR_INVALID_STATE;
 
-    // set the core function pointers to NULL 
+    // set the core function pointers to NULL
     CoreErrorMessage = NULL;
     CoreStartup = NULL;
     CoreShutdown = NULL;
@@ -788,15 +788,15 @@ m64p_error getRomHeader(const char* path, m64p_rom_header* out)
 {
     FILE* f;
     f = fopen(path, "rb");
-    
+
     if (!f) return M64ERR_FILES;
-    
+
     int count = fread(out, sizeof(m64p_rom_header), 1, f);
-    
+
     int error = (count != 1) || ferror(f);
-    
+
     fclose(f);
-    
+
     if (error != 0) return M64ERR_NO_MEMORY;
     else            return M64ERR_SUCCESS;
 }
@@ -878,7 +878,7 @@ m64p_error takeScreenshot()
 m64p_error attachPlugins()
 {
     int i;
-    
+
     // attach plugins to core
     for (i = 0; i < 4; i++)
     {
@@ -898,7 +898,7 @@ m64p_error detachPlugins()
 {
     assert(CoreDetachPlugin != NULL);
     int i;
-    
+
     // detach plugins from core and unload them
     for (i = 0; i < 4; i++)
     {
@@ -928,3 +928,154 @@ void osdNewMessage(const char* message)
 {
     (*osd_new_message)(OSD_BOTTOM_CENTER, message);
 }
+
+// -----------------------------------------------------------------------------------------------------------
+
+const char *GetUserConfigPath()
+{
+    return (*PtrConfigGetUserConfigPath)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+const char *GetUserDataPath()
+{
+    return (*PtrConfigGetUserDataPath)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error SetDebuggingCallbacks(void (*init)(void), void (*update)(unsigned int), void (*vi)(void))
+{
+    return (*DebugSetCallbacks)(init, update, vi);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error SetRunState(int state)
+{
+    return (*DebugSetRunState)(state);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+m64p_error DebuggerStep()
+{
+    return (*DebugStep)();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+int GetDebugState(m64p_dbg_state state)
+{
+    return (*DebugGetState)(state);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+int MemIsValid(unsigned int address)
+{
+    int flags = (*DebugMemGetMemInfo)(M64P_DBG_MEM_FLAGS, address);
+    if (flags & 0x1 || flags & 0x2) // The api headers were lacking
+        return 1;
+
+    // io addresses aren't included in the previous check
+    if (address >= 0xa0000000)
+        address -= 0x20000000;
+    if ((address >= 0x83f00000 && address < 0x8480001c) &&
+        ((address >= 0x83f00000 && address < 0x83f00028) ||
+         (address >= 0x84000000 && address < 0x84002000) ||
+         (address >= 0x84040000 && address < 0x84040020) ||
+         (address >= 0x84080000 && address < 0x84080008) ||
+         (address >= 0x84100000 && address < 0x84100020) ||
+         (address >= 0x84200000 && address < 0x84200010) ||
+         (address >= 0x84300000 && address < 0x84300010) ||
+         (address >= 0x84400000 && address < 0x84400038) ||
+         (address >= 0x84500000 && address < 0x84500018) ||
+         (address >= 0x84600000 && address < 0x84600034) ||
+         (address >= 0x84700000 && address < 0x84700020) ||
+         (address >= 0x84800000 && address < 0x8480001c)))
+        return 1;
+
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned char MemRead8(unsigned int address)
+{
+    return (*DebugMemRead8)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned short MemRead16(unsigned int address)
+{
+    return (*DebugMemRead16)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned int MemRead32(unsigned int address)
+{
+    return (*DebugMemRead32)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned long long MemRead64(unsigned int address)
+{
+    return (*DebugMemRead64)(address);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MemWrite8(unsigned int address, unsigned char value)
+{
+    (*DebugMemWrite8)(address, value);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void MemWrite32(unsigned int address, unsigned int value)
+{
+    (*DebugMemWrite32)(address, value);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void *GetRegister(m64p_dbg_cpu_data type)
+{
+    return (*DebugGetCPUDataPtr)(type);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+unsigned long long ReadRegister(m64p_dbg_cpu_data type, unsigned char index)
+{
+    switch (type)
+    {
+        case M64P_CPU_REG_REG:
+        case M64P_CPU_REG_COP1_FGR_64:
+            return ((unsigned long long *)GetRegister(type))[index];
+        default:
+            return ((unsigned long *)GetRegister(type))[index];
+        break;
+    }
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void *GetMemoryPointer(m64p_dbg_memptr_type type)
+{
+    return (*DebugMemGetPointer)(type);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+void DecodeOpcode(unsigned int addr, char *op, char *args)
+{
+    (*DebugDecodeOp)(MemRead32(addr), op, args, addr);
+}
+
