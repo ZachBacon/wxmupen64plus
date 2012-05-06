@@ -282,7 +282,11 @@ void DebuggerFrame::PaneCloseEvent(wxAuiManagerEvent &evt)
 
 void DebuggerFrame::SafeAuiUpdate()
 {
+    double constraint[2];
+    aui->GetDockSizeConstraint(&constraint[0], &constraint[1]);
+    aui->SetDockSizeConstraint(1, 1);
     aui->Update();
+    aui->SetDockSizeConstraint(constraint[0], constraint[1]);
 }
 
 bool DebuggerFrame::LoadAui(const wxString &perspective_, DebugConfigIn *config)
