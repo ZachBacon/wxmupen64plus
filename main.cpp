@@ -40,6 +40,8 @@
 #include "main.h"
 #include "wxvidext.h"
 
+#include "debugger/debuggerframe.h"
+
 #include <stdexcept>
 #include <algorithm>
 #include "sdlhelper.h"
@@ -340,6 +342,8 @@ void MupenFrontendApp::shutdown()
         m_curr_panel->removeMyselfFrom(m_sizer);
         m_curr_panel = NULL;
     }
+    if (DebuggerFrame::Exists())
+        DebuggerFrame::Delete();
     
     if (m_frame != NULL)
     {

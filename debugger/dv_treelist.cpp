@@ -122,7 +122,7 @@ dvtlModelItem *DataViewTreeListModel::FindItem(void *value)
 {
     auto it = value_lookup.find(value);
     if (it == value_lookup.end())
-        return 0 ;
+        return 0;
 
     return it->second;
 }

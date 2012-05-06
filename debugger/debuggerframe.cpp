@@ -161,6 +161,7 @@ void DebuggerFrame::Delete()
         return;
     g_debugger->SaveConfig();
     g_debugger->SaveGameValues();
+    g_debugger->breakpoints->Clear(); // Destroy() is delayed, but this uses functions that will be unloaded
     g_debugger->Destroy();
 }
 

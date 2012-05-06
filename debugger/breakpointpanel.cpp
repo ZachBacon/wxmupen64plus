@@ -519,6 +519,16 @@ void BreakpointPanel::EditDialog()
 void BreakpointPanel::RClickEvent(wxCommandEvent &evt)
 {
     int id = evt.GetId();
+    dvtlModelItem *selection = (dvtlModelItem *)list->GetSelection().GetID();
+    if (selection) // if has single selection
+    {
+        Breakpoint *bpt = (Breakpoint *)selection->value; // if selection is not group (not even implemented)
+        if (bpt)
+        {
+            if (parent->DoFollow(id, bpt->GetAddress()))
+                return;
+        }
+    }
     switch(id)
     {
         case break_add:
@@ -617,7 +627,8 @@ void BreakpointPanel::RClickItem(wxDataViewEvent &evt)
     menu.Append(add);
     if (list->HasSelection())
     {
-        if (list->GetSelection().GetID() != 0) // wx 2.9.3: list->GetSelectedItemsCount() == 1 or list->HasSelecion()
+        bool single_selection = list->GetSelection().GetID() != 0;
+        if (single_selection) // wx 2.9.3: list->GetSelectedItemsCount() == 1 or list->HasSelecion()
         {
             edit = new wxMenuItem(&menu, break_edit, _("Edit..\tCtrl-E"));
             menu.Append(edit);
@@ -628,6 +639,18 @@ void BreakpointPanel::RClickItem(wxDataViewEvent &evt)
         menu.Append(enable);
         remove = new wxMenuItem(&menu, break_delete, _("Delete\tDel"));
         menu.Append(remove);
+        if (single_selection)
+        {
+            Breakpoint *bpt = (Breakpoint *)((dvtlModelItem *)list->GetSelection().GetID())->value;
+            if (bpt)
+            {
+                int type = bpt->GetType();
+                if (type & BREAK_TYPE_EXECUTE)
+                    parent->MenuAppendDisasmFollow(&menu);
+                if (type & (BREAK_TYPE_READ | BREAK_TYPE_WRITE))
+                    parent->MenuAppendMemoryFollow(&menu);
+            }
+        }
     }
 
     separator = new wxMenuItem(&menu);
@@ -636,7 +659,7 @@ void BreakpointPanel::RClickItem(wxDataViewEvent &evt)
     GenerateFilterMenu(filter);
     menu.AppendSubMenu(filter, _("Show"));
 
-    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &BreakpointPanel::RClickEvent, this, break_add, break_last - 1);
+    menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &BreakpointPanel::RClickEvent, this);
 
     PopupMenu(&menu);
 }
