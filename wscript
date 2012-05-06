@@ -31,7 +31,8 @@ def options(opt):
     opt.add_option('--debug',     action='store', help='Whether to make a debug build (may be \'true\' or \'false\')', default='false', dest="debugmode")
     opt.add_option('--wxconfig_args', action='store', help='Additional arguments passed to wx-config', default='',  dest='wxconfig_args')
     opt.add_option('--datadir', action='store', help='(Optional) the directory where to look for data files', default='',  dest='datadir')
-    opt.add_option('--libdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='libdir')
+    opt.add_option('--libdir', action='store', help='(Optional) the directory where to look for the core library', default='',  dest='libdir')
+    opt.add_option('--pluginsdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='pluginsdir')
     opt.add_option('--bindir', action='store', help='(Optional) the directory where to install wxmupen64plus binary', default='',  dest='bindir')
     opt.add_option('--debugger', action='store', help='Enable or disable the debugger (true or false). Requires GCC 4.6', default='true',  dest='debugger')
     
@@ -84,6 +85,7 @@ def configure(ctx):
     ctx.env['wxhome'] = wxhome
     ctx.env['datadir'] = Options.options.datadir
     ctx.env['libdir'] = Options.options.libdir
+    ctx.env['pluginsdir'] = Options.options.pluginsdir
     ctx.env['enable_debugger'] = enable_debugger
     
     ctx.find_program('gcc', var='GCC', mandatory=True)
@@ -143,6 +145,8 @@ def build(bld):
         build_flags += ['-DWXDATADIR="' + bld.env['datadir'] + '"']
     if len(bld.env['libdir']) > 0:
         build_flags += ['-DLIBDIR="' + bld.env['libdir'] + '"']
+    if len(bld.env['pluginsdir']) > 0:
+        build_flags += ['-DPLUGINSDIR="' + bld.env['pluginsdir'] + '"']
     if len(bld.env['bindir']) > 0:
         bin_install_path = bld.env['bindir']
     else:

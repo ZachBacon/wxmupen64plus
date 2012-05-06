@@ -174,6 +174,11 @@ bool MupenFrontendApp::OnInit()
     libs = wxStandardPaths::Get().GetPluginsDir() + wxFileName::GetPathSeparator();
 #endif
 
+    wxString pluginsPath = libs;
+#ifdef PLUGINSDIR
+    pluginsPath = wxString(PLUGINSDIR) + wxFileName::GetPathSeparator();
+#endif
+
     mplog_info("MupenfrontApp", "Will look for resources in <%s> and librairies in <%s>\n",
               (const char*)datadir.utf8_str(), (const char*)libs.utf8_str());
     int plugins = 0;
@@ -187,7 +192,7 @@ bool MupenFrontendApp::OnInit()
         {
             // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
             m_api = new Mupen64PlusPlus(corepath,
-                                        libs.utf8_str(),
+                                        pluginsPath.utf8_str(),
                                         DEFAULT_VIDEO_PLUGIN,
                                         DEFAULT_AUDIO_PLUGIN,
                                         DEFAULT_INPUT_PLUGIN,
@@ -203,7 +208,7 @@ bool MupenFrontendApp::OnInit()
         catch (CoreNotFoundException& e)
         {
             mplog_error("MupenAPI", "The core was not found : %s\n", e.what());
-            wxMessageBox( _("The Mupen64Plus core library was not found or loaded; please select it before you can continue") );
+            wxMessageBox( wxString::Format(_("The Mupen64Plus core library was not found at <%s> or could not be loaded; please select it before you can continue"), corepath) );
             
             wxString wildcard = _("Dynamic libraries") + wxString(" (*") + OSAL_DLL_EXTENSION +
                                       ")|*" + OSAL_DLL_EXTENSION + "|" + _("All files") + "|*";
