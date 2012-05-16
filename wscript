@@ -85,6 +85,7 @@ def configure(ctx):
     ctx.env['wxhome'] = wxhome
     ctx.env['datadir'] = Options.options.datadir
     ctx.env['libdir'] = Options.options.libdir
+    ctx.env['bindir'] = Options.options.bindir
     ctx.env['pluginsdir'] = Options.options.pluginsdir
     ctx.env['enable_debugger'] = enable_debugger
     
