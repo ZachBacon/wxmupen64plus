@@ -62,7 +62,7 @@ BreakpointInterface::~BreakpointInterface()
     Clear();
 }
 
-bool BreakpointInterface::RawAdd(Breakpoint *bpt)
+bool BreakpointInterface::AddToCore(Breakpoint *bpt)
 {
     breakpoint raw_bpt;
     raw_bpt.address = bpt->address;
@@ -73,7 +73,6 @@ bool BreakpointInterface::RawAdd(Breakpoint *bpt)
     if (bpt->id == -1)
         return false;
 
-    bpt->enabled = true;
     return true;
 }
 
@@ -85,7 +84,7 @@ bool BreakpointInterface::Add(Breakpoint *bpt)
     if (Find(bpt->address, bpt->length))
         return false; // Well, this could edit the existing breakpoint to merge or something it with this one
 
-    if (!RawAdd(bpt))
+    if (!AddToCore(bpt))
         return false;
 
     for (int i = 0; i < bpt->length; i++)
@@ -113,7 +112,7 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
         breaks.insert(pair<wxString *, Breakpoint *>(&bpt->name, bpt));
     }
 
-    if (!bpt->enabled)
+    if (!bpt->IsEnabled())
     {
         bpt->SetValues(address, length, type);
         return true;
@@ -140,7 +139,7 @@ bool BreakpointInterface::Update(Breakpoint *bpt, const wxString &name, uint32_t
 
 }
 
-void BreakpointInterface::Remove(Breakpoint *bpt)
+void BreakpointInterface::RemoveFromCore(Breakpoint *bpt)
 {
     if (bpt->id == -1)
         return;
@@ -148,27 +147,15 @@ void BreakpointInterface::Remove(Breakpoint *bpt)
     int old_id = bpt->id;
     (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
     bpt->id = -1;
-    bpt->enabled = false;
 
-    for (int i = 0; i < bpt->length; i++)
-        breakmap.erase(bpt->address + i);
-
-    auto range = breaks.equal_range(&bpt->name);
-    auto to_be_deleted = breaks.end();
-    for (auto it = range.first; it != range.second; ++it)
+    for (auto it = breaks.begin(); it != breaks.end(); ++it)
     {
         Breakpoint *entry = it->second;
-        if (entry == bpt)
-        {
-            to_be_deleted = it;
-        }
-        else if (entry->id > old_id) // Core does this too, so it has to be mimiced (maybe shouldn't use ids at all)
+         if (entry->id > old_id) // Core does this too, so it has to be mimiced (maybe shouldn't use ids at all)
         {
             entry->id -= 1;
         }
     }
-    if (to_be_deleted != breaks.end())
-        breaks.erase(to_be_deleted);
 }
 
 unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name, int *amt)
@@ -190,26 +177,36 @@ unique_ptr<Breakpoint *[]> BreakpointInterface::FindByName(const wxString &name,
 
 void BreakpointInterface::Delete(Breakpoint *bpt)
 {
-    Remove(bpt);
+    RemoveFromCore(bpt);
+    for (int i = 0; i < bpt->length; i++)
+        breakmap.erase(bpt->address + i);
+
+    auto range = breaks.equal_range(&bpt->GetName());
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        if (it->second == bpt)
+        {
+            breaks.erase(it);
+            break;
+        }
+    }
     delete bpt;
 }
 
 bool BreakpointInterface::Enable(Breakpoint *bpt)
 {
-    if (bpt->enabled)
+    if (bpt->IsEnabled())
         return true;
 
-    return RawAdd(bpt);
+    return AddToCore(bpt);
 }
 
 void BreakpointInterface::Disable(Breakpoint *bpt)
 {
-    if (!bpt->enabled)
+    if (!bpt->IsEnabled())
         return;
 
-    (*DebugBreakpointCommand)(M64P_BKP_CMD_REMOVE_IDX, bpt->id, 0);
-    bpt->id = -1;
-    bpt->enabled = false;
+    RemoveFromCore(bpt);
 }
 
 Breakpoint *BreakpointInterface::Find(uint32_t address, uint32_t length)

@@ -77,8 +77,9 @@ class BreakpointInterface
         const BreakContainer *GetAllBreakpoints() { return &breaks; }
 
     private:
-        bool RawAdd(Breakpoint *bpt);
-        void Remove(Breakpoint *bpt);
+        bool AddToCore(Breakpoint *bpt);
+        void RemoveFromCore(Breakpoint *bpt);
+        
         // I don't think hash table is the best option for data ranges far aways each other, but it shall be enough for now
         std::unordered_map<uint32_t, Breakpoint *> breakmap;
         BreakContainer breaks;
@@ -92,11 +93,10 @@ class Breakpoint
         Breakpoint(const wxString &name, uint32_t address, int length, char type);
         ~Breakpoint();
 
-
         BreakValidity IsValid() const;
         static BreakValidity IsValid(const wxString &name, uint32_t address, int length, char type);
 
-        bool IsEnabled() const { return enabled; }
+        bool IsEnabled() const { return id != -1; }
         char GetType() const { return type; }
         const wxString &GetName() const { return name; }
         uint32_t GetAddress() const { return address; }
@@ -112,7 +112,6 @@ class Breakpoint
         uint32_t address;
         int length;
         char type;
-        bool enabled;
 };
 
 #endif // BREAKPOINT_H
