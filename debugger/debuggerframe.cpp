@@ -158,7 +158,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
 
     CreateMenubar();
 
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuClose, this, wxID_CLOSE);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::Close, this, wxID_CLOSE);
     Bind(wxEVT_CLOSE_WINDOW, &DebuggerFrame::Close, this);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuAddPanel, this, break_panel_id, last_panel_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuState, this, state_run_id, last_state_id - 1);
@@ -181,14 +181,14 @@ void DebuggerFrame::Delete()
     if (!g_debugger)
         return;
     g_debugger->SaveConfig();
-    // I don't think this is necessary?
-    //g_debugger->SaveGameValues();
     g_debugger->breakpoints->Clear(); // Destroy() is delayed, but this uses functions that will be unloaded
     g_debugger->Destroy();
 }
 
-void DebuggerFrame::Close(wxCloseEvent &evt)
+// Called when debugger was closed but game is still running
+void DebuggerFrame::Close(wxEvent &evt)
 {
+    g_debugger->SaveGameValues();
     Delete();
 }
 
@@ -974,11 +974,6 @@ void DebuggerFrame::Print(const wxString &msg)
         output->Print(msg);
     else
         printf("Debugger: %s\n", (const char *)msg);
-}
-
-void DebuggerFrame::MenuClose(wxCommandEvent &evt)
-{
-    Delete();
 }
 
 void DebuggerFrame::UpdatePanels(bool vi)

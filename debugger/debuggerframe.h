@@ -90,8 +90,7 @@ class DebuggerFrame : public wxFrame
         static void GameClosed();
 
         void ProcessCallback(wxCommandEvent &evt);
-        void Close(wxCloseEvent &evt);
-        void MenuClose(wxCommandEvent &evt);
+        void Close(wxEvent &evt);
         void MenuAddPanel(wxCommandEvent &evt);
         void MenuState(wxCommandEvent &evt);
         void MenuOption(wxCommandEvent &evt);
