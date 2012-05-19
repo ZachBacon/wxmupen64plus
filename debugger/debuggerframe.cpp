@@ -1,3 +1,24 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *   wxMupen64Plus debugger                                                *
+ *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 Markus Heikkinen                                   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 #include "debuggerframe.h"
 
 #include <wx/aui/framemanager.h>
@@ -137,7 +158,7 @@ DebuggerFrame::DebuggerFrame(wxWindow *parentwnd, int id) : wxFrame(parentwnd, i
 
     CreateMenubar();
 
-    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuClose, this, wxID_CLOSE);
+    Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::Close, this, wxID_CLOSE);
     Bind(wxEVT_CLOSE_WINDOW, &DebuggerFrame::Close, this);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuAddPanel, this, break_panel_id, last_panel_id - 1);
     Bind(wxEVT_COMMAND_MENU_SELECTED, &DebuggerFrame::MenuState, this, state_run_id, last_state_id - 1);
@@ -160,14 +181,14 @@ void DebuggerFrame::Delete()
     if (!g_debugger)
         return;
     g_debugger->SaveConfig();
-    // I don't think this is necessary?
-    //g_debugger->SaveGameValues();
     g_debugger->breakpoints->Clear(); // Destroy() is delayed, but this uses functions that will be unloaded
     g_debugger->Destroy();
 }
 
-void DebuggerFrame::Close(wxCloseEvent &evt)
+// Called when debugger was closed but game is still running
+void DebuggerFrame::Close(wxEvent &evt)
 {
+    g_debugger->SaveGameValues();
     Delete();
 }
 
@@ -953,11 +974,6 @@ void DebuggerFrame::Print(const wxString &msg)
         output->Print(msg);
     else
         printf("Debugger: %s\n", (const char *)msg);
-}
-
-void DebuggerFrame::MenuClose(wxCommandEvent &evt)
-{
-    Delete();
 }
 
 void DebuggerFrame::UpdatePanels(bool vi)

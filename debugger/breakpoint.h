@@ -1,3 +1,24 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *   wxMupen64Plus debugger                                                *
+ *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 Markus Heikkinen                                   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 #ifndef BREAKPOINT_H
 #define BREAKPOINT_H
 #include <stdint.h>
@@ -56,8 +77,9 @@ class BreakpointInterface
         const BreakContainer *GetAllBreakpoints() { return &breaks; }
 
     private:
-        bool RawAdd(Breakpoint *bpt);
-        void Remove(Breakpoint *bpt);
+        bool AddToCore(Breakpoint *bpt);
+        void RemoveFromCore(Breakpoint *bpt);
+        
         // I don't think hash table is the best option for data ranges far aways each other, but it shall be enough for now
         std::unordered_map<uint32_t, Breakpoint *> breakmap;
         BreakContainer breaks;
@@ -71,11 +93,10 @@ class Breakpoint
         Breakpoint(const wxString &name, uint32_t address, int length, char type);
         ~Breakpoint();
 
-
         BreakValidity IsValid() const;
         static BreakValidity IsValid(const wxString &name, uint32_t address, int length, char type);
 
-        bool IsEnabled() const { return enabled; }
+        bool IsEnabled() const { return id != -1; }
         char GetType() const { return type; }
         const wxString &GetName() const { return name; }
         uint32_t GetAddress() const { return address; }
@@ -91,7 +112,6 @@ class Breakpoint
         uint32_t address;
         int length;
         char type;
-        bool enabled;
 };
 
 #endif // BREAKPOINT_H
