@@ -35,6 +35,7 @@ def options(opt):
     opt.add_option('--pluginsdir', action='store', help='(Optional) the directory where to look for plugin files', default='',  dest='pluginsdir')
     opt.add_option('--bindir', action='store', help='(Optional) the directory where to install wxmupen64plus binary', default='',  dest='bindir')
     opt.add_option('--debugger', action='store', help='Enable or disable the debugger (true or false). Requires GCC 4.6', default='true',  dest='debugger')
+    opt.add_option('--version_check', action='store', help='Enable or disable check of the mupen64plus-core version (true or false).', default='true',  dest='version_check')
     
     if os.name == 'nt':
         opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
@@ -65,6 +66,7 @@ def configure(ctx):
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
     enable_debugger = (Options.options.debugger == 'true')
+    version_check = (Options.options.version_check == 'true')
     
     wxconfig_args = Options.options.wxconfig_args
     
@@ -85,6 +87,7 @@ def configure(ctx):
     ctx.env['wxhome'] = wxhome
     ctx.env['datadir'] = Options.options.datadir
     ctx.env['libdir'] = Options.options.libdir
+    ctx.env['bindir'] = Options.options.bindir
     ctx.env['pluginsdir'] = Options.options.pluginsdir
     ctx.env['enable_debugger'] = enable_debugger
     
@@ -95,7 +98,8 @@ def configure(ctx):
     ctx.check_cc(header_name="m64p_frontend.h",   includes=[api_path])
     ctx.check_cc(header_name="m64p_config.h",     includes=[api_path])
     ctx.check_cc(header_name="m64p_types.h",      includes=[api_path])
-    ctx.check_cc(header_name="../main/version.h", includes=[api_path])
+    if version_check:
+	ctx.check_cc(header_name="../main/version.h", includes=[api_path])
 
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
     
@@ -106,7 +110,8 @@ def configure(ctx):
     else:
         ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --libs adv,aui,core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
 
-    ctx.check_cc(compile_filename='test.c', execute=False, cflags=["-I"+api_path], msg="Checking mupen64plus is recent enough...", fragment=
+    if version_check:
+        ctx.check_cc(compile_filename='test.c', execute=False, cflags=["-I"+api_path], msg="Checking mupen64plus is recent enough...", fragment=
 """#include "../main/version.h"
    #if FRONTEND_API_VERSION < 0x020001
    #error Your mupen64plus build is too old, please upgrade
