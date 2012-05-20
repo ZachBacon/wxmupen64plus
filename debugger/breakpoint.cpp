@@ -22,7 +22,7 @@
 #include "breakpoint.h"
 
 #define uint32 uint32_t
-#include <../debugger/dbg_breakpoints.h> // sigh
+#include <m64p_types.h>
 #include <m64p_debugger.h>
 #include "../mupen64plusplus/MupenAPI.h"
 
