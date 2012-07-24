@@ -99,7 +99,7 @@ def configure(ctx):
     ctx.check_cc(header_name="m64p_config.h",     includes=[api_path])
     ctx.check_cc(header_name="m64p_types.h",      includes=[api_path])
     if version_check:
-	ctx.check_cc(header_name="../main/version.h", includes=[api_path])
+        ctx.check_cc(header_name="../main/version.h", includes=[api_path])
 
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
     
