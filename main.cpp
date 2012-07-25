@@ -183,7 +183,7 @@ bool MupenFrontendApp::OnInit()
               (const char*)datadir.utf8_str(), (const char*)libs.utf8_str());
     int plugins = 0;
     
-    wxString corepath = libs + "libmupen64plus" + OSAL_DLL_EXTENSION;
+    wxString corepath = libs + OSAL_DEFAULT_DYNLIB_FILENAME; //"libmupen64plus" + OSAL_DLL_EXTENSION;
     
     while (m_api == NULL)
     {
