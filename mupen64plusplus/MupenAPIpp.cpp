@@ -1006,6 +1006,14 @@ std::string ConfigParam::getStringValue()
         errmsg = errmsg + getErrorMessage(result);
         throw std::runtime_error(errmsg);
     }
+    
+    // HACK: when the name of a device is 'AutoKeyboard', mupen will not reload
+    //       the config. Since wxmupen is all about changing the config, don't
+    //       let mupen do that :)
+    if (m_param_name == "name" and std::string(buffer) == "AutoKeyboard")
+    {
+        return "CustomKeyboardConfig";
+    }
 
     return std::string(buffer);
 }
