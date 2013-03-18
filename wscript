@@ -90,9 +90,7 @@ def configure(ctx):
     ctx.env['bindir'] = Options.options.bindir
     ctx.env['pluginsdir'] = Options.options.pluginsdir
     ctx.env['enable_debugger'] = enable_debugger
-    
-    ctx.find_program('gcc', var='GCC', mandatory=True)
-    ctx.find_program('g++', var='GPP', mandatory=True)
+
     ctx.check_cc(header_name="stdio.h", function_name='printf', msg='Checking C compiler works', errmsg="No")
     ctx.check_cxx(header_name="cstdio", function_name='printf', msg='Checking C++ compiler works', errmsg="No")
     ctx.check_cc(header_name="m64p_frontend.h",   includes=[api_path])
