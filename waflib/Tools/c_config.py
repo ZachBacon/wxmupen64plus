@@ -185,7 +185,7 @@ def parse_flags(self, line, uselib_store, env=None, force_static=False):
 			app('CXXFLAGS_' + uselib, tmp)
 			app('LINKFLAGS_' + uselib, tmp)
 		elif x.endswith('.a') or x.endswith('.so') or x.endswith('.dylib') or x.endswith('.lib'):
-			appu('LINKFLAGS_' + uselib, [x]) # not cool, #762
+			appu('PATHLIB', [x])
 
 @conf
 def ret_msg(self, f, kw):
