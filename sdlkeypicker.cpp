@@ -867,7 +867,7 @@ void wxSDLKeyPicker::updateLabel()
         if (count > 1)
         {
             // TODO: handle multiple bindings
-            mplog_warning("KeyPicker", "Cannot handle '" + m_binding + "', will strip it down to the first option only\n");
+            mplog_warning("KeyPicker", ("Cannot handle '" + m_binding + "', will strip it down to the first option only\n").utf8_str());
             m_binding = m_binding.BeforeFirst(L')') + ")";
         }
         
@@ -882,7 +882,7 @@ void wxSDLKeyPicker::updateLabel()
             }
             else
             {
-                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + "> (not a number)\n");
+                mplog_warning("SdlKeyPicker.updateLabel", ("Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + "> (not a number)\n").utf8_str());
                 label = m_binding;
             }
         }
@@ -897,7 +897,7 @@ void wxSDLKeyPicker::updateLabel()
             }
             else
             {
-                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n");
+                mplog_warning("SdlKeyPicker.updateLabel", ("Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n").utf8_str());
                 label = m_binding;
             }
         }
@@ -914,7 +914,7 @@ void wxSDLKeyPicker::updateLabel()
             }
             else
             {
-                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n");
+                mplog_warning("SdlKeyPicker.updateLabel", ("Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n").utf8_str());
                 label = m_binding;
             }
         }
@@ -924,7 +924,7 @@ void wxSDLKeyPicker::updateLabel()
         }
         else
         {
-            mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n");
+            mplog_warning("SdlKeyPicker.updateLabel", ("Unknown binding type for 'FORMAT_DIGITAL' : <" + m_binding + ">\n").utf8_str());
             label = m_binding;
         }
     }
@@ -938,7 +938,7 @@ void wxSDLKeyPicker::updateLabel()
         if (count > 1)
         {
             // TODO: handle multiple bindings
-            mplog_warning("KeyPicker", "Cannot handle '" + m_binding + "', will strip it down to the first option only\n");
+            mplog_warning("KeyPicker", ("Cannot handle '" + m_binding + "', will strip it down to the first option only\n").utf8_str());
             m_binding = m_binding.BeforeFirst(L')') + ")";
         }
         
@@ -948,7 +948,7 @@ void wxSDLKeyPicker::updateLabel()
             wxString key1 = m_binding.AfterFirst('(').BeforeLast(',');
             wxString key2 = m_binding.AfterLast(',').BeforeLast(')');
             
-            mplog_info("SdlKeyPicker", "Binding : <" + m_binding + ">\n");
+            mplog_info("SdlKeyPicker", ("Binding : <" + m_binding + ">\n").utf8_str());
             
             const bool success = (key1.IsEmpty() || key1.ToLong(&key1val)) &&
                                  (key2.IsEmpty() || key2.ToLong(&key2val));
@@ -963,7 +963,7 @@ void wxSDLKeyPicker::updateLabel()
             else
             {
                 label = m_binding;
-                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding format for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n");
+                mplog_warning("SdlKeyPicker.updateLabel", ("Unknown binding format for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n").utf8_str());
                 m_btn2->SetLabel("???");
             }
         }
@@ -979,7 +979,7 @@ void wxSDLKeyPicker::updateLabel()
         {
             if (not m_binding.IsEmpty())
             {
-                mplog_warning("SdlKeyPicker.updateLabel", "Unknown binding type for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n");
+                mplog_warning("SdlKeyPicker.updateLabel", ("Unknown binding type for 'FORMAT_ANALOG_COUPLE' : <" + m_binding + ">\n").utf8_str());
             }
             label = m_binding;
         }
