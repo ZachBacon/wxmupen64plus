@@ -81,6 +81,9 @@ def configure(ctx):
     
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
+
+    if os.name == 'nt':
+        ctx.find_program('windres', var='WINDRES', mandatory=True)
     
     ctx.env['api_path'] = api_path
     ctx.env['is_debug'] = is_debug
@@ -160,11 +163,11 @@ def build(bld):
     
     # Windows
     if os.name == 'nt':
-        cmd = "windres --include-dir=" + wxhome + r"\include ${SRC} --output ${TGT}"
+        cmd = bld.env.WINDRES + " --include-dir=" + wxhome + r"\include ${SRC} --output ${TGT}"
         bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
+        additional_links += ['manifest.o']
         
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
-        additional_links += ['manifest.o']
         
     # A few OSX-specific flags
     elif os.uname()[0] == 'Darwin':
