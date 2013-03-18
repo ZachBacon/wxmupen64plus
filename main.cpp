@@ -29,6 +29,7 @@
 #include <wx/html/htmlwin.h>
 #include <wx/progdlg.h>
 #include <wx/artprov.h>
+#include <SDL.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
