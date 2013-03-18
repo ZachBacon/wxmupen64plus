@@ -39,6 +39,7 @@ def options(opt):
     
     if os.name == 'nt':
         opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
+        opt.add_option('--wxinclude', action='store', help='Where your wxWidgets header files are installed', default=None,  dest='wxinclude')
 
     opt.load('compiler_cxx')
     opt.load('compiler_c')
@@ -69,10 +70,17 @@ def configure(ctx):
     version_check = (Options.options.version_check == 'true')
     
     wxconfig_args = Options.options.wxconfig_args
-    
+
     wxhome = ''
     if os.name == 'nt':
         wxhome = ''.join(Options.options.wxhome)
+
+    wxinclude = ''
+    if os.name == 'nt':
+        if Options.options.wxinclude == None:
+            wxinclude = wxhome + r"\include"
+        else:
+            wxinclude = ''.join(Options.options.wxinclude)
     
     if Options.options.debugmode != 'true' and Options.options.debugmode != 'false':
         waflib.Logs.warn("Warning, the --debug option may only be 'true' or 'false'. Defaulting to 'false'.")
@@ -88,6 +96,7 @@ def configure(ctx):
     ctx.env['api_path'] = api_path
     ctx.env['is_debug'] = is_debug
     ctx.env['wxhome'] = wxhome
+    ctx.env['wxinclude'] = wxinclude
     ctx.env['datadir'] = Options.options.datadir
     ctx.env['libdir'] = Options.options.libdir
     ctx.env['bindir'] = Options.options.bindir
@@ -163,7 +172,7 @@ def build(bld):
     
     # Windows
     if os.name == 'nt':
-        cmd = bld.env.WINDRES + " --include-dir=" + wxhome + r"\include ${SRC} --output ${TGT}"
+        cmd = bld.env.WINDRES + " --include-dir=" + bld.env['wxinclude'] + " ${SRC} --output ${TGT}"
         bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
         additional_links += ['manifest.o']
         
