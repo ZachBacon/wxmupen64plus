@@ -9,7 +9,7 @@ ConfigSet: a special dict
 The values put in :py:class:`ConfigSet` must be lists
 """
 
-import os, copy, re
+import copy, re, os
 from waflib import Logs, Utils
 re_imp = re.compile('^(#)*?([^#=]*?)\ =\ (.*?)$', re.M)
 
@@ -48,8 +48,8 @@ class ConfigSet(object):
 		try: return self.parent.__contains__(key)
 		except AttributeError: return False # parent may not exist
 
-	def __str__(self):
-		"""Text representation of the ConfigSet (for debugging purposes)"""
+	def keys(self):
+		"""Dict interface (unknown purpose)"""
 		keys = set()
 		cur = self
 		while cur:
@@ -57,7 +57,11 @@ class ConfigSet(object):
 			cur = getattr(cur, 'parent', None)
 		keys = list(keys)
 		keys.sort()
-		return "\n".join(["%r %r" % (x, self.__getitem__(x)) for x in keys])
+		return keys
+
+	def __str__(self):
+		"""Text representation of the ConfigSet (for debugging purposes)"""
+		return "\n".join(["%r %r" % (x, self.__getitem__(x)) for x in self.keys()])
 
 	def __getitem__(self, key):
 		"""
@@ -82,11 +86,11 @@ class ConfigSet(object):
 		"""
 		self.table[key] = value
 
-	def __delitem__(self, key, value):
+	def __delitem__(self, key):
 		"""
 		Dictionary interface: get value from key
 		"""
-		del self.table[key]
+		self[key] = []
 
 	def __getattr__(self, name):
 		"""
@@ -266,6 +270,11 @@ class ConfigSet(object):
 		:param filename: file to use
 		:type filename: string
 		"""
+		try:
+			os.makedirs(os.path.split(filename)[0])
+		except OSError:
+			pass
+
 		f = None
 		try:
 			f = open(filename, 'w')
@@ -287,7 +296,7 @@ class ConfigSet(object):
 		:type filename: string
 		"""
 		tbl = self.table
-		code = Utils.readf(filename)
+		code = Utils.readf(filename, m='rU')
 		for m in re_imp.finditer(code):
 			g = m.group
 			tbl[g(2)] = eval(g(3))
@@ -317,8 +326,11 @@ class ConfigSet(object):
 
 		The history is kept in a stack, and is lost during the serialization by :py:meth:`ConfigSet.store`
 		"""
-		self.undo_stack = self.undo_stack + [self.table]
-		self.table = self.table.copy()
+		orig = self.table
+		tbl = self.table = self.table.copy()
+		for x in tbl.keys():
+			tbl[x] = copy.deepcopy(tbl[x])
+		self.undo_stack = self.undo_stack + [orig]
 
 	def revert(self):
 		"""

@@ -6,14 +6,50 @@
 logging, colors, terminal width and pretty-print
 """
 
-import os, re, logging, traceback, sys
+import os, re, traceback, sys
 
 try:
-	if 'NOCOLOR' not in os.environ:
-		import waflib.ansiterm
-except:
-	# optional module for colors on win32, just ignore if it cannot be imported
+	import threading
+except ImportError:
 	pass
+else:
+	wlock = threading.Lock()
+
+	class sync_stream(object):
+		def __init__(self, stream):
+			self.stream = stream
+			self.encoding = self.stream.encoding
+
+		def write(self, txt):
+			try:
+				wlock.acquire()
+				self.stream.write(txt)
+				self.stream.flush()
+			finally:
+				wlock.release()
+
+		def fileno(self):
+			return self.stream.fileno()
+
+		def flush(self):
+			self.stream.flush()
+
+		def isatty(self):
+			return self.stream.isatty()
+
+	_nocolor = os.environ.get('NOCOLOR', 'no') not in ('no', '0', 'false')
+	try:
+		if not _nocolor:
+			import waflib.ansiterm
+	except ImportError:
+		pass
+
+	if not os.environ.get('NOSYNC', False):
+		if id(sys.stdout) == id(sys.__stdout__):
+			sys.stdout = sync_stream(sys.stdout)
+			sys.stderr = sync_stream(sys.stderr)
+
+import logging # import other modules only after
 
 LOG_FORMAT = "%(asctime)s %(c1)s%(zone)s%(c2)s %(message)s"
 HOUR_FORMAT = "%H:%M:%S"
@@ -38,11 +74,11 @@ colors_lst = {
 got_tty = not os.environ.get('TERM', 'dumb') in ['dumb', 'emacs']
 if got_tty:
 	try:
-		got_tty = sys.stderr.isatty()
+		got_tty = sys.stderr.isatty() and sys.stdout.isatty()
 	except AttributeError:
 		got_tty = False
 
-if not got_tty or 'NOCOLOR' in os.environ:
+if (not got_tty and os.environ.get('TERM', 'dumb') != 'msys') or _nocolor:
 	colors_lst['USE'] = False
 
 def get_term_cols():
@@ -68,7 +104,7 @@ else:
 		# try the function once to see if it really works
 		try:
 			get_term_cols_real()
-		except:
+		except Exception:
 			pass
 		else:
 			get_term_cols = get_term_cols_real
@@ -79,10 +115,6 @@ get_term_cols.__doc__ = """
 	:return: the number of characters per line
 	:rtype: int
 	"""
-
-# test
-#if sys.platform == 'win32':
-#	colors_lst['USE'] = True
 
 def get_color(cl):
 	if not colors_lst['USE']: return ''
@@ -135,10 +167,9 @@ class log_filter(logging.Filter):
 				rec.c1 = colors.GREEN
 			return True
 
-		zone = ''
 		m = re_log.match(rec.msg)
 		if m:
-			zone = rec.zone = m.group(1)
+			rec.zone = m.group(1)
 			rec.msg = m.group(2)
 
 		if zones:
@@ -156,9 +187,10 @@ class formatter(logging.Formatter):
 		"""Messages in warning, error or info mode are displayed in color by default"""
 		if rec.levelno >= logging.WARNING or rec.levelno == logging.INFO:
 			try:
-				return '%s%s%s' % (rec.c1, rec.msg.decode('utf-8'), rec.c2)
-			except:
-				return rec.c1+rec.msg+rec.c2
+				msg = rec.msg.decode('utf-8')
+			except Exception:
+				msg = rec.msg
+			return '%s%s%s' % (rec.c1, msg, rec.c2)
 		return logging.Formatter.format(self, rec)
 
 log = None

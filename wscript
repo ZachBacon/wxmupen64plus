@@ -57,7 +57,7 @@ def options(opt):
 # --------------------------------------------------------------------------------------------
 
 def configure(ctx):
-    import Options
+    from waflib import Options, Logs
     import subprocess
     import waflib
     import os

@@ -28,9 +28,11 @@ except Exception:
 else:
 	import re, threading
 
+	is_vista = getattr(sys, "getwindowsversion", None) and sys.getwindowsversion()[0] >= 6
+
 	try:
 		_type = unicode
-	except:
+	except NameError:
 		_type = str
 
 	to_int = lambda number, default: number and int(number) or default
@@ -70,7 +72,7 @@ else:
 				line_start = sbinfo.CursorPosition
 				line_length = sbinfo.Size.X - sbinfo.CursorPosition.X
 			chars_written = c_int()
-			windll.kernel32.FillConsoleOutputCharacterA(self.hconsole, c_char(' '), line_length, line_start, byref(chars_written))
+			windll.kernel32.FillConsoleOutputCharacterA(self.hconsole, c_wchar(' '), line_length, line_start, byref(chars_written))
 			windll.kernel32.FillConsoleOutputAttribute(self.hconsole, sbinfo.Attributes, line_length, line_start, byref(chars_written))
 
 		def clear_screen(self, param):
@@ -87,7 +89,7 @@ else:
 				clear_start = sbinfo.CursorPosition
 				clear_length = ((sbinfo.Size.X - sbinfo.CursorPosition.X) + sbinfo.Size.X * (sbinfo.Size.Y - sbinfo.CursorPosition.Y))
 			chars_written = c_int()
-			windll.kernel32.FillConsoleOutputCharacterA(self.hconsole, c_char(' '), clear_length, clear_start, byref(chars_written))
+			windll.kernel32.FillConsoleOutputCharacterA(self.hconsole, c_wchar(' '), clear_length, clear_start, byref(chars_written))
 			windll.kernel32.FillConsoleOutputAttribute(self.hconsole, sbinfo.Attributes, clear_length, clear_start, byref(chars_written))
 
 		def push_cursor(self, param):
@@ -161,9 +163,11 @@ else:
 			sbinfo = CONSOLE_SCREEN_BUFFER_INFO()
 			windll.kernel32.GetConsoleScreenBufferInfo(self.hconsole, byref(sbinfo))
 			attr = sbinfo.Attributes
-			neg = False
 			for c in cols:
-				c = to_int(c, 0)
+				if is_vista:
+					c = int(c)
+				else:
+					c = to_int(c, 0)
 				if c in range(30,38): # fgcolor
 					attr = (attr & 0xfff0) | self.rgb2bgr(c-30)
 				elif c in range(40,48): # bgcolor
