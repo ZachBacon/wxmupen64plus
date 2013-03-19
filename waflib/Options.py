@@ -11,7 +11,7 @@ as well as custom ones, used by the ``options`` wscript function.
 
 """
 
-import os, types, tempfile, optparse, sys
+import os, tempfile, optparse, sys, re
 from waflib import Logs, Utils, Context
 
 cmds = 'distclean configure build install clean uninstall check dist distcheck'.split()
@@ -35,7 +35,7 @@ commands = []
 List of commands to execute extracted from the command-line. This list is consumed during the execution, see :py:func:`waflib.Scripting.run_commands`.
 """
 
-lockfile = os.environ.get('WAFLOCK', '.lock-wafbuild')
+lockfile = os.environ.get('WAFLOCK', '.lock-waf_%s_build' % sys.platform)
 try: cache_global = os.path.abspath(os.environ['WAFCACHE'])
 except KeyError: cache_global = ''
 platform = Utils.unversioned_sys_platform()
@@ -54,7 +54,7 @@ class opt_parser(optparse.OptionParser):
 
 		jobs = ctx.jobs()
 		p('-j', '--jobs',     dest='jobs',    default=jobs, type='int', help='amount of parallel jobs (%r)' % jobs)
-		p('-k', '--keep',     dest='keep',    default=False, action='store_true', help='keep running happily even if errors are found')
+		p('-k', '--keep',     dest='keep',    default=0,     action='count', help='keep running happily even if errors are found')
 		p('-v', '--verbose',  dest='verbose', default=0,     action='count', help='verbosity level -v -vv or -vvv [default: 0]')
 		p('--nocache',        dest='nocache', default=False, action='store_true', help='ignore the WAFCACHE (if set)')
 		p('--zones',          dest='zones',   default='',    action='store', help='debugging zones (task_gen, deps, tasks, etc)')
@@ -93,13 +93,15 @@ class opt_parser(optparse.OptionParser):
 		gr.add_option('--destdir', help='installation root [default: %r]' % default_destdir, default=default_destdir, dest='destdir')
 		gr.add_option('-f', '--force', dest='force', default=False, action='store_true', help='force file installation')
 
+		gr.add_option('--distcheck-args', help='arguments to pass to distcheck', default=None, action='store')
+
 	def get_usage(self):
 		"""
 		Return the message to print on ``waf --help``
 		"""
 		cmds_str = {}
 		for cls in Context.classes:
-			if not cls.cmd:
+			if not cls.cmd or cls.cmd == 'options':
 				continue
 
 			s = cls.__doc__ or ''
@@ -135,11 +137,11 @@ class OptionsContext(Context.Context):
 	Set the global :py:const:`waflib.Options.commands` and :py:const:`waflib.Options.options` values.
 	"""
 
-	cmd = ''
+	cmd = 'options'
 	fun = 'options'
 
 	def __init__(self, **kw):
-		super(self.__class__, self).__init__(**kw)
+		super(OptionsContext, self).__init__(**kw)
 
 		self.parser = opt_parser(self)
 		"""Instance of :py:class:`waflib.Options.opt_parser`"""
@@ -159,7 +161,7 @@ class OptionsContext(Context.Context):
 		"""
 		count = int(os.environ.get('JOBS', 0))
 		if count < 1:
-			if sys.platform == 'win32':
+			if 'NUMBER_OF_PROCESSORS' in os.environ:
 				# on Windows, use the NUMBER_OF_PROCESSORS environment variable
 				count = int(os.environ.get('NUMBER_OF_PROCESSORS', 1))
 			else:
@@ -169,10 +171,14 @@ class OptionsContext(Context.Context):
 						count = int(os.sysconf('SC_NPROCESSORS_ONLN'))
 					elif 'SC_NPROCESSORS_CONF' in os.sysconf_names:
 						count = int(os.sysconf('SC_NPROCESSORS_CONF'))
-				elif os.name != 'java':
-					tmp = self.cmd_and_log(['sysctl', '-n', 'hw.ncpu'])
-					if re.match('^[0-9]+$', tmp):
-						count = int(tmp)
+				if not count and os.name not in ('nt', 'java'):
+					try:
+						tmp = self.cmd_and_log(['sysctl', '-n', 'hw.ncpu'], quiet=0)
+					except Exception:
+						pass
+					else:
+						if re.match('^[0-9]+$', tmp):
+							count = int(tmp)
 		if count < 1:
 			count = 1
 		elif count > 1024:
@@ -187,19 +193,19 @@ class OptionsContext(Context.Context):
 				ctx.add_option('-u', '--use', dest='use', default=False, action='store_true',
 					help='a boolean option')
 		"""
-		self.parser.add_option(*k, **kw)
+		return self.parser.add_option(*k, **kw)
 
 	def add_option_group(self, *k, **kw):
 		"""
 		Wrapper for optparse.add_option_group::
 
 			def options(ctx):
-				ctx.add_option_group('some options')
+				gr = ctx.add_option_group('some options')
 				gr.add_option('-u', '--use', dest='use', default=False, action='store_true')
 		"""
 		try:
 			gr = self.option_groups[k[0]]
-		except:
+		except KeyError:
 			gr = self.parser.add_option_group(*k, **kw)
 		self.option_groups[k[0]] = gr
 		return gr
@@ -217,7 +223,10 @@ class OptionsContext(Context.Context):
 		try:
 			return self.option_groups[opt_str]
 		except KeyError:
-			return self.parser.get_option_group(opt_str)
+			for group in self.parser.option_groups:
+				if group.title == opt_str:
+					return group
+			return None
 
 	def parse_args(self, _args=None):
 		"""

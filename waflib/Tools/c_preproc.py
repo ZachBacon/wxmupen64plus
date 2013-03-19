@@ -26,8 +26,8 @@ A dumb preprocessor is also available in the tool *c_dumbpreproc*
 """
 # TODO: more varargs, pragma once
 
-import re, sys, os, string, traceback
-from waflib import Logs, Build, Utils, Errors
+import re, string, traceback
+from waflib import Logs, Utils, Errors
 from waflib.Logs import debug, error
 
 class PreprocError(Errors.WafError):
@@ -40,10 +40,10 @@ recursion_limit = 150
 "Limit on the amount of files to read in the dependency scanner"
 
 go_absolute = False
-"Set to 1 to track headers on files in /usr/include - else absolute paths are ignored"
+"Set to True to track headers on files in /usr/include, else absolute paths are ignored (but it becomes very slow)"
 
 standard_includes = ['/usr/include']
-if sys.platform == "win32":
+if Utils.is_win32:
 	standard_includes = []
 
 use_trigraphs = 0
@@ -270,6 +270,7 @@ def get_num(lst):
 			num, lst = get_num(lst[1:])
 			return (int(not int(num)), lst)
 		elif v == '~':
+			num, lst = get_num(lst[1:])
 			return (~ int(num), lst)
 		else:
 			raise PreprocError("Invalid op token %r for get_num" % lst)
@@ -299,11 +300,7 @@ def get_term(lst):
 		return (num, [])
 	(p, v) = lst[0]
 	if p == OP:
-		if v == '&&' and not num:
-			return (num, [])
-		elif v == '||' and num:
-			return (num, [])
-		elif v == ',':
+		if v == ',':
 			# skip
 			return get_term(lst[1:])
 		elif v == '?':
@@ -449,8 +446,10 @@ def reduce_tokens(lst, defs, ban=[]):
 			if isinstance(macro_def[0], list):
 				# macro without arguments
 				del lst[i]
-				for x in range(len(to_add)):
-					lst.insert(i, to_add[x])
+				accu = to_add[:]
+				reduce_tokens(accu, defs, ban+[v])
+				for x in range(len(accu)):
+					lst.insert(i, accu[x])
 					i += 1
 			else:
 				# collect the arguments for the funcall
@@ -711,7 +710,6 @@ def parse_char(txt):
 		try: return chr_esc[c]
 		except KeyError: raise PreprocError("could not parse char literal '%s'" % txt)
 
-@Utils.run_once
 def tokenize(s):
 	"""
 	Convert a string into a list of tokens (shlex.split does not apply to c/c++/d)
@@ -721,7 +719,10 @@ def tokenize(s):
 	:return: a list of tokens
 	:rtype: list of tuple(token, value)
 	"""
-	# the same headers are read again and again - 10% improvement on preprocessing the samba headers
+	return tokenize_private(s)[:] # force a copy of the results
+
+@Utils.run_once
+def tokenize_private(s):
 	ret = []
 	for match in re_clexer.finditer(s):
 		m = match.group
@@ -812,7 +813,7 @@ class c_parser(object):
 		"""
 		try:
 			nd = node.ctx.cache_nd
-		except:
+		except AttributeError:
 			nd = node.ctx.cache_nd = {}
 
 		tup = (node, filename)
@@ -824,7 +825,7 @@ class c_parser(object):
 				if getattr(ret, 'children', None):
 					ret = None
 				elif ret.is_child_of(node.ctx.bldnode):
-					tmp = node.ctx.srcnode.search(ret.path_from(node.ctx.bldnode))
+					tmp = node.ctx.srcnode.search_node(ret.path_from(node.ctx.bldnode))
 					if tmp and getattr(tmp, 'children', None):
 						ret = None
 			nd[tup] = ret
@@ -987,7 +988,7 @@ class c_parser(object):
 				elif token == 'define':
 					try:
 						self.defs[define_name(line)] = line
-					except:
+					except Exception:
 						raise PreprocError("Invalid define line %s" % line)
 				elif token == 'undef':
 					m = re_mac.match(line)
@@ -1018,7 +1019,7 @@ def scan(task):
 		raise Errors.WafError('%r is missing a feature such as "c", "cxx" or "includes": ' % task.generator)
 
 	if go_absolute:
-		nodepaths = incn
+		nodepaths = incn + [task.generator.bld.root.find_dir(x) for x in standard_includes]
 	else:
 		nodepaths = [x for x in incn if x.is_child_of(x.ctx.srcnode) or x.is_child_of(x.ctx.bldnode)]
 

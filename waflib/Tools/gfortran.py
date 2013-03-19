@@ -5,13 +5,14 @@
 
 import re
 from waflib import Utils
-from waflib.Tools import fc, fc_config, fc_scan
+from waflib.Tools import fc, fc_config, fc_scan, ar
 from waflib.Configure import conf
 
 @conf
 def find_gfortran(conf):
 	"""Find the gfortran program (will look in the environment variable 'FC')"""
-	fc = conf.find_program('gfortran', var='FC')
+	fc = conf.find_program(['gfortran','g77'], var='FC')
+	# (fallback to g77 for systems, where no gfortran is available)
 	fc = conf.cmd_to_list(fc)
 	conf.get_gfortran_version(fc)
 	conf.env.FC_NAME = 'GFORTRAN'
@@ -85,5 +86,6 @@ def configure(conf):
 	conf.find_gfortran()
 	conf.find_ar()
 	conf.fc_flags()
+	conf.fc_add_flags()
 	conf.gfortran_flags()
 	conf.gfortran_modifier_platform()

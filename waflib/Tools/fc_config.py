@@ -46,6 +46,13 @@ def fc_flags(conf):
 
 	v['SONAME_ST']           = '-Wl,-h,%s'
 
+@conf
+def fc_add_flags(conf):
+	"""
+	FCFLAGS?
+	"""
+	conf.add_os_flags('FCFLAGS')
+	conf.add_os_flags('LDFLAGS', 'LINKFLAGS')
 
 @conf
 def check_fortran(self, *k, **kw):
@@ -101,13 +108,13 @@ def fortran_modifier_darwin(conf):
 def fortran_modifier_win32(conf):
 	"""Define fortran flags for the windows platforms"""
 	v = conf.env
-	v['fcprogram_PATTERN']    = '%s.exe'
+	v['fcprogram_PATTERN'] = v['fcprogram_test_PATTERN']  = '%s.exe'
 
-	v['fcshlib_PATTERN']      = '%s.dll'
-	v['implib_PATTERN']      = 'lib%s.dll.a'
-	v['IMPLIB_ST']           = '-Wl,--out-implib,%s'
+	v['fcshlib_PATTERN']   = '%s.dll'
+	v['implib_PATTERN']    = 'lib%s.dll.a'
+	v['IMPLIB_ST']         = '-Wl,--out-implib,%s'
 
-	v['FCFLAGS_fcshlib']      = []
+	v['FCFLAGS_fcshlib']   = []
 
 	v.append_value('FCFLAGS_fcshlib', ['-DDLL_EXPORT']) # TODO adding nonstandard defines like this DLL_EXPORT is not a good idea
 
@@ -177,9 +184,6 @@ POSIX_LIB_FLAGS = re.compile('-l\S+')
 @conf
 def is_link_verbose(self, txt):
 	"""Return True if 'useful' link options can be found in txt"""
-	if sys.platform == 'win32':
-		raise NotImplementedError("FIXME: not implemented on win32")
-
 	assert isinstance(txt, str)
 	for line in txt.splitlines():
 		if not GCC_DRIVER_LINE.search(line):
@@ -314,7 +318,7 @@ def check_fortran_clib(self, autoadd=True, *k, **kw):
 			features = 'fc fcprogram_test',
 			linkflags = [self.env.FC_VERBOSE_FLAG]
 		)
-	except:
+	except Exception:
 		self.end_msg(False)
 		if kw.get('mandatory', True):
 			conf.fatal('Could not find the c library flags')
@@ -330,23 +334,23 @@ def getoutput(conf, cmd, stdin=False):
 	"""
 	TODO a bit redundant, can be removed anytime
 	"""
+	if stdin:
+		stdin = Utils.subprocess.PIPE
+	else:
+		stdin = None
+	env = conf.env.env or None
 	try:
-		if stdin:
-			stdin = Utils.subprocess.PIPE
-		else:
-			stdin = None
-		p = Utils.subprocess.Popen(cmd, stdin=stdin, stdout=Utils.subprocess.PIPE, stderr=Utils.subprocess.PIPE)
+		p = Utils.subprocess.Popen(cmd, stdin=stdin, stdout=Utils.subprocess.PIPE, stderr=Utils.subprocess.PIPE, env=env)
 		if stdin:
 			p.stdin.write('\n'.encode())
-		stdout, stderr = p.communicate()
-	except:
+		out, err = p.communicate()
+	except Exception:
 		conf.fatal('could not determine the compiler version %r' % cmd)
-	else:
-		if not isinstance(stdout, str):
-			stdout = stdout.decode(sys.stdout.encoding)
-		if not isinstance(stderr, str):
-			stderr = stderr.decode(sys.stdout.encoding)
-		return stdout, stderr
+	if not isinstance(out, str):
+		out = out.decode(sys.stdout.encoding or 'iso8859-1')
+	if not isinstance(err, str):
+		err = err.decode(sys.stdout.encoding or 'iso8859-1')
+	return (out, err)
 
 # ------------------------------------------------------------------------
 
@@ -443,4 +447,22 @@ def check_fortran_mangling(self, *k, **kw):
 def set_lib_pat(self):
 	"""Set the fortran flags for linking with the python library"""
 	self.env['fcshlib_PATTERN'] = self.env['pyext_PATTERN']
+
+@conf
+def detect_openmp(self):
+	for x in ['-fopenmp','-openmp','-mp','-xopenmp','-omp','-qsmp=omp']:
+		try:
+			self.check_fc(
+				msg='Checking for OpenMP flag %s' % x,
+				fragment='program main\n  call omp_get_num_threads()\nend program main',
+				fcflags=x,
+				linkflags=x,
+				uselib_store='OPENMP'
+			)
+		except self.errors.ConfigurationError:
+			pass
+		else:
+			break
+	else:
+		self.fatal('Could not find OpenMP')
 

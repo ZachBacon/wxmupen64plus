@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: ISO8859-1
-# Thomas Nagy, 2005-2010
+# Thomas Nagy, 2005-2012
 
 """
 Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 import os, sys
 
-VERSION="1.6.4"
+VERSION="1.7.9"
 REVISION="x"
 INSTALL="x"
 C1='x'
@@ -76,13 +76,13 @@ def unpack_wafdir(dir):
 		for x in ['Tools', 'extras']:
 			os.makedirs(join(dir, 'waflib', x))
 	except OSError:
-		err("Cannot unpack waf lib into %s\nMove waf into a writeable directory" % dir)
+		err("Cannot unpack waf lib into %s\nMove waf in a writable directory" % dir)
 
 	os.chdir(dir)
 	tmp = 't.bz2'
 	t = open(tmp,'wb')
-	t.write(txt)
-	t.close()
+	try: t.write(txt)
+	finally: t.close()
 
 	try:
 		t = tarfile.open(tmp)
@@ -97,8 +97,10 @@ def unpack_wafdir(dir):
 			except OSError: pass
 			err("Waf cannot be unpacked, check that bzip2 support is present")
 
-	for x in t: t.extract(x)
-	t.close()
+	try:
+		for x in t: t.extract(x)
+	finally:
+		t.close()
 
 	for x in ['Tools', 'extras']:
 		os.chmod(join('waflib',x), 493)
@@ -158,7 +160,7 @@ wafdir = find_lib()
 sys.path.insert(0, wafdir)
 
 if __name__ == '__main__':
-	import waflib.extras.compat15#PRELUDE
+	#import waflib.extras.compat15#PRELUDE
 	from waflib import Scripting
 	Scripting.waf_entry_point(cwd, VERSION, wafdir)
 

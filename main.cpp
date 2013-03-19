@@ -29,6 +29,7 @@
 #include <wx/html/htmlwin.h>
 #include <wx/progdlg.h>
 #include <wx/artprov.h>
+#include <SDL.h>
 
 #include "mupen64plusplus/MupenAPI.h"
 #include "mupen64plusplus/MupenAPIpp.h"
@@ -191,7 +192,7 @@ bool MupenFrontendApp::OnInit()
         try
         {
             // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
-            m_api = new Mupen64PlusPlus(corepath,
+            m_api = new Mupen64PlusPlus(corepath.utf8_str(),
                                         pluginsPath.utf8_str(),
                                         DEFAULT_VIDEO_PLUGIN,
                                         DEFAULT_AUDIO_PLUGIN,

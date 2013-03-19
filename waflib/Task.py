@@ -102,7 +102,8 @@ classes = {}
 
 class store_task_type(type):
 	"""
-	Metaclass: store the task types into :py:const:`waflib.Task.classes`.
+	Metaclass: store the task classes into :py:const:`waflib.Task.classes`, or to the dict pointed
+	by the class attribute 'register'.
 	The attribute 'run_str' will be processed to compute a method 'run' on the task class
 	The decorator :py:func:`waflib.Task.cache_outputs` is also applied to the class
 	"""
@@ -121,8 +122,8 @@ class store_task_type(type):
 				cls.hcode = cls.run_str
 				cls.run_str = None
 				cls.run = f
-				cls.vars = []
-				cls.vars.extend(dvars)
+				cls.vars = list(set(cls.vars + dvars))
+				cls.vars.sort()
 			elif getattr(cls, 'run', None) and not 'hcode' in cls.__dict__:
 				# getattr(cls, 'hcode') would look in the upper classes
 				cls.hcode = Utils.h_fun(cls.run)
@@ -130,7 +131,8 @@ class store_task_type(type):
 			if not getattr(cls, 'nocache', None):
 				cls = cache_outputs(cls)
 
-			classes[name] = cls
+			# be creative
+			getattr(cls, 'register', classes)[name] = cls
 
 evil = store_task_type('evil', (object,), {})
 "Base class provided to avoid writing a metaclass, so the code can run in python 2.6 and 3.x unmodified"
@@ -230,14 +232,14 @@ class TaskBase(evil):
 		# in case of failure the task will be executed again
 		try:
 			del self.generator.bld.task_sigs[self.uid()]
-		except:
+		except KeyError:
 			pass
 
 		try:
 			self.generator.bld.returned_tasks.append(self)
 			self.log_display(self.generator.bld)
 			ret = self.run()
-		except Exception as e:
+		except Exception:
 			self.err_msg = Utils.ex_stack()
 			self.hasrun = EXCEPTION
 
@@ -266,7 +268,8 @@ class TaskBase(evil):
 
 	def run(self):
 		"""
-		Execute the task (executed by threads). Override in subclasses.
+		Called by threads to execute the tasks. The default is empty and meant to be overridden in subclasses.
+		It is a bad idea to create nodes in this method (so, no node.ant_glob)
 
 		:rtype: int
 		"""
@@ -290,9 +293,17 @@ class TaskBase(evil):
 		"""
 		col1 = Logs.colors(self.color)
 		col2 = Logs.colors.NORMAL
+		master = self.master
+
+		def cur():
+			# the current task position, computed as late as possible
+			tmp = -1
+			if hasattr(master, 'ready'):
+				tmp -= master.ready.qsize()
+			return master.processed + tmp
 
 		if self.generator.bld.progress_bar == 1:
-			return self.generator.bld.progress_line(self.generator.bld.producer.processed-1, self.position[1], col1, col2)
+			return self.generator.bld.progress_line(cur(), master.total, col1, col2)
 
 		if self.generator.bld.progress_bar == 2:
 			ela = str(self.generator.bld.timer)
@@ -304,17 +315,16 @@ class TaskBase(evil):
 				outs = ','.join([n.name for n in self.outputs])
 			except AttributeError:
 				outs = ''
-			return '|Total %s|Current %s|Inputs %s|Outputs %s|Time %s|\n' % (self.position[1], self.generator.bld.producer.processed-1, ins, outs, ela)
+			return '|Total %s|Current %s|Inputs %s|Outputs %s|Time %s|\n' % (master.total, cur(), ins, outs, ela)
 
 		s = str(self)
 		if not s:
 			return None
 
-		total = self.position[1]
+		total = master.total
 		n = len(str(total))
 		fs = '[%%%dd/%%%dd] %%s%%s%%s' % (n, n)
-		# we could use self.position[0], but the threading can make the reading unreliable
-		return fs % (self.generator.bld.producer.processed-1, self.position[1], col1, s, col2)
+		return fs % (cur(), total, col1, s, col2)
 
 	def attr(self, att, default=None):
 		"""
@@ -347,17 +357,20 @@ class TaskBase(evil):
 		:rtype: string
 		"""
 		msg = getattr(self, 'last_cmd', '')
+		name = getattr(self.generator, 'name', '')
 		if getattr(self, "err_msg", None):
 			return self.err_msg
+		elif not self.hasrun:
+			return 'task in %r was not executed for some reason: %r' % (name, self)
 		elif self.hasrun == CRASHED:
 			try:
-				return ' -> task failed (exit status %r): %r\n%r' % (self.err_code, self, msg)
+				return ' -> task in %r failed (exit status %r): %r\n%r' % (name, self.err_code, self, msg)
 			except AttributeError:
-				return ' -> task failed: %r\n%r' % (self, msg)
+				return ' -> task in %r failed: %r\n%r' % (name, self, msg)
 		elif self.hasrun == MISSING:
-			return ' -> missing files: %r\n%r' % (self, msg)
+			return ' -> missing files in %r: %r\n%r' % (name, self, msg)
 		else:
-			return '?'
+			return 'invalid status for task in %r: %r' % (name, self.hasrun)
 
 	def colon(self, var1, var2):
 		"""
@@ -421,15 +434,21 @@ class Task(TaskBase):
 	def __str__(self):
 		"string to display to the user"
 		env = self.env
-		src_str = ' '.join([a.nice_path(env) for a in self.inputs])
-		tgt_str = ' '.join([a.nice_path(env) for a in self.outputs])
+		src_str = ' '.join([a.nice_path() for a in self.inputs])
+		tgt_str = ' '.join([a.nice_path() for a in self.outputs])
 		if self.outputs: sep = ' -> '
 		else: sep = ''
 		return '%s: %s%s%s\n' % (self.__class__.__name__.replace('_task', ''), src_str, sep, tgt_str)
 
 	def __repr__(self):
 		"for debugging purposes"
-		return "".join(['\n\t{task %r: ' % id(self), self.__class__.__name__, " ", ",".join([x.name for x in self.inputs]), " -> ", ",".join([x.name for x in self.outputs]), '}'])
+		try:
+			ins = ",".join([x.name for x in self.inputs])
+			outs = ",".join([x.name for x in self.outputs])
+		except AttributeError:
+			ins = ",".join([str(x) for x in self.inputs])
+			outs = ",".join([str(x) for x in self.outputs])
+		return "".join(['\n\t{task %r: ' % id(self), self.__class__.__name__, " ", ins, " -> ", outs, '}'])
 
 	def uid(self):
 		"""
@@ -451,7 +470,7 @@ class Task(TaskBase):
 		try:
 			return self.uid_
 		except AttributeError:
-			# this is not a real hot zone, but we want to avoid surprizes here
+			# this is not a real hot zone, but we want to avoid surprises here
 			m = Utils.md5()
 			up = m.update
 			up(self.__class__.__name__.encode())
@@ -483,11 +502,11 @@ class Task(TaskBase):
 	def set_run_after(self, task):
 		"""
 		Run this task only after *task*. Affect :py:meth:`waflib.Task.runnable_status`
+		You probably want to use tsk.run_after.add(task) directly
 
 		:param task: task
 		:type task: :py:class:`waflib.Task.Task`
 		"""
-		# TODO: handle lists too?
 		assert isinstance(task, TaskBase)
 		self.run_after.add(task)
 
@@ -524,7 +543,7 @@ class Task(TaskBase):
 		# implicit deps / scanner results
 		if self.scan:
 			try:
-				imp_sig = self.sig_implicit_deps()
+				self.sig_implicit_deps()
 			except Errors.TaskRescan:
 				return self.signature()
 
@@ -542,7 +561,6 @@ class Task(TaskBase):
 			if not t.hasrun:
 				return ASK_LATER
 
-		env = self.env
 		bld = self.generator.bld
 
 		# first compute the signature
@@ -581,7 +599,6 @@ class Task(TaskBase):
 		of their contents. See the class decorator :py:func:`waflib.Task.update_outputs` if you need this behaviour.
 		"""
 		bld = self.generator.bld
-		env = self.env
 		sig = self.signature()
 
 		for node in self.outputs:
@@ -698,8 +715,19 @@ class Task(TaskBase):
 			try:
 				if prev == self.compute_sig_implicit_deps():
 					return prev
-			except IOError: # raised if a file was renamed
-				pass
+			except Exception:
+				# when a file was renamed (IOError usually), remove the stale nodes (headers in folders without source files)
+				# this will break the order calculation for headers created during the build in the source directory (should be uncommon)
+				# the behaviour will differ when top != out
+				for x in bld.node_deps.get(self.uid(), []):
+					if x.is_child_of(bld.srcnode):
+						try:
+							os.stat(x.abspath())
+						except OSError:
+							try:
+								del x.parent.children[x.name]
+							except KeyError:
+								pass
 			del bld.task_sigs[(key, 'imp')]
 			raise Errors.TaskRescan('rescan')
 
@@ -716,8 +744,17 @@ class Task(TaskBase):
 		self.are_implicit_nodes_ready()
 
 		# recompute the signature and return it
-		bld.task_sigs[(key, 'imp')] = sig = self.compute_sig_implicit_deps()
-		return sig
+		try:
+			bld.task_sigs[(key, 'imp')] = sig = self.compute_sig_implicit_deps()
+		except Exception:
+			if Logs.verbose:
+				for k in bld.node_deps.get(self.uid(), []):
+					try:
+						k.get_bld_sig()
+					except Exception:
+						Logs.warn('Missing signature for node %r (may cause rebuilds)' % k)
+		else:
+			return sig
 
 	def compute_sig_implicit_deps(self):
 		"""
@@ -731,20 +768,14 @@ class Task(TaskBase):
 		upd = self.m.update
 
 		bld = self.generator.bld
-		env = self.env
 
 		self.are_implicit_nodes_ready()
 
 		# scanner returns a node that does not have a signature
 		# just *ignore* the error and let them figure out from the compiler output
 		# waf -k behaviour
-		try:
-			for k in bld.node_deps.get(self.uid(), []):
-				upd(k.get_bld_sig())
-		except:
-			if Logs.verbose:
-				Logs.warn('Missing signature for node %r (may cause rebuilds)' % k)
-
+		for k in bld.node_deps.get(self.uid(), []):
+			upd(k.get_bld_sig())
 		return self.m.digest()
 
 	def are_implicit_nodes_ready(self):
@@ -757,7 +788,7 @@ class Task(TaskBase):
 		bld = self.generator.bld
 		try:
 			cache = bld.dct_implicit_nodes
-		except:
+		except AttributeError:
 			bld.dct_implicit_nodes = cache = {}
 
 		try:
@@ -799,9 +830,8 @@ class Task(TaskBase):
 		if not getattr(self, 'outputs', None):
 			return None
 
-		env = self.env
 		sig = self.signature()
-		ssig = Utils.to_hex(sig)
+		ssig = Utils.to_hex(self.uid()) + Utils.to_hex(sig)
 
 		# first try to access the cache folder for the task
 		dname = os.path.join(self.generator.bld.cache_global, ssig)
@@ -846,15 +876,17 @@ class Task(TaskBase):
 		# try to avoid data corruption as much as possible
 		if getattr(self, 'cached', None):
 			return None
+		if not getattr(self, 'outputs', None):
+			return None
 
 		sig = self.signature()
-		ssig = Utils.to_hex(sig)
+		ssig = Utils.to_hex(self.uid()) + Utils.to_hex(sig)
 		dname = os.path.join(self.generator.bld.cache_global, ssig)
 		tmpdir = tempfile.mkdtemp(prefix=self.generator.bld.cache_global + os.sep + 'waf')
 
 		try:
 			shutil.rmtree(dname)
-		except:
+		except Exception:
 			pass
 
 		try:
@@ -864,7 +896,7 @@ class Task(TaskBase):
 		except (OSError, IOError):
 			try:
 				shutil.rmtree(tmpdir)
-			except:
+			except Exception:
 				pass
 		else:
 			try:
@@ -872,12 +904,12 @@ class Task(TaskBase):
 			except OSError:
 				try:
 					shutil.rmtree(tmpdir)
-				except:
+				except Exception:
 					pass
 			else:
 				try:
 					os.chmod(dname, Utils.O755)
-				except:
+				except Exception:
 					pass
 
 def is_before(t1, t2):
@@ -958,8 +990,10 @@ def set_precedence_constraints(tasks):
 				b = i
 			else:
 				continue
+
+			aval = set(cstr_groups[keys[a]])
 			for x in cstr_groups[keys[b]]:
-				x.run_after.update(cstr_groups[keys[a]])
+				x.run_after.update(aval)
 
 def funex(c):
 	"""
@@ -1022,7 +1056,7 @@ def compile_fun_shell(line):
 
 	c = COMPILE_TEMPLATE_SHELL % (line, parm)
 
-	Logs.debug('action: %s' % c)
+	Logs.debug('action: %s' % c.strip().splitlines())
 	return (funex(c), dvars)
 
 def compile_fun_noshell(line):
@@ -1076,7 +1110,7 @@ def compile_fun_noshell(line):
 		if params[-1]:
 			app("lst.extend(%r)" % params[-1].split())
 	fun = COMPILE_TEMPLATE_NOSHELL % "\n\t".join(buf)
-	Logs.debug('action: %s' % fun)
+	Logs.debug('action: %s' % fun.strip().splitlines())
 	return (funex(fun), dvars)
 
 def compile_fun(line, shell=False):
@@ -1108,8 +1142,8 @@ def compile_fun(line, shell=False):
 
 def task_factory(name, func=None, vars=None, color='GREEN', ext_in=[], ext_out=[], before=[], after=[], shell=False, scan=None):
 	"""
-	Return a new task subclass with the function ``run`` compiled from the line given.
-	Provided for compatibility with waf 1.4-1.5, when we did not use metaclasses to register new objects.
+	Deprecated. Return a new task subclass with the function ``run`` compiled from the line given.
+	Provided for compatibility with waf 1.4-1.5, when we did not have the metaclass to register new classes (will be removed in Waf 1.8)
 
 	:param func: method run
 	:type func: string or function
@@ -1179,6 +1213,7 @@ def update_outputs(cls):
 		old_post_run(self)
 		for node in self.outputs:
 			node.sig = Utils.h_file(node.abspath())
+			self.generator.bld.task_sigs[node.abspath()] = self.uid() # issue #1017
 	cls.post_run = post_run
 
 
@@ -1193,16 +1228,17 @@ def update_outputs(cls):
 			# perform a second check, returning 'SKIP_ME' as we are expecting that
 			# the signatures do not match
 			bld = self.generator.bld
-			new_sig  = self.signature()
 			prev_sig = bld.task_sigs[self.uid()]
-			if prev_sig == new_sig:
+			if prev_sig == self.signature():
 				for x in self.outputs:
-					if not x.sig:
+					if not x.sig or bld.task_sigs[x.abspath()] != self.uid():
 						return RUN_ME
 				return SKIP_ME
 		except KeyError:
 			pass
 		except IndexError:
+			pass
+		except AttributeError:
 			pass
 		return RUN_ME
 	cls.runnable_status = runnable_status
