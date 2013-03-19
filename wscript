@@ -25,6 +25,7 @@ out = 'build'
 def options(opt):
     import os
     
+    opt.add_option('--targetos',  action='store', help='Which OS to target (auto, windows, osx, linux, freebsd)', default='auto', dest="targetos")
     opt.add_option('--mupenapi',  action='store', help='Where to find Mupen64Plus API headers (optional)', default='/usr/include')
     opt.add_option('--wxconfig',  action='store', help='Which wx-config utility to use (optional)', default='wx-config', dest="wxconfig")
     opt.add_option('--sdlconfig', action='store', help='Which sdl-config utility to use (optional)', default='sdl-config', dest="sdlconfig")
@@ -63,6 +64,21 @@ def configure(ctx):
     import waflib
     import os
     
+    targetos   = Options.options.targetos
+    if targetos == 'auto':
+        if os.name == 'nt':
+            targetos = 'windows'
+        elif os.uname()[0] == 'Darwin':
+            targetos = 'osx'
+        elif os.uname()[0] == 'FreeBSD':
+            targetos = 'freebsd'
+        elif os.uname()[0] == 'Linux':
+            targetos = 'linux'
+    
+    if targetos not in ('windows', 'osx', 'linux', 'freebsd'):
+        waflib.Logs.error('Invalid OS "' + targetos + '", please pass a valid --targetos=... flag')
+        return
+    
     api_path   = Options.options.mupenapi
     wx_config  = Options.options.wxconfig
     sdl_config = Options.options.sdlconfig
@@ -72,11 +88,11 @@ def configure(ctx):
     wxconfig_args = Options.options.wxconfig_args
 
     wxhome = ''
-    if os.name == 'nt':
+    if targetos == 'windows':
         wxhome = ''.join(Options.options.wxhome)
 
     wxinclude = ''
-    if os.name == 'nt':
+    if targetos == 'windows':
         if Options.options.wxinclude == None:
             wxinclude = wxhome + r"\include"
         else:
@@ -90,9 +106,10 @@ def configure(ctx):
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
 
-    if os.name == 'nt':
+    if targetos == 'windows':
         ctx.find_program('windres', var='WINDRES', mandatory=True)
     
+    ctx.env['targetos'] = targetos
     ctx.env['api_path'] = api_path
     ctx.env['is_debug'] = is_debug
     ctx.env['wxhome'] = wxhome
@@ -113,13 +130,18 @@ def configure(ctx):
 
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
     
-    if os.name == 'nt':
+    if targetos == 'targetos':
         if wxhome == None :
             ctx.fatal("On Windows, the --wxhome argument is mandatory")
         ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --prefix=' + wxhome + ' ' + wxconfig_args + ' --libs adv,aui,core,base,gl,html', package='', uselib_store='wxWidgets')
     else:
         ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --libs adv,aui,core,base,gl,html ' + wxconfig_args, package='', uselib_store='wxWidgets')
-
+    
+    if targetos != 'windows' and targetos != 'osx':
+        ctx.check_cxx(lib='dl')
+        ctx.check_cxx(lib='X11')
+        ctx.check_cxx(lib='GL')
+    
     if version_check:
         ctx.check_cc(compile_filename='test.c', execute=False, cflags=["-I"+api_path], msg="Checking mupen64plus is recent enough...", fragment=
 """#include "../main/version.h"
@@ -141,10 +163,10 @@ def configure(ctx):
 def build(bld):
     import os
 
-    api_path = bld.env['api_path']
-
-    wxhome = bld.env['wxhome']
     
+    targetos = bld.env['targetos']
+    api_path = bld.env['api_path']
+    wxhome = bld.env['wxhome']
     enable_debugger = bld.env['enable_debugger']
     
     link_flags = []
@@ -169,9 +191,10 @@ def build(bld):
 
     osal_src = []
     additional_links = []
+    additional_libs = ''
     
     # Windows
-    if os.name == 'nt':
+    if targetos == 'windows':
         cmd = bld.env.WINDRES + " --include-dir=" + bld.env['wxinclude'] + " ${SRC} --output ${TGT}"
         bld(rule=cmd, source='wxmupen64plus.rc', target='manifest.o')
         additional_links += ['manifest.o']
@@ -179,7 +202,7 @@ def build(bld):
         osal_src += ['mupen64plusplus/osal_dynamiclib_win32.c', 'mupen64plusplus/osal_files_win32.c']
         
     # A few OSX-specific flags
-    elif os.uname()[0] == 'Darwin':
+    elif targetos == 'osx':
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         link_flags += ['-Wl,-framework,IOKit', '-Wl,-framework,Carbon',
                        '-Wl,-framework,Cocoa', '-Wl,-framework,AudioToolbox',
@@ -192,7 +215,7 @@ def build(bld):
         bld.install_files('wxMupen64Plus.app/Contents/Resources', data_dir.ant_glob('*'))
         bin_install_path = "wxMupen64Plus.app/Contents/MacOS"
         
-    elif os.uname()[0] == 'FreeBSD':
+    elif targetos == 'freebsd':
         if 'LOCALBASE' in os.environ:
            LOCALBASE = os.environ['LOCALBASE']
         else:
@@ -200,15 +223,14 @@ def build(bld):
         
         build_flags += ['-I'+ LOCALBASE +'/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
-        link_flags += ['-lGL','-lX11']
+        
+        additional_libs = ' X11 GL'
     else:
-        # For other unices
+        # Linux
         build_flags += ['-I/usr/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
-        link_flags += ['-lGL', '-ldl', '-lX11']
         
-        if os.uname()[0] != 'FreeBSD':
-            link_flags += ['-ldl']
+        additional_libs = ' dl X11 GL'
         
         # install target
         data_dir = bld.path.find_dir('data')
@@ -240,6 +262,6 @@ def build(bld):
                         'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c',
                         'wxvidext.cpp'] + osal_src + debugger_sources,
                 target='wxmupen64plus',
-                uselib = 'SDL wxWidgets',
+                uselib = 'SDL wxWidgets' + additional_libs,
                 install_path = bin_install_path,
                 includes=['.', api_path])
