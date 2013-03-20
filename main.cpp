@@ -192,13 +192,13 @@ bool MupenFrontendApp::OnInit()
         try
         {
             // TODO: automagically check for local runs (no install) with "OSAL_CURRENT_DIR"?
-            m_api = new Mupen64PlusPlus(corepath.utf8_str(),
-                                        pluginsPath.utf8_str(),
+            m_api = new Mupen64PlusPlus(toNativeEncoding(corepath),
+                                        toNativeEncoding(pluginsPath),
                                         DEFAULT_VIDEO_PLUGIN,
                                         DEFAULT_AUDIO_PLUGIN,
                                         DEFAULT_INPUT_PLUGIN,
                                         DEFAULT_RSP_PLUGIN,
-                                        (const char*)datadir.utf8_str());
+                                        toNativeEncoding(datadir));
             
             plugins = m_api->loadPlugins();
             if (plugins != 15)

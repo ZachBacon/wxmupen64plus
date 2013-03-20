@@ -42,6 +42,7 @@ void mplog_error(const char* who, const char* message, ...);
 extern wxString datadir;
 extern wxString libs;
 
+
 class wxFrame;
 class wxToolBar;
 class wxStatusBar;
@@ -56,6 +57,16 @@ DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_RELOAD_OPTIONS, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_INIT_GL_CANVAS, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_INITED_GL_CANVAS, -1);
 DECLARE_LOCAL_EVENT_TYPE(wxMUPEN_CLEAN_GL_CANVAS, -1);
+
+#ifdef __WXMSW__
+    // Windows is probably not using UTF-8, so on this OS let's use the libc encoding
+    // and pray it's the same used by the OS. It usually is.
+    #define toNativeEncoding(str) (const char*)str.mb_str()
+#else
+    // Other systems seem to always use unicode, much simpler.
+    #define toNativeEncoding(str) (const char*)str.utf8_str()
+#endif
+
 
 // application class
 class MupenFrontendApp : public wxApp
