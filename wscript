@@ -38,9 +38,8 @@ def options(opt):
     opt.add_option('--debugger', action='store', help='Enable or disable the debugger (true or false). Requires GCC 4.6', default='true',  dest='debugger')
     opt.add_option('--version_check', action='store', help='Enable or disable check of the mupen64plus-core version (true or false).', default='true',  dest='version_check')
     
-    if os.name == 'nt':
-        opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed', default=None,  dest='wxhome')
-        opt.add_option('--wxinclude', action='store', help='Where your wxWidgets header files are installed', default=None,  dest='wxinclude')
+    opt.add_option('--wxhome', action='store', help='Where your wxWidgets build is installed (windows only)', default=None,  dest='wxhome')
+    opt.add_option('--wxinclude', action='store', help='Where your wxWidgets header files are installed (windows only)', default=None,  dest='wxinclude')
 
     opt.load('compiler_cxx')
     opt.load('compiler_c')
@@ -130,7 +129,7 @@ def configure(ctx):
 
     ctx.check_cfg(path=sdl_config, args='--cflags --libs',   package='', uselib_store='SDL')
     
-    if targetos == 'targetos':
+    if targetos == 'windows':
         if wxhome == None :
             ctx.fatal("On Windows, the --wxhome argument is mandatory")
         ctx.check_cfg(msg="Checking for wxWidgets 2.9.x", path=wx_config,  args='--version=2.9 --cxxflags --prefix=' + wxhome + ' ' + wxconfig_args + ' --libs adv,aui,core,base,gl,html', package='', uselib_store='wxWidgets')
