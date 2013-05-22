@@ -190,7 +190,7 @@ def build(bld):
 
     osal_src = []
     additional_links = []
-    additional_libs = ''
+    additional_libs = []
     
     # Windows
     if targetos == 'windows':
@@ -223,13 +223,13 @@ def build(bld):
         build_flags += ['-I'+ LOCALBASE +'/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         
-        additional_libs = ' X11 GL'
+        additional_libs = ['X11', 'GL']
     else:
         # Linux
         build_flags += ['-I/usr/include/X11']
         osal_src += ['mupen64plusplus/osal_dynamiclib_unix.c', 'mupen64plusplus/osal_files_unix.c']
         
-        additional_libs = ' dl X11 GL'
+        additional_libs = ['GL', 'X11', 'dl']
         
         # install target
         data_dir = bld.path.find_dir('data')
@@ -261,6 +261,7 @@ def build(bld):
                         'sdlhelper.cpp', 'config.cpp', 'mupen64plusplus/plugin.c',
                         'wxvidext.cpp'] + osal_src + debugger_sources,
                 target='wxmupen64plus',
-                uselib = 'SDL wxWidgets' + additional_libs,
+                lib=additional_libs,
+                uselib = 'SDL wxWidgets',
                 install_path = bin_install_path,
                 includes=['.', api_path])
