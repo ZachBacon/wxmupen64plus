@@ -377,15 +377,17 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
 
             try
             {
-                CREATE_PARAM_IF_MISSING("mode",              2,             M64TYPE_INT,    NOTHING_SPECIAL, "Input configuration mode");
-                CREATE_PARAM_IF_MISSING("plugged",           false,         M64TYPE_BOOL,   NOTHING_SPECIAL, "Specifies whether this input device is currently enabled");
-                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL, "Expansion pack type, if any");
-                CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL, "Whether mouse use is enabled");
-                CREATE_PARAM_IF_MISSING("device",            -2,            M64TYPE_INT,    NOTHING_SPECIAL, "Specifies which input device to use");
+                CREATE_PARAM_IF_MISSING("mode",              2,             M64TYPE_INT,    INPUT_MODE_PICKER, "Input configuration mode");
+                CREATE_PARAM_IF_MISSING("plugged",           false,         M64TYPE_BOOL,   OTHER_INPUT_FIELD, "Specifies whether this input device is currently enabled");
+                CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    OTHER_INPUT_FIELD, "Expansion pack type, if any");
+                CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   OTHER_INPUT_FIELD, "Whether mouse use is enabled");
+                CREATE_PARAM_IF_MISSING("device",            -1,            M64TYPE_INT,    OTHER_INPUT_FIELD, "Specifies which input device to use");
+                CREATE_PARAM_IF_MISSING("name",              "Keyboard",    M64TYPE_STRING, INPUT_DEVICE_NAME, "Name of the input device");
 
                 // TODO: provide nicer way to edit deadzone and peak
-                CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING, NOTHING_SPECIAL, "For analog controls, specifies the dead zone");
-                CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING, NOTHING_SPECIAL, "For analog controls, specifies the peak value");
+                CREATE_PARAM_IF_MISSING("AnalogDeadzone",    "4096,4096",   M64TYPE_STRING, OTHER_INPUT_FIELD, "For analog controls, specifies the dead zone");
+                CREATE_PARAM_IF_MISSING("AnalogPeak",        "32768,32768", M64TYPE_STRING, OTHER_INPUT_FIELD, "For analog controls, specifies the peak value");
+                CREATE_PARAM_IF_MISSING("MouseSensitivity",  "2.00,2.00",   M64TYPE_STRING, OTHER_INPUT_FIELD, "For mouse input");
                 CREATE_PARAM_IF_MISSING("DPad R",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Right button on the digital pad");
                 CREATE_PARAM_IF_MISSING("DPad L",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Left button on the digital pad");
                 CREATE_PARAM_IF_MISSING("DPad D",            "", M64TYPE_STRING, BINDING_DIGITAL_STRING, "Down button on the digital pad");
@@ -422,8 +424,8 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             ConfigParam* modeParam = section->getParamWithName("mode");
             if (modeParam != NULL)
             {
-                modeParam->m_choices.push_back( ConfigParamChoice(_("Fully manual"), 0) );
-                modeParam->m_choices.push_back( ConfigParamChoice(_("Auto with named device"), 1) );
+                modeParam->m_choices.push_back( ConfigParamChoice(_("Manual"), 0) );
+                modeParam->m_choices.push_back( ConfigParamChoice(_("Automatic with device selection"), 1) );
                 modeParam->m_choices.push_back( ConfigParamChoice(_("Fully automatic"), 2) );
             }
             
@@ -438,9 +440,8 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             ConfigParam* deviceParam = section->getParamWithName("device");
             if (deviceParam != NULL)
             {
-                deviceParam->m_choices.push_back( ConfigParamChoice(_("Keyboard/Mouse"), -2) );
-                deviceParam->m_choices.push_back( ConfigParamChoice(_("Auto Config"), -1) );
-
+                deviceParam->m_choices.push_back( ConfigParamChoice(_("No joystick"), -1) );
+                
                 for (int n=0; n<9; n++)
                 {
 					const std::map<int, std::string>& gamepads = getGamepadList();

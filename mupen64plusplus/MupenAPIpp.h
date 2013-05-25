@@ -60,15 +60,21 @@ enum SpecialParamType
 {
     NOTHING_SPECIAL,
 
-    /** A keyboard kehy binding, stored using integer format in config */
+    /** A keyboard key binding, stored using integer format in config */
     KEYBOARD_KEY_INT,
 
+    INPUT_MODE_PICKER,
+    
+    INPUT_DEVICE_NAME,
+    
     /** A key binding, stored using a string like "key(111)" or "button(9)" or "axis(3+)" or "hat(0 Right)"
      *  format in config */
     BINDING_DIGITAL_STRING,
     
     /** A key binding, stored using a format like "key(111, 222)" or "axis(0-,0+)" in config */
     BINDING_ANALOG_COUPLE_STRING,
+    
+    OTHER_INPUT_FIELD,
     
     /** A directory parameter (primitive type = string)*/
     DIRECTORY,

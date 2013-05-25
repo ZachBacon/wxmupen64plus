@@ -72,6 +72,10 @@ public:
     {
         update();
     }
+    void onInputModeChange(wxCommandEvent& evt)
+    {
+        update();
+    }
 };
 
 class ParameterGroupsPanel : public wxNotebook, public IConfigurationPanel

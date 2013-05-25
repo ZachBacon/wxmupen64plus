@@ -172,6 +172,16 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
         //                                             section.m_parameters[p].m_enabled);
         if (not curr->isEnabled()) continue;
 
+        bool readonly = false;
+        if ((curr->m_special_type == BINDING_DIGITAL_STRING ||
+             curr->m_special_type == BINDING_ANALOG_COUPLE_STRING ||
+             curr->m_special_type == INPUT_DEVICE_NAME ||
+             curr->m_special_type == OTHER_INPUT_FIELD) &&
+            section->m_parameters[0]->getName() == "mode")
+        {
+            if (section->m_parameters[0]->getIntValue() != 0) readonly = true; //continue;
+        }
+        
         if (curr->getName() == "device") is_input = true;
 
         // if help string is short enough, use it instead of param name, often it's a clearer string
@@ -200,10 +210,9 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                curr->getName().c_str(), ex.what());
                 }
                 
-                bool greyOut = false;
                 if (curr->getName() == "ScreenWidth" or curr->getName() == "ScreenHeight")
                 {
-                    greyOut = fullscreen;
+                    readonly = fullscreen;
                 }
                 
                 if (curr->m_special_type == KEYBOARD_KEY_INT)
@@ -211,6 +220,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     ctrl = new wxSDLKeyPicker(this, (SDLKey)currVal);
                     ctrl->Connect(wxID_ANY, wxKEY_PICKED, wxCommandEventHandler(ParameterPanel::onKeyPicked),NULL,this);
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    
+                    if (readonly) ((wxSDLKeyPicker*)ctrl)->getButton()->Disable();
                 }
                 else if (curr->m_choices.size() > 0)
                 {
@@ -235,6 +246,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     }
                     
                     choice->SetSelection(selection);
+                    if (readonly) choice->Disable();
                     
                     ctrl = choice;
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
@@ -245,6 +257,12 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                         choice->Connect(choice->GetId(), wxEVT_COMMAND_CHOICE_SELECTED,
                                         wxCommandEventHandler(ParameterPanel::onInputDeviceChange), NULL, this);
                     }
+                    
+                    if (curr->m_special_type == INPUT_MODE_PICKER)
+                    {
+                        choice->Bind(wxEVT_COMMAND_CHOICE_SELECTED,
+                                     &ParameterPanel::onInputModeChange, this);
+                    }
                 }
                 else
                 {
@@ -254,7 +272,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     ctrl->SetMaxSize(wxSize(100, -1));
                     sizer->Add(ctrl, 1, wxALIGN_CENTER_VERTICAL | wxALL, 5);
                     
-                    if (greyOut) ctrl->Disable();
+                    if (readonly) ctrl->Disable();
                 }
                 break;
             }
@@ -275,6 +293,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 ctrl = new wxSpinCtrlDouble(this, wxID_ANY, wxString::Format("%f", currVal),
                                             wxDefaultPosition, wxSize(100, -1));
                 sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL  | wxALL, 5);
+                if (readonly) ctrl->Disable();
                 break;
             }
             
@@ -302,6 +321,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                 cbox->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &ParameterPanel::onCheckbox, this, cbox->GetId());
                 ctrl = cbox;
                 sizer->Add(ctrl, 0, wxALIGN_CENTER_VERTICAL  | wxALL, 5);
+                if (readonly) ctrl->Disable();
                 break;
             }
             
@@ -325,6 +345,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                               curr, false);
                     ctrl->Connect(wxID_ANY, wxKEY_PICKED, wxCommandEventHandler(ParameterPanel::onKeyPicked),NULL,this);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    if (readonly) ((wxSDLKeyPicker*)ctrl)->getButton()->Disable();
                 }
                 else if (curr->m_special_type == BINDING_ANALOG_COUPLE_STRING)
                 {
@@ -332,6 +353,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                               curr, true);
                     ctrl->Connect(wxID_ANY, wxKEY_PICKED, wxCommandEventHandler(ParameterPanel::onKeyPicked),NULL,this);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    if (readonly)
+                    {
+                        ((wxSDLKeyPicker*)ctrl)->getButton()->Disable();
+                        ((wxSDLKeyPicker*)ctrl)->getButton2()->Disable();
+                    }
                 }
                 else if (curr->m_special_type == DIRECTORY)
                 {
@@ -342,6 +368,7 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                   wxFileDirPickerEventHandler(ParameterPanel::onPathChanged),
                                   NULL, this);
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    if (readonly) ctrl->Disable();
                 }
                 else if (curr->m_special_type == PLUGIN_FILE)
                 {
@@ -411,6 +438,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     combo->m_icon = icon_widget;
                     
                     sizer->Add(container, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    
+                    if (readonly) combo->Disable();
                 }
                 else if (curr->m_choices.size() > 0)
                 {
@@ -443,11 +472,20 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                         choice->Connect(choice->GetId(), wxEVT_COMMAND_CHOICE_SELECTED,
                                         wxCommandEventHandler(ParameterPanel::onInputDeviceChange), NULL, this);
                     }
+                    
+                    if (curr->m_special_type == INPUT_MODE_PICKER)
+                    {
+                        choice->Bind(wxEVT_COMMAND_CHOICE_SELECTED,
+                                     &ParameterPanel::onInputModeChange, this);
+                    }
+                    
+                    if (readonly) choice->Disable();
                 }
                 else
                 {
                     ctrl = new wxTextCtrl(this, wxID_ANY, currVal, wxDefaultPosition, wxSize(150, -1));
                     sizer->Add(ctrl, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    if (readonly) ctrl->Disable();
                 }
                 
                 break;
@@ -886,12 +924,53 @@ void ParameterPanel::update()
         GAMEPAD
     } device_type = UNKNOWN;
     
+    int inputmode = -1;
+    
     const int count = m_parameter_widgets.size();
     for (int n=0; n<count; n++)
     {
         ConfigParam* param = (ConfigParam*)m_parameter_widgets[n]->GetClientData();
         assert(param != NULL);
         assert(param->ok());
+        
+        if (param->m_special_type == INPUT_MODE_PICKER)
+        {
+            wxChoice* ctrl = (wxChoice*)m_parameter_widgets[n];
+            inputmode = ctrl->GetCurrentSelection();
+        }
+        
+        if (inputmode != -1 &&
+            (param->m_special_type == BINDING_DIGITAL_STRING ||
+             param->m_special_type == BINDING_ANALOG_COUPLE_STRING ||
+             param->m_special_type == INPUT_DEVICE_NAME ||
+             param->m_special_type == OTHER_INPUT_FIELD))
+        {
+            bool readonly = (inputmode != 0);
+            
+            if (param->m_special_type == INPUT_DEVICE_NAME)
+            {
+                readonly = (inputmode != 1);
+            }   
+            
+            wxChoice* asChoice = dynamic_cast<wxChoice*>(m_parameter_widgets[n]);
+            if (asChoice != NULL)
+            {
+                asChoice->Enable(!readonly);
+            }
+            
+            wxTextCtrl* asTextCtrl = dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]);
+            if (asTextCtrl != NULL)
+            {
+                asTextCtrl->Enable(!readonly);
+            }
+            
+            wxSDLKeyPicker* asKeypicker = dynamic_cast<wxSDLKeyPicker*>(m_parameter_widgets[n]);
+            if (asKeypicker != NULL)
+            {
+                asKeypicker->getButton()->Enable(!readonly);
+                if (asKeypicker->getButton2() != NULL) asKeypicker->getButton2()->Enable(!readonly);
+            }
+        }
         
         if (param->getName() == "device")
         {

@@ -122,6 +122,11 @@ public:
     {
         return m_btn;
     }
+    
+    wxButton* getButton2()
+    {
+        return m_btn2;
+    }
 };
 
 #endif // SDL_KEY_PICKER_H
