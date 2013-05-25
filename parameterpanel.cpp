@@ -24,6 +24,7 @@
 #include "mupen64plusplus/osal_preproc.h"
 
 #include "sdlkeypicker.h"
+#include "sdlhelper.h"
 #include <wx/checkbox.h>
 #include <wx/spinctrl.h>
 #include <wx/textctrl.h>
@@ -42,6 +43,7 @@
 #include <SDL_keysym.h>
 #include <SDL_events.h>
 #include <stdexcept>
+#include <map>
 
 //Circumventing some API layers, refactor as necessary
 #include "mupen64plusplus/plugin.h"
@@ -339,7 +341,27 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                                curr->getName().c_str(), ex.what());
                 }
                 
-                if (curr->m_special_type == BINDING_DIGITAL_STRING)
+                if (curr->m_special_type == INPUT_DEVICE_NAME)
+                {
+                    wxComboBox* combo = new wxComboBox(this, wxID_ANY, wxString(currVal.c_str()));
+                    
+                    const std::map<int, std::string>& gamepads = getGamepadList();
+
+                    combo->Append("Keyboard");
+                    for (int n=0; n<9; n++)
+                    {
+                        if (gamepads.find(n) != gamepads.end())
+                        {
+                            wxString name = gamepads.find(n)->second.c_str();
+                            combo->Append(name);
+                        }
+                    }
+                    
+                    sizer->Add(combo, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxALL, 5);
+                    if (readonly) combo->Disable();
+                    ctrl = combo;
+                }
+                else if (curr->m_special_type == BINDING_DIGITAL_STRING)
                 {
                     ctrl = new wxSDLKeyPicker(this, wxString(currVal.c_str()),
                                               curr, false);
@@ -956,6 +978,12 @@ void ParameterPanel::update()
             if (asChoice != NULL)
             {
                 asChoice->Enable(!readonly);
+            }
+                        
+            wxComboBox* asComboBox = dynamic_cast<wxComboBox*>(m_parameter_widgets[n]);
+            if (asComboBox != NULL)
+            {
+                asComboBox->Enable(!readonly);
             }
             
             wxTextCtrl* asTextCtrl = dynamic_cast<wxTextCtrl*>(m_parameter_widgets[n]);

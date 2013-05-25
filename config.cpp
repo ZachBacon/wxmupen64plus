@@ -442,10 +442,10 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             {
                 deviceParam->m_choices.push_back( ConfigParamChoice(_("No joystick"), -1) );
                 
+                const std::map<int, std::string>& gamepads = getGamepadList();
+
                 for (int n=0; n<9; n++)
                 {
-					const std::map<int, std::string>& gamepads = getGamepadList();
-
 					wxString name = _("Not plugged");
 					if (gamepads.find(n) != gamepads.end())
 					{
