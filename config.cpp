@@ -377,6 +377,7 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
 
             try
             {
+                CREATE_PARAM_IF_MISSING("mode",              2,             M64TYPE_INT,    NOTHING_SPECIAL, "Input configuration mode");
                 CREATE_PARAM_IF_MISSING("plugged",           false,         M64TYPE_BOOL,   NOTHING_SPECIAL, "Specifies whether this input device is currently enabled");
                 CREATE_PARAM_IF_MISSING("plugin",            1,             M64TYPE_INT,    NOTHING_SPECIAL, "Expansion pack type, if any");
                 CREATE_PARAM_IF_MISSING("mouse",             false,         M64TYPE_BOOL,   NOTHING_SPECIAL, "Whether mouse use is enabled");
@@ -418,6 +419,14 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
 
 #undef CREATE_PARAM_IF_MISSING
 
+            ConfigParam* modeParam = section->getParamWithName("mode");
+            if (modeParam != NULL)
+            {
+                modeParam->m_choices.push_back( ConfigParamChoice(_("Fully manual"), 0) );
+                modeParam->m_choices.push_back( ConfigParamChoice(_("Auto with named device"), 1) );
+                modeParam->m_choices.push_back( ConfigParamChoice(_("Fully automatic"), 2) );
+            }
+            
             ConfigParam* pluginParam = section->getParamWithName("plugin");
             if (pluginParam != NULL)
             {
