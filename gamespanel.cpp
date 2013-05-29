@@ -74,44 +74,6 @@ std::map<wxString, Mupen64PlusPlus::RomInfo> g_cache;
 // -----------------------------------------------------------------------------------------------------------
 // The main part where the game list is shown
 
-// FIXME: wxListCtrl is awful, the native OSX list ordering when clicking on columns is not controllable
-// (nor portable I think)
-int wxCALLBACK GamesPanel::wxListCompareFunction(long item1, long item2, wxIntPtr sortData)
-{
-    GamesPanel* self = (GamesPanel*)sortData;
-    
-#if defined(__WXMAC__) && !defined(__WXOSX_COCOA__)
-    RomInfo& rom1 = self->m_roms[item1];
-    RomInfo& rom2 = self->m_roms[item2];
-#else
-    RomInfo& rom1 = self->m_roms[item2];
-    RomInfo& rom2 = self->m_roms[item1];
-#endif
-
-    //printf("Comparing <%s> and <%s>\n", (const char*)rom1.m_file_name.mb_str(),
-    //    (const char*)rom2.m_file_name.mb_str());
-    
-    if (self->m_curr_col == COLUMN_FILE) 
-    {
-        return rom2.m_file_name.CmpNoCase( rom1.m_file_name );
-    }
-    else if (self->m_curr_col == COLUMN_NAME)
-    {
-        return rom2.m_internal_name.CmpNoCase( rom1.m_internal_name );
-    }
-    else if (self->m_curr_col == COLUMN_COUNTRY)
-    {
-        return rom2.m_country.CmpNoCase( rom1.m_country );
-    }
-    else
-    {
-        fprintf(stderr, "Unknown column %i?\n", self->m_curr_col);
-        return rom2.m_file_name.CmpNoCase( rom1.m_file_name );
-    }
-}
-
-// -----------------------------------------------------------------------------------------------------------
-
 GamesPanel::GamesPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigParam* gamesPathParam) :
         wxPanel(parent, wxID_ANY)
 {

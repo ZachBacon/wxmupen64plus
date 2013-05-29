@@ -55,9 +55,6 @@ class GamesPanel : public wxPanel, public IConfigurationPanel, public IEmuStateL
     ConfigParam* m_height_param;
     ConfigParam* m_fullscreen_param;
     
-    /** Callback to sort the list */
-    static int wxCALLBACK wxListCompareFunction(long item1, long item2, wxIntPtr sortData);
-
     struct RomInfo
     {
         wxString m_file_name;
