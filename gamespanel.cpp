@@ -257,6 +257,9 @@ void GamesPanel::populateList()
     m_roms = getRomsInDir(path);
     
     const int item_amount = m_roms.size();
+    
+    std::map<wxString, wxVector< wxVariant > > gameList;
+    
     for (int n=0; n<item_amount; n++)
     {
         RomInfo& curritem = m_roms[n];
@@ -291,10 +294,15 @@ void GamesPanel::populateList()
         values.push_back( wxVariant(curritem.m_file_name) );
         values.push_back( wxVariant(curritem.m_internal_name) );
         values.push_back( wxVariant(curritem.m_country) );
-        m_item_list->AppendItem(values);
+        
+        gameList[curritem.m_file_name] = values;
     } // end for
     
-    //m_item_list->SortItems(GamesPanel::wxListCompareFunction, (wxIntPtr)this /* user data */);
+    std::map<wxString, wxVector< wxVariant > >::iterator it;
+    for (it = gameList.begin(); it != gameList.end(); it++)
+    {
+        m_item_list->AppendItem(it->second);
+    }
 }
 
 // -----------------------------------------------------------------------------------------------------------
