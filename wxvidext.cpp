@@ -810,6 +810,12 @@ m64p_error VidExt_GL_SwapBuffers()
     return M64ERR_SUCCESS;
 }
 
+m64p_error VidExt_ResizeWindow(int w, int h)
+{
+        // TODO
+    printf("Resize request : %i %i\n", w, h);
+}
+
 m64p_error VidExtFuncGLGetAttr(m64p_GLattr Attr, int* value)
 {
     switch (Attr)
@@ -874,7 +880,8 @@ m64p_error installWxVideoExtension()
     f.VidExtFuncSetMode    = &VidExt_SetVideoMode;
     f.VidExtFuncGLGetAttr  = &VidExtFuncGLGetAttr;
     f.VidExtFuncToggleFS   = &VidExt_ToggleFullScreen;
-
+    f.VidExtFuncResizeWindow = &VidExt_ResizeWindow;
+  
     return coreOverrideVidExt(&f);
 }
 
