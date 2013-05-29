@@ -455,8 +455,22 @@ void VidExt_InitGLCanvas()
 #endif
 */
 
-m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, /*m64p_video_mode*/ int ScreenMode)
+m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel,
+                              /*m64p_video_mode*/ int ScreenMode,
+                              /*m64p_video_flags*/ int Flags)
 {
+    /*
+    typedef enum {
+      M64VIDEO_NONE = 1,
+      M64VIDEO_WINDOWED,
+      M64VIDEO_FULLSCREEN
+    } m64p_video_mode;
+
+    typedef enum {
+      M64VIDEOFLAG_SUPPORT_RESIZING = 1
+    } m64p_video_flags;
+    */
+    
     gWidth = Width;
     gHeight = Height;
     gBitsPerPixel = BitsPerPixel;
