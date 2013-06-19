@@ -119,6 +119,11 @@ public:
     bool m_has_comment_string;
     wxString m_comment_string;
 
+    /** Set to true when a help string has been "blessed" by the config module of
+     *  wxMupen to appear in interfaces, bypassing the length check
+     */
+    bool m_ui_approved_helpstring;
+
     /** Dummy instance ctor; produces a non-usable instance that needs to be setup later */
     /*
     ConfigParam()
@@ -144,6 +149,7 @@ public:
         m_plugin_type = M64PLUGIN_NULL;
         m_dir = NULL;
         m_is_ok = true;
+        m_ui_approved_helpstring = false;
     }
 
     void copyFrom(const ConfigParam& other)
@@ -161,6 +167,7 @@ public:
         m_icon_1 = other.m_icon_1;
         m_icon_2 = other.m_icon_2;
         m_is_ok = other.m_is_ok;
+        m_ui_approved_helpstring = other.m_ui_approved_helpstring;
         
         assert(m_param_type == M64TYPE_INT   or
                m_param_type == M64TYPE_FLOAT or
@@ -234,6 +241,7 @@ public:
     const std::string& getHelpString() const { return m_help_string; }
     bool               isEnabled    () const { return m_enabled;     }
     m64p_type          getType      () const { return m_param_type;  }
+    bool      isHelpStringUIApproved() const { return m_ui_approved_helpstring; }
     
     void setDetails(m64p_type type, std::string name, const char* helpString)
     {
@@ -245,6 +253,7 @@ public:
     void setHelpString(const wxString helpString)
     {
         m_help_string = helpString;
+        m_ui_approved_helpstring = true;
     }
     
     void setEnabled(bool enabled) { m_enabled = enabled; }

@@ -191,10 +191,11 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
         if (curr->getName() == "device") is_input = true;
 
         // if help string is short enough, use it instead of param name, often it's a clearer string
-        wxString labelstr = (curr->getHelpString().size() < 30 and
-                             curr->getHelpString().size() > 0) ?
-                             curr->getHelpString() :
-                             curr->getName();
+        wxString labelstr = ((curr->getHelpString().size() < 30 and
+                              curr->getHelpString().size() > 0) or
+                             curr->isHelpStringUIApproved() ?
+                                curr->getHelpString() :
+                                curr->getName());
 
         wxStaticText* label = new wxStaticText(this, wxID_ANY, labelstr);
         sizer->Add( label, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 15 );
@@ -528,8 +529,8 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
             }
         } // end switch
         
-        label->SetToolTip( curr->getHelpString() );
-        ctrl->SetToolTip( curr->getHelpString() );
+        label->SetToolTip( "[" + curr->getName() + "] " + curr->getHelpString() );
+        ctrl->SetToolTip( "[" + curr->getName() + "] " + curr->getHelpString() );
         ctrl->SetClientData( curr );
         m_parameter_widgets.push_back(ctrl);
         

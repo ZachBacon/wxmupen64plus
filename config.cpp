@@ -333,6 +333,76 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                     tex_filter->m_choices.push_back( ConfigParamChoice(_("Hq2x"), 3) );
                     tex_filter->m_choices.push_back( ConfigParamChoice(_("Hq4x"), 4) );
                 }
+                
+                ConfigParam* ghq_cmpr = section->getParamWithName("ghq_cmpr");
+                if (ghq_cmpr != NULL)
+                {
+                    ghq_cmpr->setHelpString((_("Texture compression")));
+                    ghq_cmpr->m_choices.push_back( ConfigParamChoice("S3TC", 0) );
+                    ghq_cmpr->m_choices.push_back( ConfigParamChoice("FXT1", 1) );
+                }
+                
+                //ConfigParam* ghq_enht_cmpr = section->getParamWithName("ghq_enht_cmpr");
+                //if (ghq_enht_cmpr != NULL)
+                //{
+                //    ghq_enht_cmpr->setHelpString(_("Compress texture cache");
+                //}
+                
+                ConfigParam* ghq_enht_tile = section->getParamWithName("ghq_enht_tile");
+                if (ghq_enht_tile != NULL)
+                {
+                    ghq_enht_tile->setHelpString(_("Tile textures"));
+                }
+                
+                ConfigParam* ghq_enht_f16bpp = section->getParamWithName("ghq_enht_f16bpp");
+                if (ghq_enht_f16bpp != NULL)
+                {
+                    ghq_enht_f16bpp->setHelpString(_("Force 16bpp"));
+                }
+                
+                ConfigParam* ghq_hirs = section->getParamWithName("ghq_hirs");
+                if (ghq_hirs != NULL)
+                {
+                    ghq_hirs->setHelpString(_("High-res texture packs"));
+                    ghq_hirs->m_choices.push_back( ConfigParamChoice("None", 0) );
+                    ghq_hirs->m_choices.push_back( ConfigParamChoice("Rice format", 1) );
+                }
+                
+                ConfigParam* ghq_hirs_altcrc = section->getParamWithName("ghq_hirs_altcrc");
+                if (ghq_hirs_altcrc != NULL)
+                {
+                    ghq_hirs_altcrc->setHelpString(_("[High-res tex] Alternative CRC calculation"));
+                }
+                
+                ConfigParam* ghq_hirs_let_texartists_fly = section->getParamWithName("ghq_hirs_let_texartists_fly");
+                if (ghq_hirs_let_texartists_fly != NULL)
+                {
+                    ghq_hirs_let_texartists_fly->setHelpString(_("[High-res tex] Use full alpha channel"));
+                }
+                
+                ConfigParam* ghq_hirs_f16bpp = section->getParamWithName("ghq_hirs_f16bpp");
+                if (ghq_hirs_f16bpp != NULL)
+                {
+                    ghq_hirs_f16bpp->setHelpString(_("[High-res tex] Force 16bpp"));
+                }
+                
+                ConfigParam* ghq_hirs_tile = section->getParamWithName("ghq_hirs_tile");
+                if (ghq_hirs_tile != NULL)
+                {
+                    ghq_hirs_tile->setHelpString(_("[High-res tex] Tile textures"));
+                }
+                
+                ConfigParam* ghq_hirs_gz = section->getParamWithName("ghq_hirs_gz");
+                if (ghq_hirs_gz != NULL)
+                {
+                    ghq_hirs_gz->setHelpString(_("[High-res tex] Compress texture cache (GZ)"));
+                }
+                
+                ConfigParam* ghq_hirs_cmpr = section->getParamWithName("ghq_hirs_cmpr");
+                if (ghq_hirs_cmpr != NULL)
+                {
+                    ghq_hirs_cmpr->setHelpString(_("[High-res tex] Compress texture cache (S3TC/FXT1)"));
+                }
             }
         }
         else if (section->m_section_name == "Audio-SDL")
