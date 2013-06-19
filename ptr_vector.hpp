@@ -25,6 +25,7 @@
 #include <vector>
 #include <iostream>
 #include <assert.h>
+#include <algorithm>
 
 enum VECTOR_TYPE
 {
@@ -57,6 +58,11 @@ ptr_vector(const ptr_vector<TYPE>& other)
 ~ptr_vector()
 {
     if (type == HOLD and not m_give_up_ownership) clearAndDeleteAll();
+}
+
+void sort(bool(*comparefn)(TYPE*, TYPE*))
+{
+    std::sort(contentsVector.begin(), contentsVector.end(), comparefn);
 }
 
 void push_back(TYPE* t)

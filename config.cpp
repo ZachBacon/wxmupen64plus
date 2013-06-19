@@ -34,6 +34,15 @@ extern wxString datadir;
 
 #define CHATTY 0
 
+bool parameters_sort_fn(ConfigParam* a, ConfigParam* b)
+{
+    if (a == NULL && b == NULL) return 0;
+    if (a == NULL && b != NULL) return -1;
+    if (a != NULL && b == NULL) return 1;
+    
+    return a->getName() < b->getName();
+}
+
 void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
 {
     // FIXME: this entire function could be improved; at this point, the structure of the config is
@@ -276,6 +285,8 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             }
             else if (wxString(section->m_section_name).Contains("Glide64"))
             {
+                section->m_parameters.sort(&parameters_sort_fn);
+                
                 ConfigParam* filteringSetting = section->getParamWithName("filtering");
                 if (filteringSetting != NULL)
                 {
@@ -342,11 +353,11 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                     ghq_cmpr->m_choices.push_back( ConfigParamChoice("FXT1", 1) );
                 }
                 
-                //ConfigParam* ghq_enht_cmpr = section->getParamWithName("ghq_enht_cmpr");
-                //if (ghq_enht_cmpr != NULL)
-                //{
-                //    ghq_enht_cmpr->setHelpString(_("Compress texture cache");
-                //}
+                ConfigParam* ghq_enht_cmpr = section->getParamWithName("ghq_enht_cmpr");
+                if (ghq_enht_cmpr != NULL)
+                {
+                    ghq_enht_cmpr->setHelpString(_("Compress texture cache (S3TC/FXT1)"));
+                }
                 
                 ConfigParam* ghq_enht_tile = section->getParamWithName("ghq_enht_tile");
                 if (ghq_enht_tile != NULL)
@@ -366,6 +377,12 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                     ghq_hirs->setHelpString(_("High-res texture packs"));
                     ghq_hirs->m_choices.push_back( ConfigParamChoice("None", 0) );
                     ghq_hirs->m_choices.push_back( ConfigParamChoice("Rice format", 1) );
+                }
+                
+                ConfigParam* ghq_enht_gz = section->getParamWithName("ghq_enht_gz");
+                if (ghq_enht_gz != NULL)
+                {
+                    ghq_enht_gz->setHelpString(_("Compress texture cache (GZ)"));
                 }
                 
                 ConfigParam* ghq_hirs_altcrc = section->getParamWithName("ghq_hirs_altcrc");
@@ -402,6 +419,12 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
                 if (ghq_hirs_cmpr != NULL)
                 {
                     ghq_hirs_cmpr->setHelpString(_("[High-res tex] Compress texture cache (S3TC/FXT1)"));
+                }
+                
+                ConfigParam* ghq_hirs_dump = section->getParamWithName("ghq_hirs_dump");
+                if (ghq_hirs_dump != NULL)
+                {
+                    ghq_hirs_dump->setHelpString(_("[High-res tex] Dump textures"));
                 }
             }
         }
