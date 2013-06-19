@@ -95,14 +95,16 @@ namespace PluginsFinder
             
             wxArrayString temp_list;
             // wxDIR_FILES is used to avoid very long processing (e.g. searching the entire disk if path is set to /...)
-            // Also filter only to files containing the word mupen to avoid opening hundreds of libraries
-            // if the path is set to something like /usr/lib
-            wxDir::GetAllFiles(dir, &temp_list, wxString("*mupen*") + OSAL_DLL_EXTENSION, wxDIR_FILES);
+            wxDir::GetAllFiles(dir, &temp_list, wxString("*") + OSAL_DLL_EXTENSION, wxDIR_FILES);
             
             // trim path, keep only filenames
             const int count = temp_list.size();
             for (int n=0; n<count; n++)
             {
+                // Also filter only to files containing the word mupen to avoid opening hundreds of libraries
+                // if the path is set to something like /usr/lib
+                if (not temp_list[n].Contains("mupen")) continue;
+                
                 wxFileName f(temp_list[n]);
                 PluginInfo info;
                 const char *plugin_name;

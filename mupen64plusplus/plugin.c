@@ -166,6 +166,10 @@ int PluginSearchLoad(m64p_handle ConfigPlugins)
             {
                 use_dummy = 1;
             }
+            else if (strlen(curr_path) == 0)
+            {
+                use_dummy = 1;
+            }
             else /* otherwise search through the plugin directory to find a match with this name */
             {
                 osal_lib_search *curr = lib_filelist;
