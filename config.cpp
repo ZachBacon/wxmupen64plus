@@ -433,23 +433,8 @@ void getOptions(Mupen64PlusPlus* api, ptr_vector<ConfigSection>* out)
             ConfigParam* resample = section->getParamWithName("RESAMPLE");
             if (resample != NULL)
             {
-                resample->m_choices.push_back( ConfigParamChoice(_("Unfiltered"), std::string("trivial") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-0"), std::string("speex-fixed-0") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-1"), std::string("speex-fixed-1") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-2"), std::string("speex-fixed-2") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-3"), std::string("speex-fixed-3") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-4"), std::string("speex-fixed-4") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-5"), std::string("speex-fixed-5") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-6"), std::string("speex-fixed-6") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-7"), std::string("speex-fixed-7") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-8"), std::string("speex-fixed-8") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-9"), std::string("speex-fixed-9") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("speex-fixed-10"), std::string("speex-fixed-10") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("src-linear"), std::string("src-linear") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("src-zero-order-hold"), std::string("src-zero-order-hold") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("src-sinc-fastest"), std::string("src-sinc-fastest") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("src-sinc-medium-quality"), std::string("src-sinc-medium-quality") ) );
-                resample->m_choices.push_back( ConfigParamChoice(_("src-sinc-best-quality"), std::string("src-sinc-best-quality") ) );
+                resample->m_choices.push_back( ConfigParamChoice(_("Unfiltered"), 1 ) );
+                resample->m_choices.push_back( ConfigParamChoice(_("SINC resampling"), 2 ) );
             }
 
             ConfigParam* volumeCtrType = section->getParamWithName("VOLUME_CONTROL_TYPE");

@@ -240,16 +240,23 @@ ParameterPanel::ParameterPanel(wxWindow* parent, Mupen64PlusPlus* api, ConfigSec
                     const int count = curr->m_choices.size();
                     for (int n=0; n<count; n++)
                     {
-                        const int choiceVal = curr->m_choices[n].m_value.As<int>();
-                        
-                        // FIXME: the user data pointer is abused to contain an int
-                        const int index = choice->Append(curr->m_choices[n].m_name,
-                                                         (void*)choiceVal);
-                                                         
-                        if (choiceVal == currVal)
+                        if (curr->m_choices[n].m_value.CheckType<int>())
                         {
-                            selection = index;
+                            const int choiceVal = curr->m_choices[n].m_value.As<int>();
+                            
+                            // FIXME: the user data pointer is abused to contain an int
+                            const int index = choice->Append(curr->m_choices[n].m_name,
+                                                             (void*)choiceVal);
+                                                             
+                            if (choiceVal == currVal)
+                            {
+                                selection = index;
+                            }
                         }
+                        else
+                        {
+                            mplog_warning("ParameterPanel", "Parameter choice '%s' does not have a int value\n", curr->getName().c_str());
+                        }   
                     }
                     
                     choice->SetSelection(selection);
