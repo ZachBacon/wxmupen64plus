@@ -378,6 +378,42 @@ wxGLCanvas* VidExt_InitGLCanvas(wxWindow* parent)
 
 void VidExt_InitedGLCanvas()
 {
+    static char empty_bits[] = { 255, 255, 255, 255, 31,
+255, 255, 255, 31, 255, 255, 255, 31, 255, 255, 255,
+31, 255, 255, 255, 31, 255, 255, 255, 31, 255, 255,
+255, 31, 255, 255, 255, 31, 255, 255, 255, 25, 243,
+255, 255, 19, 249, 255, 255, 7, 252, 255, 255, 15, 254,
+255, 255, 31, 255, 255, 255, 191, 255, 255, 255, 255,
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+255 };
+static char empty_mask[] = { 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0 };
+#ifdef __WXMSW__
+    wxBitmap empty_bitmap(empty_bits, 32, 32);
+    wxBitmap empty_mask_bitmap(empty_mask, 32, 32);
+    down_bitmap.SetMask(new wxMask(empty_mask_bitmap));
+    wxImage empty_image = down_bitmap.ConvertToImage();
+    empty_image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X, 6);
+    empty_image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y, 14);
+    wxCursor empty_cursor = wxCursor(empty_image);
+#else
+    wxCursor empty_cursor = wxCursor(empty_bits, 32, 32, 6, 14,
+        empty_mask, wxWHITE, wxBLACK);
+#endif
+    glPane->SetCursor(empty_cursor);
+    
     if (g_condition == NULL)
     {
         wxMutexLocker locker(*g_mutex);
@@ -805,8 +841,33 @@ void cleanupEvents()
 
 DcHolder* holder = NULL;
 
+// hack : move mouse once in a while to prevent screensaver from kicking in
+int frames = 0;
+bool moveMouseUp = false;
+
 m64p_error VidExt_GL_SwapBuffers()
 {
+    // stop screensaver
+    frames++;
+    if (frames > 350)
+    {
+        wxPoint screenMousePos = wxGetMousePosition();
+        wxPoint mousePos = glPane->ScreenToClient(screenMousePos);
+        if (screenMousePos.y < 1 or not moveMouseUp)
+        {
+            mousePos.y += 1;
+            moveMouseUp = true;
+        }
+        else
+        {
+            mousePos.y -= 1;
+            moveMouseUp = false;
+        }
+        
+        glPane->WarpPointer(mousePos.x, mousePos.y);
+        frames = 0;
+    }
+    
     wxMutexGuiEnter();
     if (holder != NULL)
     {
