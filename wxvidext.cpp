@@ -403,8 +403,8 @@ static char empty_mask[] = { 0, 0, 0, 0, 0, 0,
 #ifdef __WXMSW__
     wxBitmap empty_bitmap(empty_bits, 32, 32);
     wxBitmap empty_mask_bitmap(empty_mask, 32, 32);
-    down_bitmap.SetMask(new wxMask(empty_mask_bitmap));
-    wxImage empty_image = down_bitmap.ConvertToImage();
+    empty_bitmap.SetMask(new wxMask(empty_mask_bitmap));
+    wxImage empty_image = empty_bitmap.ConvertToImage();
     empty_image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_X, 6);
     empty_image.SetOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y, 14);
     wxCursor empty_cursor = wxCursor(empty_image);
