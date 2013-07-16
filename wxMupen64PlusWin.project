@@ -38,8 +38,6 @@
     <File Name="mupen64plusplus/MupenAPIpp.cpp"/>
     <File Name="mupen64plusplus/MupenAPIpp.h"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="-Wall" C_Options="-Wall">
@@ -124,4 +122,6 @@ $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icn
       </AdditionalRules>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>
