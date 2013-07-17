@@ -53,13 +53,15 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="">
+      <Compiler Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-g;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <Preprocessor Value="__WX__"/>
       </Compiler>
       <Linker Options="-mwindows;$(shell /usr/local/bin/wx-config-2.9 --debug=yes --libs --unicode=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --libs)" Required="yes"/>
       <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="C:\Documents and Settings\mmg\Desktop\wxmupen64plus\build\wxmupen64plus.exe" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="C:/Documents and Settings/mmg/Desktop/wxmupen64plus/build" PauseExecWhenProcTerminates="yes"/>
-      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <PostConnectCommands/>
         <StartupCommands/>
@@ -68,8 +70,8 @@
       <PostBuild/>
       <CustomBuild Enabled="yes">
         <RebuildCommand/>
-        <CleanCommand>python C:\waf-1.6.2 clean</CleanCommand>
-        <BuildCommand>python C:\waf-1.6.2 --verbose</BuildCommand>
+        <CleanCommand>python "C:\Documents and Settings\mmg\Desktop\wxmupen64plus\waf" clean</CleanCommand>
+        <BuildCommand>python "C:\Documents and Settings\mmg\Desktop\wxmupen64plus\waf" --verbose</BuildCommand>
         <PreprocessFileCommand/>
         <SingleFileCommand/>
         <MakefileGenerationCommand/>
@@ -87,15 +89,22 @@ $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icn
 	mkdir -p '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/' &amp;&amp; cp -f wxMupen64Plus.icns '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns'
 </CustomPreBuild>
       </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="">
+      <Compiler Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" C_Options="-O2;$(shell /usr/local/bin/wx-config-2.9 --cxxflags --unicode=yes --debug=no);-arch;i386;$(shell /usr/local/bin/sdl-config --cflags)" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <Preprocessor Value="__WX__"/>
       </Compiler>
       <Linker Options="-mwindows;-s;$(shell /usr/local/bin/wx-config-2.9 --debug=no --libs --unicode=yes);-arch;i386;$(shell /usr/local/bin/sdl-config --libs)" Required="yes"/>
       <ResourceCompiler Options="$(shell wx-config --rcflags)" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName).app/Contents/MacOS/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
-      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
       <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
         <PostConnectCommands/>
         <StartupCommands/>
@@ -122,6 +131,38 @@ $(IntermediateDirectory)/$(ProjectName).app/Contents/Info.plist: Info.plist
 $(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns: wxMupen64Plus.icns
 	mkdir -p '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/' &amp;&amp; cp -f wxMupen64Plus.icns '$(IntermediateDirectory)/$(ProjectName).app/Contents/Resources/wxMupen64Plus.icns'</CustomPreBuild>
       </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="Debugger">
+    <File Name="debugger/breakpoint.cpp"/>
+    <File Name="debugger/breakpoint.h"/>
+    <File Name="debugger/breakpointpanel.cpp"/>
+    <File Name="debugger/breakpointpanel.h"/>
+    <File Name="debugger/colors.cpp"/>
+    <File Name="debugger/colors.h"/>
+    <File Name="debugger/debugconfig.cpp"/>
+    <File Name="debugger/debugconfig.h"/>
+    <File Name="debugger/debugconsole.cpp"/>
+    <File Name="debugger/debugconsole.h"/>
+    <File Name="debugger/debuggerframe.cpp"/>
+    <File Name="debugger/debuggerframe.h"/>
+    <File Name="debugger/debugpanel.cpp"/>
+    <File Name="debugger/debugpanel.h"/>
+    <File Name="debugger/disasmpanel.cpp"/>
+    <File Name="debugger/disasmpanel.h"/>
+    <File Name="debugger/dv_treelist.cpp"/>
+    <File Name="debugger/dv_treelist.h"/>
+    <File Name="debugger/memorypanel.cpp"/>
+    <File Name="debugger/memorypanel.h"/>
+    <File Name="debugger/memorysearch.cpp"/>
+    <File Name="debugger/memorysearch.h"/>
+    <File Name="debugger/r4300.h"/>
+    <File Name="debugger/registerpanel.cpp"/>
+    <File Name="debugger/registerpanel.h"/>
+  </VirtualDirectory>
 </CodeLite_Project>
