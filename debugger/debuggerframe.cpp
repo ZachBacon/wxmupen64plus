@@ -21,6 +21,7 @@
 
 #include "debuggerframe.h"
 
+#include <wx/wx.h>
 #include <wx/aui/framemanager.h>
 #include <wx/menu.h>
 #include <wx/panel.h>

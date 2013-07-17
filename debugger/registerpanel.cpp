@@ -21,6 +21,7 @@
 
 #include "registerpanel.h"
 
+#include <wx/wx.h>
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
